@@ -296,7 +296,7 @@ create policy "Suppression admin sur bucket catalog" on storage.objects for dele
 -- ====================================================================
 
 insert into public.site_settings (id, shop_name, full_name, slogan, whatsapp, phone, email, address, delivery_fee)
-values (true, 'MAURELLE EMBALLAGE', 'Boutique d’Emballages & Bouteilles de Jus', 'Vos emballages alimentaires et contenants de jus au meilleur prix.', '2290100000000', '+229 01 00 00 00 00', 'contact@maurelle-emballage.com', 'Cotonou, Bénin', 2000)
+values (true, 'FOOD PACK', 'Boutique d’Emballages Alimentaires & Bouteilles de Jus', 'Vos emballages alimentaires et contenants de jus au meilleur prix à Cotonou.', '2290100000000', '+229 01 00 00 00 00', 'contact@foodpack.com', 'Cotonou, Bénin', 2000)
 on conflict (id) do update set
   shop_name = excluded.shop_name,
   full_name = excluded.full_name,
@@ -335,6 +335,26 @@ values
   (7, 4, 'Gobelet Smoothie PET Transparent + Couvercle Dôme', 'gobelet-smoothie-pet-dome', 'Gobelet cristal pour milkshakes, jus pressés, bissap glacé et granités.', 'Transparence cristal mettant en valeur les couleurs de vos jus. Couvercle dôme avec trou pour paille.', 8500, 9500, 4.8, 31, array['Lot de 50', 'Lot de 100', 'Carton de 500'], array['350 ml', '500 ml'], 'PET cristal recyclable', true, true, false),
   
   (8, 2, 'Sachet Kraft Doypack Zippé avec Fenêtre Transparente', 'sachet-kraft-doypack-fenetre', 'Sachet refermable hermétique pour épices, tisanes, kinkeliba, gari et snacks.', 'Fermeture zip hermétique et fenêtre transparente pour admirer le contenu. Tient debout tout seul en rayon.', 8000, 9000, 4.7, 19, array['Lot de 50', 'Lot de 100', 'Lot de 500'], array['100 g', '250 g', '500 g', '1 kg'], 'Kraft naturel + doublure barrière fraîcheur', false, true, false);
+
+-- Images des Produits
+insert into public.product_images (product_id, url, alt_text, sort_order)
+values
+  (1, '/products/bouteille-pet.jpg', 'Bouteille PET Cristal à Jus et Bissap', 0),
+  (1, '/products/bidon-alimentaire.jpg', 'Bouteille PET et bidon alimentaire', 1),
+  (2, '/products/bidon-alimentaire.jpg', 'Bidon Alimentaire avec Poignée', 0),
+  (2, '/products/bouteille-pet.jpg', 'Bidon et bouteille jus', 1),
+  (3, '/products/boite-kraft.jpg', 'Boîte Repas Kraft Étanche', 0),
+  (3, '/products/sac-kraft.jpg', 'Boîte repas et sac kraft', 1),
+  (4, '/products/sac-kraft.jpg', 'Sac Papier Kraft à Poignées Torsadées', 0),
+  (4, '/products/boite-kraft.jpg', 'Sac et boîtes kraft', 1),
+  (5, '/products/barquette-micro.jpg', 'Barquette Micro-ondable Noire avec Couvercle', 0),
+  (5, '/products/barquette-alu.jpg', 'Barquette micro-ondable et aluminium', 1),
+  (6, '/products/barquette-alu.jpg', 'Barquette Aluminium avec Couvercle Carton', 0),
+  (6, '/products/barquette-micro.jpg', 'Barquette aluminium alimentaire', 1),
+  (7, '/products/gobelet-smoothie.jpg', 'Gobelet Smoothie PET avec Couvercle Dôme', 0),
+  (7, '/products/bouteille-pet.jpg', 'Gobelet smoothie et bouteille jus', 1),
+  (8, '/products/sachet-doypack.jpg', 'Sachet Kraft Doypack avec Fenêtre', 0),
+  (8, '/products/sac-kraft.jpg', 'Sachet doypack et sac kraft', 1);
 
 -- Avis clients exemples (SHOP.CO)
 insert into public.reviews (product_id, customer_name, rating, comment, is_verified)
