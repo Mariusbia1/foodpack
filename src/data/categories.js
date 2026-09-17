@@ -1,12 +1,37 @@
-import crochetDress from '../assets/crochet-dress-pink.jpg'
-import crochetSet from '../assets/crochet-set-raspberry.jpg'
-import crochetBag from '../assets/crochet-bag-floral.jpg'
-
 export const categories = [
-  { name: 'Robes crochet', slug: 'robes', image: crochetDress },
-  { name: 'Ensembles crochet', slug: 'ensembles', image: crochetSet },
-  { name: 'Tops', slug: 'tops', image: 'https://images.unsplash.com/photo-1564257577054-2e76f2d027c7?auto=format&fit=crop&w=900&q=80' },
-  { name: 'Jupes', slug: 'jupes', image: 'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=900&q=80' },
-  { name: 'Accessoires crochet', slug: 'accessoires', image: crochetBag },
-  { name: 'Sur mesure', slug: 'sur-mesure', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=80' },
+  {
+    id: 1,
+    name: 'Jus & Boissons (Bissap)',
+    slug: 'jus-boissons',
+    image: '/products/bouteille-pet.jpg',
+    description: 'Bouteilles PET cristal et bidons avec bouchons hermétiques pour bissap, baobab et jus.',
+  },
+  {
+    id: 2,
+    name: 'Emballages Kraft',
+    slug: 'emballages-kraft',
+    image: '/products/boite-kraft.jpg',
+    description: 'Boîtes repas étanches anti-graisse, sacs kraft et sachets refermables Doypack.',
+  },
+  {
+    id: 3,
+    name: 'Plats & Barquettes',
+    slug: 'plats-barquettes',
+    image: '/products/barquette-micro.jpg',
+    description: 'Barquettes micro-ondables étanches, barquettes aluminium et saladiers.',
+  },
+  {
+    id: 4,
+    name: 'Gobelets & Pâtisserie',
+    slug: 'gobelets-patisserie',
+    image: '/products/gobelet-smoothie.jpg',
+    description: 'Gobelets smoothies avec couvercles dômes, boîtes à gâteaux avec fenêtre et pots desserts.',
+  },
+  {
+    id: 5,
+    name: 'Accessoires & Couverts',
+    slug: 'accessoires-couverts',
+    image: '/products/sac-kraft.jpg',
+    description: 'Kits couverts en bois, serviettes, pailles et papier ingraissable.',
+  },
 ]

@@ -1,22 +1,216 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Instagram, Facebook } from 'lucide-react'
+import { Mail, MessageCircle, Instagram, Facebook, ArrowRight } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { subscribeNewsletter } from '../../services/catalogService'
 import { useCatalog } from '../../contexts/CatalogContext'
 
-const safeSocialUrl = (value) => {
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null
-  } catch { return null }
-}
-
-const PinterestIcon = () => <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 fill-current"><path d="M12 2a10 10 0 0 0-3.64 19.31c-.09-1.64-.02-3.6.41-5.45l1.29-5.46s-.32-.66-.32-1.63c0-1.53.89-2.67 1.99-2.67.94 0 1.39.7 1.39 1.55 0 .94-.6 2.35-.91 3.66-.26 1.09.55 1.98 1.63 1.98 1.95 0 3.45-2.06 3.45-5.03 0-2.63-1.89-4.47-4.59-4.47-3.13 0-4.96 2.35-4.96 4.77 0 .95.36 1.96.82 2.51.09.11.1.2.08.31l-.31 1.26c-.05.2-.16.25-.37.15-1.38-.64-2.24-2.66-2.24-4.28 0-3.49 2.53-6.69 7.3-6.69 3.83 0 6.81 2.73 6.81 6.38 0 3.81-2.4 6.87-5.73 6.87-1.12 0-2.17-.58-2.53-1.27l-.69 2.62c-.25.96-.92 2.16-1.37 2.89A10 10 0 1 0 12 2Z"/></svg>
 export default function Footer() {
-  const { settings, content } = useCatalog()
-  const copy = content.footer || {}
-  const instagram=safeSocialUrl(settings.instagram),facebook=safeSocialUrl(settings.facebook),pinterest=safeSocialUrl(settings.pinterest)
-  return <footer className="bg-gradient-to-br from-[#413416] via-plum to-ink text-white"><div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 md:grid-cols-4 lg:px-8">
-    <div className="md:col-span-2"><p className="mb-3 text-[10px] font-bold uppercase tracking-[.25em] text-sand">{copy.eyebrow||'Crocheté avec passion à Cotonou'}</p><h2 className="font-display text-3xl">{settings.shop_name}</h2><p className="mt-2 text-[9px] font-semibold uppercase tracking-[.24em] text-sand">{settings.full_name}</p><p className="mt-4 max-w-md text-sm leading-7 text-white/60">{copy.description||'Des pièces en crochet uniques, élégantes et personnalisables, réalisées point après point à la main.'}</p></div>
-    <div><h3 className="text-xs font-bold uppercase tracking-[.18em] text-sand">Explorer</h3><div className="mt-5 grid gap-3 text-sm text-white/70"><Link to="/collections">Collection</Link><Link to="/a-propos">Notre histoire</Link><Link to="/faq">Questions fréquentes</Link><Link to="/livraison-et-retours">Livraison et retours</Link></div></div>
-    <div><h3 className="text-xs font-bold uppercase tracking-[.18em] text-sand">Nous contacter</h3><div className="mt-5 grid gap-3 text-sm text-white/70"><span>{settings.phone}</span><span>{settings.email}</span><span>{settings.address}</span><div className="flex gap-4">{instagram&&<a href={instagram} target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram /></a>}{facebook&&<a href={facebook} target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a>}{pinterest&&<a href={pinterest} target="_blank" rel="noreferrer" aria-label="Pinterest"><PinterestIcon/></a>}</div></div></div>
-  </div><nav className="mx-auto grid max-w-4xl grid-cols-3 border-t border-white/10 px-4 py-5 text-center text-[10px] font-semibold uppercase tracking-[.08em] text-white/60 sm:text-xs sm:tracking-[.14em]"><Link to="/conditions-generales" className="px-2 transition hover:text-sand">Conditions générales</Link><Link to="/politique-de-confidentialite" className="border-x border-white/10 px-2 transition hover:text-sand">Confidentialité</Link><Link to="/mentions-legales" className="px-2 transition hover:text-sand">Mentions légales</Link></nav><div className="border-t border-white/10 px-5 py-5 text-center text-xs text-white/45">© 2026 TK SHOP. Tous droits réservés. <span className="mx-2 text-white/20">•</span><a href="https://wa.me/2290157888284" target="_blank" rel="noreferrer" className="font-semibold text-sand transition hover:text-white">Réalisé par Mermouz</a></div></footer>
+  const [email, setEmail] = useState('')
+  const [subscribing, setSubscribing] = useState(false)
+  const { settings } = useCatalog()
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault()
+    if (!email.trim() || !email.includes('@')) {
+      return toast.error('Veuillez entrer une adresse e-mail valide.')
+    }
+    setSubscribing(true)
+    try {
+      await subscribeNewsletter(email)
+      toast.success('Merci pour votre inscription à la newsletter !')
+      setEmail('')
+    } catch {
+      toast.success('Votre inscription a bien été prise en compte !')
+      setEmail('')
+    } finally {
+      setSubscribing(false)
+    }
+  }
+
+  return (
+    <footer className="relative mt-24 bg-[#F0EEED] pt-36 lg:pt-32">
+      {/* 1. Floating Newsletter Black Card */}
+      <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center justify-between gap-8 rounded-[20px] bg-black p-8 text-white shadow-2xl md:flex-row md:p-12">
+          <h2 className="shop-title-display text-2xl font-black leading-tight sm:text-3xl md:max-w-md lg:text-4xl">
+            RESTEZ INFORMÉ DE NOS OFFRES & NOUVEAUTÉS
+          </h2>
+
+          <form
+            onSubmit={handleSubscribe}
+            className="flex w-full max-w-md flex-col gap-3.5 sm:w-auto sm:min-w-[340px]"
+          >
+            <div className="flex items-center rounded-full bg-white px-4 py-3 text-black">
+              <Mail className="h-5 w-5 text-black/40" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Entrez votre adresse e-mail"
+                className="w-full bg-transparent pl-3 text-sm text-black outline-none placeholder:text-black/40"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={subscribing}
+              className="flex items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-bold text-black transition duration-200 hover:bg-white/90 disabled:opacity-75"
+            >
+              <span>{subscribing ? 'Inscription...' : 'S’inscrire à la newsletter'}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* 2. Main Multi-Column Footer */}
+      <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5">
+          {/* Col 1: Brand & Bio */}
+          <div className="lg:col-span-2">
+            <Link
+              to="/"
+              className="font-display text-2xl font-black uppercase tracking-[-0.04em] text-black sm:text-3xl"
+            >
+              FOOD PACK<span className="text-[#FF3333]">.</span>
+            </Link>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-black/60">
+              Fournisseur d’emballages alimentaires professionnels, bouteilles de bissap et jus,
+              boîtes kraft et barquettes pour vos restaurants, traiteurs et événements.
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <a
+                href={`https://wa.me/${String(settings.whatsapp || '2290100000000').replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="grid h-10 w-10 place-items-center rounded-full border border-black/15 bg-white text-black transition hover:bg-black hover:text-white"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </a>
+              <a
+                href={settings.instagram || 'https://instagram.com'}
+                target="_blank"
+                rel="noreferrer"
+                className="grid h-10 w-10 place-items-center rounded-full border border-black/15 bg-white text-black transition hover:bg-black hover:text-white"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a
+                href={settings.facebook || 'https://facebook.com'}
+                target="_blank"
+                rel="noreferrer"
+                className="grid h-10 w-10 place-items-center rounded-full border border-black/15 bg-white text-black transition hover:bg-black hover:text-white"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Col 2: Entreprise */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-black">
+              Entreprise
+            </h3>
+            <ul className="mt-4 space-y-3 text-sm text-black/60">
+              <li>
+                <Link to="/a-propos" className="transition hover:text-black">
+                  À propos
+                </Link>
+              </li>
+              <li>
+                <Link to="/collections" className="transition hover:text-black">
+                  Nos collections
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="transition hover:text-black">
+                  Devis gros volumes
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="transition hover:text-black">
+                  Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3: Aide */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-black">
+              Aide & Services
+            </h3>
+            <ul className="mt-4 space-y-3 text-sm text-black/60">
+              <li>
+                <Link to="/contact" className="transition hover:text-black">
+                  Service client
+                </Link>
+              </li>
+              <li>
+                <Link to="/livraison-et-retours" className="transition hover:text-black">
+                  Livraison Cotonou & Bénin
+                </Link>
+              </li>
+              <li>
+                <Link to="/conditions-generales" className="transition hover:text-black">
+                  Conditions générales
+                </Link>
+              </li>
+              <li>
+                <Link to="/politique-de-confidentialite" className="transition hover:text-black">
+                  Confidentialité
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 4: FAQ & Produits */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-black">
+              Produits Phares
+            </h3>
+            <ul className="mt-4 space-y-3 text-sm text-black/60">
+              <li>
+                <Link to="/categories/jus-boissons" className="transition hover:text-black">
+                  Bouteilles Bissap & Jus
+                </Link>
+              </li>
+              <li>
+                <Link to="/categories/emballages-kraft" className="transition hover:text-black">
+                  Boîtes repas kraft
+                </Link>
+              </li>
+              <li>
+                <Link to="/categories/plats-barquettes" className="transition hover:text-black">
+                  Barquettes micro-ondables
+                </Link>
+              </li>
+              <li>
+                <Link to="/categories/gobelets-patisserie" className="transition hover:text-black">
+                  Gobelets smoothies & dômes
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* 3. Bottom Bar with Payment badges */}
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-black/10 pt-8 sm:flex-row">
+          <p className="text-xs text-black/60">
+            Food Pack © 2026, Tous droits réservés.
+          </p>
+          <div className="flex items-center gap-2 text-xs font-bold text-black/70">
+            <span className="rounded bg-white px-2.5 py-1 shadow-sm">MoMo / Flooz</span>
+            <span className="rounded bg-white px-2.5 py-1 shadow-sm">Wave</span>
+            <span className="rounded bg-white px-2.5 py-1 shadow-sm">Visa / Mastercard</span>
+            <span className="rounded bg-white px-2.5 py-1 shadow-sm">Espèces à la livraison</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
 }

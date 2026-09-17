@@ -1,8 +1,8 @@
 {
   "id": "/admin/",
-  "name": "TK SHOP Admin",
-  "short_name": "TK Admin",
-  "description": "Administration de la boutique TK SHOP.",
+  "name": "FOOD PACK Admin",
+  "short_name": "FP Admin",
+  "description": "Administration FOOD PACK.",
   "start_url": "/admin/",
   "scope": "/admin/",
   "display": "standalone",

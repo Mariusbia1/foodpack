@@ -1,66 +1,404 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, X, MessageCircle, Mail, MapPin } from 'lucide-react'
+import {
+  MessageCircle,
+  Mail,
+  MapPin,
+  Clock,
+  Send,
+  CheckCircle2,
+  ChevronDown,
+  ArrowRight,
+  Phone,
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 import SEO from '../../components/common/SEO'
-import Button from '../../components/common/Button'
-import Accordion from '../../components/common/Accordion'
 import { useCatalog } from '../../contexts/CatalogContext'
 import { faq } from '../../data/faq'
-import { siteConfig } from '../../config/siteConfig'
 import PhoneInput from '../../components/common/PhoneInput'
 
+// 1. PAGE CONTACT & DEVIS PRO
+export function ContactPage() {
+  const { settings } = useCatalog()
+  const [phone, setPhone] = useState('')
+  const [subjectType, setSubjectType] = useState('Tarif par carton / Gros volume')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [quantities, setQuantities] = useState('')
+  const [message, setMessage] = useState('')
 
-export function GalleryPage(){const [active,setActive]=useState(null);const {gallery,content}=useCatalog();const copy=content.galleryPage||{};const current=active!==null?gallery[active]:null;return <><SEO title="Galerie | TK SHOP"/><div className="mx-auto max-w-7xl px-5 py-16"><div className="text-center"><p className="text-xs font-bold uppercase tracking-[.2em] text-gold">{copy.eyebrow||'Carnet d’atelier'}</p><h1 className="mt-4 font-display text-5xl">{copy.title||'Galerie de réalisations'}</h1></div><div className="mt-12 columns-2 gap-4 md:columns-3">{gallery.map((g,i)=><button key={g.id} onClick={()=>setActive(i)} className="group relative mb-4 block w-full overflow-hidden">{g.mediaType==='video'?<><video src={g.image} muted autoPlay loop playsInline preload="metadata" className={`w-full bg-black object-cover ${i%3===0?'aspect-[3/4]':'aspect-square'}`}/><span className="absolute inset-0 grid place-items-center bg-black/20 text-xs font-bold uppercase tracking-widest text-white">Lire la vidéo</span></>:<img src={g.image} alt={g.title} loading="lazy" className={`w-full object-cover ${i%3===0?'aspect-[3/4]':'aspect-square'}`}/>}<span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 p-4 pt-12 text-left text-sm text-white opacity-0 transition group-hover:opacity-100">{g.title}</span></button>)}</div></div>{current&&<div className="fixed inset-0 z-50 grid place-items-center bg-black/95 p-5" role="dialog" aria-label={current.title}><button className="absolute right-5 top-5 z-10 text-white" onClick={()=>setActive(null)}><X/></button><button className="absolute left-4 z-10 text-white" onClick={()=>setActive((active-1+gallery.length)%gallery.length)}><ChevronLeft/></button>{current.mediaType==='video'?<video key={current.image} src={current.image} controls autoPlay playsInline className="max-h-[85vh] max-w-[85vw] bg-black"/>:<img src={current.image} alt={current.title} className="max-h-[85vh] max-w-[85vw]"/>}<button className="absolute right-4 z-10 text-white" onClick={()=>setActive((active+1)%gallery.length)}><ChevronRight/></button></div>}</>}
+  const subjectOptions = [
+    'Tarif par carton / Gros volume',
+    'Bouteilles & Bidons de Bissap',
+    'Boîtes repas & Sacs Kraft',
+    'Impression de logo / Personnalisation',
+    'Renseignement général',
+  ]
 
-export function FaqPage(){const {content}=useCatalog();return <><SEO title="Questions fréquentes | TK SHOP"/><div className="mx-auto max-w-3xl px-5 py-20"><h1 className="mb-10 text-center font-display text-5xl">{content.faqPage?.title||'Questions fréquentes'}</h1><Accordion items={faq}/></div></>}
-export function ConfirmationPage(){return <><SEO title="Commande transmise | TK SHOP"/><div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-goldSoft/15 bg-ivory/95 px-4 backdrop-blur-xl md:hidden"><Link to="/" className="grid h-10 w-10 place-items-center rounded-full bg-mist" aria-label="Retour à l’accueil"><ChevronLeft className="h-5 w-5"/></Link><h1 className="font-display text-xl">Commande</h1><div className="h-10 w-10"/></div><div className="grid min-h-[calc(100vh-4rem)] place-items-center px-5 text-center md:min-h-[65vh]"><div><div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-linen"><MessageCircle/></div><h2 className="mt-6 font-display text-4xl">Votre demande est prête</h2><p className="mx-auto mt-4 max-w-lg leading-7 text-black/55">Votre commande a été ouverte dans WhatsApp. Envoyez le message pour que l’atelier puisse la confirmer avec vous.</p><Button to="/" className="mt-7">Retour à l’accueil</Button></div></div></>}
-function LegacyLegalPage({title}){return <><SEO title={`${title} | TK SHOP`}/><article className="mx-auto max-w-3xl px-5 py-20"><h1 className="font-display text-5xl">{title}</h1><p className="mt-8 leading-8 text-black/60">Cette page présente les informations de référence de TK SHOP. Les modalités définitives seront mises à jour avant l’ouverture commerciale du service.</p><h2 className="mt-10 font-display text-2xl">Principes généraux</h2><p className="mt-4 leading-8 text-black/60">Les commandes sont confirmées après échange avec l’atelier. Les délais dépendent du modèle, des options de personnalisation et de la destination de livraison.</p></article></>}
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!name.trim() || !phone.trim()) {
+      return toast.error('Veuillez renseigner votre nom et votre numéro de téléphone.')
+    }
 
-export function AboutPage(){
-  const {content}=useCatalog()
-  const about=content.about||{}
-  return <><SEO title="Notre histoire | TK SHOP"/><section className="grid md:grid-cols-2"><div className="flex items-center bg-gradient-to-br from-mist to-linen p-10 dark:from-[#342a18] dark:to-[#211b10] md:p-20"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-gold">{about.eyebrow||'Notre histoire'}</p><h1 className="mt-5 font-display text-5xl">{about.title||'Le crochet entre les mains, l’élégance en héritage.'}</h1><p className="mt-7 leading-8 text-black/60">{about.description||'TK SHOP est née d’une passion profonde pour le crochet. La créatrice transforme le fil, point après point, en pièces contemporaines.'}</p></div></div><div className="relative min-h-[560px]"><img src={about.image||"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=85"} alt="Créatrice dans son atelier de crochet" className="absolute inset-0 h-full w-full object-cover"/><div className="absolute inset-0 bg-goldSoft/30 mix-blend-color"/></div></section><section className="mx-auto max-w-5xl px-5 py-24"><h2 className="font-display text-4xl">{about.sectionTitle||'Le crochet comme signature'}</h2><p className="mt-8 max-w-3xl leading-8 text-black/60">{about.sectionText||'Chaque création commence par une conversation, le choix du fil et un motif. La pièce grandit ensuite boucle après boucle sous le crochet, jusqu’à épouser parfaitement la silhouette.'}</p></section></>
+    const body = `Bonjour ${settings.shop_name},
+
+Je vous contacte pour : *${subjectType}*
+
+👤 *Coordonnées :*
+• Nom : ${name}
+• Téléphone : ${phone}
+• E-mail : ${email || 'Non renseigné'}
+• Quantités estimées : ${quantities || 'À définir'}
+
+💬 *Message :*
+${message || 'Je souhaite obtenir plus d’informations et vos disponibilités.'}
+
+Merci de votre retour rapide.`
+
+    const waNumber = String(settings.whatsapp || '2290100000000').replace(/\D/g, '')
+    const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(body)}`
+    window.open(url, '_blank', 'noopener,noreferrer')
+    toast.success('Votre demande a été transmise sur WhatsApp !')
+  }
+
+  return (
+    <>
+      <SEO title="Contact & Devis Gros Volumes | FOOD PACK" />
+
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#FF3333]">
+            À votre écoute 6j/7
+          </p>
+          <h1 className="shop-title-display mt-3 text-3xl font-black text-black sm:text-5xl">
+            CONTACT & DEVIS SUR MESURE
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-black/60">
+            Vous avez un restaurant, une marque de jus ou un événement ?
+            Contactez notre équipe pour obtenir nos tarifs dégressifs par cartons et palettes.
+          </p>
+        </div>
+
+        <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-12">
+          {/* Left Column : Contact Details & Cards */}
+          <div className="space-y-6 lg:col-span-5">
+            <div className="rounded-[20px] bg-[#F0EEED] p-8 space-y-6">
+              <h2 className="text-xl font-bold text-black">Nos Coordonnées</h2>
+
+              <div className="space-y-4 text-sm">
+                <a
+                  href={`https://wa.me/${String(settings.whatsapp || '2290100000000').replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-4 rounded-2xl bg-white p-4 transition hover:shadow-sm"
+                >
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#01AB31]/10 text-[#01AB31]">
+                    <MessageCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-black/50">WhatsApp Direct</p>
+                    <b className="text-black">{settings.phone || '+229 01 00 00 00 00'}</b>
+                  </div>
+                </a>
+
+                <div className="flex items-center gap-4 rounded-2xl bg-white p-4">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black/5 text-black">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-black/50">E-mail professionnel</p>
+                    <b className="text-black">{settings.email || 'contact@foodpack.com'}</b>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 rounded-2xl bg-white p-4">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black/5 text-black">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-black/50">Showroom & Retrait</p>
+                    <b className="text-black">{settings.address || 'Cotonou, Bénin'}</b>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 rounded-2xl bg-white p-4">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black/5 text-black">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-black/50">Horaires d'ouverture</p>
+                    <b className="text-black">Lundi - Samedi : 08h00 - 19h00</b>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column : Interactive Quote Form */}
+          <div className="rounded-[20px] border border-black/10 p-8 sm:p-10 lg:col-span-7">
+            <h2 className="text-xl font-bold text-black">Demande de Devis ou Renseignement</h2>
+
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+              {/* Subject Chips */}
+              <div>
+                <label className="text-xs font-bold uppercase text-black/50">Objet de votre demande</label>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {subjectOptions.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setSubjectType(opt)}
+                      className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+                        subjectType === opt
+                          ? 'bg-black text-white'
+                          : 'bg-[#F0EEED] text-black/70 hover:bg-black/10'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-bold uppercase text-black/60">Nom ou Établissement *</label>
+                  <input
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ex. Restaurant Le Palmier"
+                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase text-black/60">Numéro de Téléphone *</label>
+                  <div className="mt-1">
+                    <PhoneInput required value={phone} onChange={setPhone} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-bold uppercase text-black/60">Adresse E-mail</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="contact@exemple.com"
+                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase text-black/60">Quantités souhaitées</label>
+                  <input
+                    value={quantities}
+                    onChange={(e) => setQuantities(e.target.value)}
+                    placeholder="Ex. 10 cartons (2 500 pcs)"
+                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase text-black/60">Détails de votre besoin</label>
+                <textarea
+                  rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Précisez les formats, contenances et délais de livraison souhaités..."
+                  className="mt-1 w-full resize-none rounded-2xl border border-black/15 bg-[#F0EEED] p-4 text-sm outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="shop-btn-black flex w-full items-center justify-center gap-2 py-4 text-sm font-bold"
+              >
+                <span>Envoyer ma demande sur WhatsApp</span>
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
 
-export function ContactPage(){
-  const {settings,content}=useCatalog()
-  const contact=content.contact||{}
-  const [phone,setPhone]=useState('')
-  const submit=event=>{
-    event.preventDefault()
-    const data=new FormData(event.currentTarget)
-    const body=`Bonjour ${settings.shop_name},\n\n${data.get('message')}\n\nNom : ${data.get('name')}\nTéléphone : ${data.get('phone')}\nE-mail : ${data.get('email')}\nSujet : ${data.get('subject')}`
-    const number=String(settings.whatsapp||'').replace(/\D/g,'')
-    if(/^\d{8,15}$/.test(number)){
-      const whatsappUrl=new URL(`https://wa.me/${number}`)
-      whatsappUrl.searchParams.set('text',body)
-      window.open(whatsappUrl.toString(),'_blank','noopener,noreferrer')
-      return
-    }
-    const email=String(settings.email||'').trim()
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-      toast.error('Aucun moyen de contact valide n’est configuré.')
-      return
-    }
-    const emailLink=document.createElement('a')
-    emailLink.href=`mailto:${email}?subject=${encodeURIComponent(String(data.get('subject')||''))}&body=${encodeURIComponent(body)}`
-    emailLink.rel='noopener noreferrer'
-    emailLink.click()
-  }
-  return <><SEO title="Contact | TK SHOP"/><div className="mx-auto grid max-w-6xl gap-14 px-5 py-20 md:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-gold">{contact.eyebrow||'Parlons de votre projet'}</p><h1 className="mt-4 font-display text-5xl">{contact.title||'Une question, une envie ?'}</h1><p className="mt-6 leading-8 text-black/60">{contact.description||'Écrivez-nous. Nous vous répondrons avec plaisir pour imaginer ensemble votre prochaine création.'}</p><div className="mt-10 grid gap-5 text-sm"><p className="flex gap-3"><MessageCircle className="text-gold"/>{settings.phone}</p><p className="flex gap-3"><Mail className="text-gold"/>{settings.email}</p><p className="flex gap-3"><MapPin className="text-gold"/>{settings.address}</p></div></div><form onSubmit={submit} className="grid gap-4"><label className="text-sm font-semibold">Nom<input required name="name" className="mt-2 w-full border border-black/20 px-4 py-3"/></label><label className="text-sm font-semibold">E-mail<input required type="email" name="email" className="mt-2 w-full border border-black/20 px-4 py-3"/></label><label className="text-sm font-semibold">Téléphone<PhoneInput required value={phone} onChange={setPhone}/></label><label className="text-sm font-semibold">Sujet<input required name="subject" className="mt-2 w-full border border-black/20 px-4 py-3"/></label><label className="text-sm font-semibold">Message<textarea required name="message" rows="5" className="mt-2 w-full resize-none border border-black/20 px-4 py-3"/></label><Button type="submit">{contact.button||'Envoyer sur WhatsApp'}</Button></form></div></>
+// 2. PAGE À PROPOS
+export function AboutPage() {
+  return (
+    <>
+      <SEO title="À Propos | FOOD PACK" />
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#FF3333]">Notre Mission</p>
+          <h1 className="shop-title-display mt-3 text-3xl font-black text-black sm:text-5xl">
+            L’EMBALLAGE AU SERVICE DE VOS CRÉATIONS
+          </h1>
+        </div>
+
+        <div className="mt-12 space-y-8 text-base leading-relaxed text-black/70">
+          <p>
+            Basée à Cotonou au Bénin, <b>FOOD PACK</b> est spécialisée dans la distribution
+            d’emballages alimentaires et contenants de haute qualité destinés aux professionnels
+            de la restauration, aux producteurs de boissons et jus artisanaux (bissap, baobab, sirops),
+            aux pâtissiers et traiteurs.
+          </p>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="rounded-[20px] bg-[#F0EEED] p-6 text-center">
+              <b className="block text-3xl font-black text-black">100%</b>
+              <p className="mt-2 text-xs font-bold uppercase text-black/60">Sécurité alimentaire</p>
+            </div>
+            <div className="rounded-[20px] bg-[#F0EEED] p-6 text-center">
+              <b className="block text-3xl font-black text-black">24h</b>
+              <p className="mt-2 text-xs font-bold uppercase text-black/60">Livraison Cotonou & Calavi</p>
+            </div>
+            <div className="rounded-[20px] bg-[#F0EEED] p-6 text-center">
+              <b className="block text-3xl font-black text-black">Grossistes</b>
+              <p className="mt-2 text-xs font-bold uppercase text-black/60">Tarifs dégressifs</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
 
-export function LegalPage({title}){
-  const {content}=useCatalog()
-  const key=title==='Politique de confidentialité'?'privacy':title==='Conditions générales'?'terms':title==='Mentions légales'?'legal':'delivery'
-  const defaults={
-    privacy:'TK SHOP collecte uniquement les informations nécessaires au traitement des commandes et des demandes : nom, coordonnées, adresse de livraison et détails de la commande.\n\nCes données servent à préparer la commande, contacter la cliente et organiser la livraison. Elles ne sont pas vendues. Vous pouvez demander leur accès, leur correction ou leur suppression en contactant TK SHOP.',
-    terms:'Toute commande est confirmée après validation du modèle, des options, du prix et du délai avec TK SHOP. Les prix sont affichés en FCFA et les modalités de paiement sont communiquées lors de la confirmation.\n\nLes couleurs, tailles et mensurations fournies doivent être exactes. Les créations déjà commencées ou personnalisées peuvent ne pas être remboursables. Une solution amiable sera recherchée en priorité en cas de difficulté.',
-    delivery:'Les délais et frais de livraison dépendent de la destination et sont confirmés avant l’expédition. Tout problème doit être signalé dès la réception avec des photos.\n\nUne création personnalisée ou réalisée selon des mensurations spécifiques ne peut être retournée pour simple changement d’avis. En cas d’article endommagé ou non conforme, TK SHOP étudiera une réparation, un échange ou une solution adaptée.',
-    legal:'Le présent site est édité par TK SHOP — Taye & Kinde Shop, boutique de créations artisanales au crochet. Les coordonnées professionnelles sont celles affichées sur le site.\n\nLe site est hébergé par Vercel Inc. et les données applicatives par Supabase. Les textes, photographies, créations, éléments graphiques et logos sont protégés. Toute reproduction sans autorisation préalable est interdite.',
-  }
-  const fallback=defaults[key]
-  const paragraphs=(content[key]?.body||fallback).split(/\n+/).filter(Boolean)
-  return <><SEO title={`${title} | TK SHOP`}/><article className="mx-auto max-w-3xl px-5 py-20"><p className="text-xs font-bold uppercase tracking-[.2em] text-gold">Informations TK SHOP</p><h1 className="mt-4 font-display text-5xl">{title}</h1><div className="mt-10 grid gap-6">{paragraphs.map((paragraph,index)=><p key={index} className="whitespace-pre-wrap leading-8 text-black/60">{paragraph}</p>)}</div></article></>
+// 3. PAGE FAQ
+export function FaqPage() {
+  const [openIndex, setOpenIndex] = useState(null)
+
+  return (
+    <>
+      <SEO title="Questions Fréquentes | FOOD PACK" />
+      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#FF3333]">FAQ</p>
+          <h1 className="shop-title-display mt-3 text-3xl font-black text-black sm:text-5xl">
+            QUESTIONS FRÉQUENTES
+          </h1>
+        </div>
+
+        <div className="mt-12 space-y-4">
+          {faq.map((item, i) => (
+            <div
+              key={i}
+              className="rounded-[20px] border border-black/10 p-6 transition hover:border-black/30"
+            >
+              <button
+                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                className="flex w-full items-center justify-between text-left text-base font-bold text-black"
+              >
+                <span>{item.question}</span>
+                <ChevronDown
+                  className={`h-5 w-5 text-black/40 transition-transform ${
+                    openIndex === i ? 'rotate-180 text-black' : ''
+                  }`}
+                />
+              </button>
+              {openIndex === i && (
+                <p className="mt-3 text-sm leading-relaxed text-black/60">
+                  {item.answer}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// 4. PAGE CONFIRMATION DE COMMANDE
+export function ConfirmationPage() {
+  return (
+    <>
+      <SEO title="Commande Confirmée | FOOD PACK" />
+      <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#01AB31]/10 text-[#01AB31]">
+          <CheckCircle2 className="h-10 w-10" />
+        </div>
+        <h1 className="shop-title-display mt-6 text-3xl font-black text-black">
+          COMMANDE TRANSMISSE AVEC SUCCÈS
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-black/60">
+          Votre récapitulatif a été ouvert dans WhatsApp. Notre équipe commerciale vous confirme
+          la disponibilité et l’heure exacte de livraison sous quelques minutes.
+        </p>
+        <div className="mt-8 flex justify-center gap-4">
+          <Link to="/" className="shop-btn-black px-8 py-3.5 text-sm font-bold">
+            Retour à l'accueil
+          </Link>
+          <Link to="/collections" className="shop-btn-white px-8 py-3.5 text-sm font-bold">
+            Continuer mes achats
+          </Link>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// 5. PAGE GALERIE / SOLUTIONS
+export function GalleryPage() {
+  const { categories } = useCatalog()
+
+  return (
+    <>
+      <SEO title="Nos Solutions d'Emballages | FOOD PACK" />
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h1 className="shop-title-display text-3xl font-black text-black sm:text-5xl">
+            NOS SOLUTIONS PAR UNIVERS
+          </h1>
+        </div>
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((cat) => (
+            <Link
+              key={cat.slug}
+              to={`/categories/${cat.slug}`}
+              className="group relative h-80 overflow-hidden rounded-[20px] bg-[#F0EEED]"
+            >
+              <img
+                src={cat.image}
+                alt={cat.name}
+                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end text-white">
+                <h3 className="text-xl font-bold">{cat.name}</h3>
+                <p className="mt-1 text-xs text-white/70">{cat.description}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// 6. PAGE MENTIONS LÉGALES & CONDITIONS
+export function LegalPage({ title }) {
+  return (
+    <>
+      <SEO title={`${title} | FOOD PACK`} />
+      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <h1 className="shop-title-display text-3xl font-black text-black">{title}</h1>
+        <div className="mt-8 space-y-4 text-sm leading-relaxed text-black/70">
+          <p>
+            Le site FOOD PACK propose des emballages alimentaires et contenants pour professionnels
+            et particuliers à Cotonou et sur l'ensemble du territoire béninois.
+          </p>
+          <p>
+            Toutes nos bouteilles et boîtes sont certifiées conformes aux exigences d'hygiène et de contact alimentaire.
+            Pour toute demande particulière ou litige, notre service client est joignable 6j/7 sur WhatsApp.
+          </p>
+        </div>
+      </div>
+    </>
+  )
 }

@@ -3,33 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#B38A2C" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="TK SHOP" />
+    <meta name="apple-mobile-web-app-title" content="Maurelle Emballage" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&family=Syne:wght@700;800;900&display=swap" rel="stylesheet" />
     <style>
-      html,body{margin:0;background:#17140f}
-      .boot-loader{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#17140f;color:#fffdf7;text-align:center;font-family:Arial,sans-serif}
-      .boot-loader__content strong{display:block;margin-top:22px;font-family:Georgia,serif;font-size:27px;font-weight:600}
-      .boot-loader__content small{display:block;margin-top:9px;color:#9a741e;font-size:10px;font-weight:700;letter-spacing:.22em}
-      .boot-loader__mark{position:relative;width:92px;height:92px;margin:auto;border:1px solid rgba(179,138,44,.25);border-radius:50%}
-      .boot-loader__mark:before{content:"";position:absolute;inset:8px;border:2px solid transparent;border-top-color:#b38a2c;border-right-color:#b38a2c;border-radius:50%;animation:boot-spin 1s linear infinite}
-      .boot-loader__mark span{position:absolute;inset:28px;display:grid;place-items:center;border-radius:50%;background:#b38a2c;color:white;font-family:Georgia,serif;font-weight:700}
-      @keyframes boot-spin{to{transform:rotate(360deg)}}
-      @media(prefers-reduced-motion:reduce){.boot-loader__mark:before{animation:none}}
+      html, body { margin: 0; background: #FFFFFF; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+      .boot-loader { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: #FFFFFF; color: #000000; text-align: center; }
+      .boot-loader__content strong { display: block; margin-top: 16px; font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+      .boot-loader__content small { display: block; margin-top: 6px; color: #00000099; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
+      .boot-loader__spinner { width: 44px; height: 44px; margin: auto; border: 3px solid #F0EEED; border-top-color: #000000; border-radius: 50%; animation: boot-spin 0.8s linear infinite; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
     </style>
     <link id="app-manifest" rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/app-icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/app-icon-192.png" />
-    <title>TK SHOP | Créations crochetées à la main</title>
+    <title>Maurelle Emballage | Bouteilles de jus, boîtes kraft & emballages alimentaires</title>
   </head>
   <body>
     <div id="root">
-      <div class="boot-loader" role="status" aria-label="Chargement du site">
+      <div class="boot-loader" role="status" aria-label="Chargement de Maurelle Emballage">
         <div class="boot-loader__content">
-          <div class="boot-loader__mark"><span>TK</span></div>
-          <strong>TK SHOP</strong>
-          <small>PRÉPARATION DE VOTRE EXPÉRIENCE</small>
+          <div class="boot-loader__spinner"></div>
+          <strong>MAURELLE EMBALLAGE</strong>
+          <small>EMBALLAGES ALIMENTAIRES & BOUTEILLES DE JUS</small>
         </div>
       </div>
     </div>

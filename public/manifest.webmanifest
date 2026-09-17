@@ -1,7 +1,7 @@
 {
-  "name": "TK SHOP",
-  "short_name": "TK",
-  "description": "Créations artisanales au crochet, réalisées à la main.",
+  "name": "FOOD PACK",
+  "short_name": "FOOD PACK",
+  "description": "Emballages alimentaires professionnels et bouteilles de jus à Cotonou.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

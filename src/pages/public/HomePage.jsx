@@ -1,53 +1,274 @@
-import { motion } from 'framer-motion'
-import { ArrowRight, Gem, Hand, HeartHandshake, PackageCheck } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import SEO from '../../components/common/SEO'
-import Button from '../../components/common/Button'
 import ProductCard from '../../components/products/ProductCard'
-import Accordion from '../../components/common/Accordion'
 import { useCatalog } from '../../contexts/CatalogContext'
-import { faq } from '../../data/faq'
-import heroCrochet from '../../assets/hero-crochet-gold.jpg'
+import heroImg from '../../assets/foodpack-hero.jpg'
 
-const SectionTitle = ({ eyebrow, children }) => <div className="mb-10 text-center"><p className="mb-3 text-[11px] font-bold uppercase tracking-[.22em] text-gold">{eyebrow}</p><h2 className="font-display text-4xl md:text-5xl">{children}</h2></div>
+const partners = [
+  'RESTAURANTS',
+  'BARS À JUS & BISSAP',
+  'TRAITEURS',
+  'PÂTISSERIES & BOULANGERIES',
+  'FAST-FOOD & LIVRAISON',
+  'ÉVÉNEMENTIEL',
+]
+
 export default function HomePage() {
-  const { products, gallery, testimonials, content } = useCatalog()
-  const hero = content.hero || {}
-  const intro = content.homeIntro || {}
-  const productCopy = content.homeProducts || {}
-  const galleryCopy = content.homeGallery || {}
-  const story = content.homeStory || {}
-  const faqCopy = content.homeFaq || {}
-  const cta = content.homeCta || {}
-  return <><SEO title="TK SHOP | Créations crochetées à la main" />
-    <section className="relative min-h-[82vh] overflow-hidden bg-gradient-to-br from-[#fffcf5] via-linen to-[#ebdbb4] dark:from-plum dark:via-[#3b2e14] dark:to-[#20190d]">
-      <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-[#cfa746]/35 blur-3xl" />
-      <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-[#dfc57f]/55 blur-3xl" />
-      <div className="relative mx-auto grid min-h-[82vh] max-w-7xl items-center gap-10 px-5 py-12 lg:grid-cols-[.9fr_1.1fr] lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="relative z-10">
-          <span className="inline-flex rounded-full border border-gold/30 bg-white/75 px-4 py-2 text-[10px] font-bold uppercase tracking-[.24em] text-gold shadow-sm backdrop-blur dark:bg-white/10">{hero.eyebrow||'Crochet d’exception · Fait main'}</span>
-          <h1 className="mt-7 font-display text-5xl leading-[1.02] sm:text-7xl">{hero.title||'La douceur prend forme.'}</h1>
-          <p className="mt-6 max-w-lg text-base leading-8 text-black/60">{hero.description||'Des pièces en crochet singulières, façonnées point après point à la main pour envelopper chaque femme d’élégance et de douceur.'}</p>
-          <div className="mt-8 flex flex-wrap gap-3"><Button to="/collections">{hero.primaryButton||'Découvrir le crochet'}</Button><Button to="/contact" variant="outline">{hero.secondaryButton||'Imaginer ma pièce'}</Button></div>
-          <div className="mt-10 flex gap-8 text-xs text-black/50"><span><b className="block font-display text-2xl text-gold">100%</b>fait main</span><span><b className="block font-display text-2xl text-gold">12</b>pièces signatures</span><span><b className="block font-display text-2xl text-gold">1</b>pièce unique</span></div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .7 }} className="relative mx-auto w-full max-w-xl">
-          <div className="absolute -left-5 -top-5 h-full w-full rounded-[3rem] border border-gold/30" />
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[3rem_3rem_8rem_3rem] shadow-gold">
-            <img src={heroCrochet} alt="Robe en crochet or et champagne TK SHOP" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-plum/45 via-transparent to-goldSoft/10" />
-            <div className="absolute bottom-6 left-6 rounded-2xl bg-white/85 p-4 backdrop-blur dark:bg-plum/80"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Nouveau crochet</p><p className="mt-1 font-display text-xl">Collection Douceur</p></div>
+  const { products, categories, testimonials } = useCatalog()
+  const [reviewIndex, setReviewIndex] = useState(0)
+
+  // Filters for New Arrivals & Top Selling
+  const newArrivals = products.filter((p) => p.newArrival || p.featured).slice(0, 4)
+  const topSelling = products.filter((p) => p.topSelling || p.popular).slice(0, 4)
+
+  const handlePrevReview = () => {
+    setReviewIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))
+  }
+
+  const handleNextReview = () => {
+    setReviewIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))
+  }
+
+  return (
+    <>
+      <SEO title="FOOD PACK | Bouteilles de jus, boîtes kraft & emballages alimentaires à Cotonou" />
+
+      {/* 1. HERO + MARQUEE WRAPPER (Docked precisely to initial viewport) */}
+      <div className="flex min-h-[calc(100vh-116px)] flex-col justify-between bg-[#F2F0F1]">
+        {/* Main Hero Section */}
+        <section className="flex flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="mx-auto grid w-full max-w-7xl items-center gap-8 lg:grid-cols-12 lg:gap-12">
+            {/* Left Hero Content */}
+            <div className="flex flex-col items-start lg:col-span-6">
+              <h1 className="shop-title-display text-2xl font-black uppercase leading-[1.08] tracking-tight text-black sm:text-4xl lg:text-[40px] xl:text-[45px]">
+                DES EMBALLAGES ÉLÉGANTS POUR SUBLIMER VOS PRODUITS
+              </h1>
+
+              <p className="mt-4 max-w-lg text-sm leading-relaxed text-black/70 sm:text-[15px]">
+                Bouteilles PET cristal pour jus de bissap, boîtes repas kraft 100% étanches, barquettes micro-ondables et
+                contenants soignés pour restaurateurs, traiteurs et marques artisanales à Cotonou.
+              </p>
+              
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/collections"
+                  className="shop-btn-black inline-flex items-center gap-2 px-7 py-3 text-sm font-bold shadow-md"
+                >
+                  <span>Découvrir la boutique</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/contact"
+                  className="shop-btn-white px-6 py-3 text-sm font-bold"
+                >
+                  Demander un devis pro
+                </Link>
+              </div>
+
+              {/* Metrics Counters */}
+              <div className="mt-8 grid w-full grid-cols-3 gap-2 border-t border-black/10 pt-5 sm:gap-4">
+                <div>
+                  <b className="font-display text-xl font-black text-black sm:text-2xl">200+</b>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Références</p>
+                </div>
+                <div className="border-l border-black/10 pl-3 sm:pl-5">
+                  <b className="font-display text-xl font-black text-black sm:text-2xl">2 000+</b>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Clients servis</p>
+                </div>
+                <div className="border-l border-black/10 pl-3 sm:pl-5">
+                  <b className="font-display text-xl font-black text-black sm:text-2xl">24/48h</b>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Livraison Bénin</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Hero Image (Clean, Luxury & 100% Unbranded) */}
+            <div className="relative flex justify-center lg:col-span-6 lg:justify-end">
+              <div className="relative w-full max-w-lg overflow-hidden rounded-[24px] border border-black/10 bg-white p-2.5 shadow-xl sm:max-w-none">
+                <img
+                  src={heroImg}
+                  alt="Emballages alimentaires et bouteilles de bissap FOOD PACK"
+                  className="h-[300px] w-full rounded-[18px] object-cover sm:h-[380px] lg:h-[420px] xl:h-[450px]"
+                />
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </section>
+
+        {/* 2. PARTNERS / UNIVERS MARQUEE (Flush at the bottom of initial fold) */}
+        <div className="overflow-hidden bg-black py-4 text-white sm:py-5">
+          <div className="animate-marquee flex items-center gap-10 whitespace-nowrap text-xs font-extrabold uppercase tracking-widest sm:text-sm">
+            {[...partners, ...partners].map((name, i) => (
+              <div key={i} className="flex items-center gap-10">
+                <span>{name}</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-    </section>
-    <section className="mx-auto max-w-4xl px-5 py-24 text-center"><p className="text-xs font-bold uppercase tracking-[.2em] text-gold">{intro.eyebrow||'L’art du crochet'}</p><h2 className="mt-5 font-display text-4xl leading-tight md:text-5xl">{intro.title||'Un point après l’autre. Une émotion à porter.'}</h2><p className="mx-auto mt-6 max-w-2xl leading-8 text-black/60">{intro.description||'Chez TK SHOP, le fil de coton devient une silhouette moderne entre les mains de la créatrice.'}</p></section>
-    <section className="rounded-[3rem] bg-mist py-20 md:mx-5"><div className="mx-auto max-w-7xl px-5 lg:px-8"><SectionTitle eyebrow={productCopy.eyebrow||'Crochets coup de cœur'}>{productCopy.title||'Nos créations signatures'}</SectionTitle><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 md:gap-7">{products.filter(p => p.featured).map(p => <ProductCard key={p.id} product={p} />)}</div><div className="mt-12 text-center"><Button to="/collections" variant="outline">{productCopy.button||'Voir toute la collection'} <ArrowRight className="h-4 w-4" /></Button></div></div></section>
-    <section className="mx-auto max-w-7xl px-5 py-24 lg:px-8"><SectionTitle eyebrow={galleryCopy.eyebrow||'Carnet d’atelier'}>{galleryCopy.title||'Nos créations prennent vie'}</SectionTitle><p className="mx-auto -mt-5 mb-10 max-w-2xl text-center text-sm leading-7 text-black/60">{galleryCopy.description||'Découvrez l’allure et les détails des créations TK SHOP à travers une sélection de photos et de vidéos.'}</p><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">{gallery.slice(0,6).map(item=><Link key={item.id} to="/galerie" className="group relative overflow-hidden rounded-[2rem] bg-mist shadow-soft">{item.mediaType==='video'?<video src={item.image} muted autoPlay loop playsInline preload="metadata" className="aspect-[4/5] h-full w-full object-cover"/>:<img src={item.image} alt={item.title} loading="lazy" className="aspect-[4/5] h-full w-full object-cover transition duration-700 group-hover:scale-105"/>}<span className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent"/><span className="absolute inset-x-0 bottom-0 p-6 font-display text-2xl text-white">{item.title}<span className="mt-2 block text-[10px] font-sans font-bold uppercase tracking-[.18em] text-sand">{item.mediaType==='video'?'Voir la vidéo':'Voir la galerie'}</span></span></Link>)}</div><div className="mt-10 text-center"><Button to="/galerie" variant="outline">{galleryCopy.button||'Découvrir toute la galerie'} <ArrowRight className="h-4 w-4"/></Button></div></section>
-    <section className="grid overflow-hidden bg-linen md:mx-5 md:rounded-[3rem] md:grid-cols-2"><div className="relative min-h-[500px]"><img src={heroCrochet} alt="Création au crochet dans l’atelier" className="absolute inset-0 h-full w-full object-cover" /><div className="absolute inset-0 bg-goldSoft/20 mix-blend-color" /><div className="absolute inset-0 bg-gradient-to-t from-plum/25 to-transparent" /></div><div className="flex items-center p-10 md:p-20"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-gold">{story.eyebrow||'La main derrière le crochet'}</p><h2 className="mt-5 font-display text-4xl md:text-5xl">{story.title||'Le crochet comme langage'}</h2><p className="mt-6 max-w-lg leading-8 text-black/65">{story.description||'TK imagine des silhouettes féminines à partir de fils doux, de boucles et de motifs ajourés.'}</p><Button to="/a-propos" variant="outline" className="mt-8">{story.button||'Entrer dans l’atelier'}</Button></div></div></section>
-    <section className="mx-auto max-w-7xl px-5 py-24 lg:px-8"><div className="grid gap-8 md:grid-cols-4">{[[Hand,'Fait à la main'],[Gem,'Matières choisies'],[HeartHandshake,'Sur mesure'],[PackageCheck,'Livraison soignée']].map(([Icon,t]) => <div key={t} className="border-t border-gold pt-6"><Icon className="h-6 w-6 text-gold" /><h3 className="mt-4 font-display text-xl">{t}</h3><p className="mt-2 text-sm leading-6 text-black/55">Une attention sincère portée à chaque étape de votre création.</p></div>)}</div></section>
-    <section className="bg-gradient-to-br from-plum via-brown to-gold py-24 text-white"><div className="mx-auto max-w-7xl px-5 lg:px-8"><SectionTitle eyebrow="Elles racontent">Portées avec émotion</SectionTitle><div className="grid gap-5 md:grid-cols-4">{testimonials.map(t => <blockquote key={t.name} className="rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur"><p className="font-display text-xl leading-8">« {t.text} »</p><footer className="mt-6 text-xs uppercase tracking-wider text-sand">{t.name} — {t.city}</footer></blockquote>)}</div></div></section>
-    <section className="mx-auto grid max-w-6xl gap-12 px-5 py-24 md:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-gold">{faqCopy.eyebrow||'Questions fréquentes'}</p><h2 className="mt-4 font-display text-4xl">{faqCopy.title||'Avant de commencer votre création'}</h2></div><Accordion items={faq} /></section>
-    <section className="bg-sand px-5 py-20 text-center"><h2 className="font-display text-4xl">{cta.title||'Une création pensée spécialement pour vous.'}</h2><Button to="/collections" className="mt-7">{cta.button||'Découvrir la collection'}</Button></section>
-  </>
+
+      {/* 3. SECTION NOS PRODUITS PHARES */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <h2 className="shop-title-display text-center text-2xl font-black uppercase tracking-tight text-black sm:text-3xl lg:text-4xl">
+          NOS PRODUITS PHARES
+        </h2>
+
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {(newArrivals.length ? newArrivals : products.slice(0, 4)).map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link
+            to="/collections"
+            className="shop-btn-white px-10 py-3 text-xs font-bold"
+          >
+            Voir tout le catalogue
+          </Link>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="border-t border-black/10" />
+      </div>
+
+      {/* 4. SECTION MEILLEURES VENTES (Top Selling) */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <h2 className="shop-title-display text-center text-2xl font-black text-black sm:text-3xl">
+          MEILLEURES VENTES
+        </h2>
+
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {(topSelling.length ? topSelling : products.slice(4, 8)).map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link to="/collections" className="shop-btn-white px-10 py-3 text-xs font-bold">
+            Voir tous les produits
+          </Link>
+        </div>
+      </section>
+
+      {/* 5. BENTO GRID : PARCOURIR PAR UNIVERS */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-[32px] bg-[#F0EEED] p-6 sm:p-10 lg:p-12">
+          <h2 className="shop-title-display text-center text-2xl font-black text-black sm:text-3xl">
+            PARCOURIR PAR UNIVERS
+          </h2>
+
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-12">
+            {/* Bento Card 1: Jus & Boissons */}
+            <Link
+              to="/categories/jus-boissons"
+              className="group relative flex h-56 overflow-hidden rounded-[20px] bg-white p-6 transition duration-300 hover:shadow-lg md:col-span-5"
+            >
+              <span className="z-10 text-xl font-black text-black">Jus & Bissap</span>
+              <img
+                src={categories[0]?.image || '/products/bouteille-pet.jpg'}
+                alt="Bouteilles de jus et bissap"
+                className="absolute right-0 top-0 h-full w-2/3 object-cover object-center transition duration-500 group-hover:scale-105"
+              />
+            </Link>
+
+            {/* Bento Card 2: Emballages Kraft */}
+            <Link
+              to="/categories/emballages-kraft"
+              className="group relative flex h-56 overflow-hidden rounded-[20px] bg-white p-6 transition duration-300 hover:shadow-lg md:col-span-7"
+            >
+              <span className="z-10 text-xl font-black text-black">Boîtes & Sacs Kraft</span>
+              <img
+                src={categories[1]?.image || '/products/boite-kraft.jpg'}
+                alt="Emballages kraft"
+                className="absolute right-0 top-0 h-full w-2/3 object-cover object-center transition duration-500 group-hover:scale-105"
+              />
+            </Link>
+
+            {/* Bento Card 3: Plats & Barquettes */}
+            <Link
+              to="/categories/plats-barquettes"
+              className="group relative flex h-56 overflow-hidden rounded-[20px] bg-white p-6 transition duration-300 hover:shadow-lg md:col-span-7"
+            >
+              <span className="z-10 text-xl font-black text-black">Plats & Barquettes</span>
+              <img
+                src={categories[2]?.image || '/products/barquette-micro.jpg'}
+                alt="Barquettes micro-ondables et aluminium"
+                className="absolute right-0 top-0 h-full w-2/3 object-cover object-center transition duration-500 group-hover:scale-105"
+              />
+            </Link>
+
+            {/* Bento Card 4: Gobelets & Pâtisserie */}
+            <Link
+              to="/categories/gobelets-patisserie"
+              className="group relative flex h-56 overflow-hidden rounded-[20px] bg-white p-6 transition duration-300 hover:shadow-lg md:col-span-5"
+            >
+              <span className="z-10 text-xl font-black text-black">Gobelets & Pâtisserie</span>
+              <img
+                src={categories[3]?.image || '/products/gobelet-smoothie.jpg'}
+                alt="Gobelets smoothies et boîtes à gâteaux"
+                className="absolute right-0 top-0 h-full w-2/3 object-cover object-center transition duration-500 group-hover:scale-105"
+              />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. AVIS CLIENTS (Our Happy Customers) */}
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <div className="flex items-center justify-between">
+          <h2 className="shop-title-display text-xl font-black text-black sm:text-3xl">
+            AVIS DE NOS CLIENTS
+          </h2>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handlePrevReview}
+              className="grid h-9 w-9 place-items-center rounded-full border border-black/20 text-black transition hover:bg-black hover:text-white"
+              aria-label="Avis précédent"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={handleNextReview}
+              className="grid h-9 w-9 place-items-center rounded-full border border-black/20 text-black transition hover:bg-black hover:text-white"
+              aria-label="Avis suivant"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+          {testimonials.slice(0, 3).map((item, idx) => (
+            <div
+              key={idx}
+              className="flex flex-col justify-between rounded-[20px] border border-black/10 p-6 shadow-sm transition hover:shadow-md"
+            >
+              <div>
+                <div className="flex text-[#FFC633]">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-[#FFC633]" />
+                  ))}
+                </div>
+                <div className="mt-3 flex items-center gap-1.5">
+                  <b className="text-sm text-black">{item.name}</b>
+                  <CheckCircle2 className="h-4 w-4 text-[#01AB31]" />
+                </div>
+                <p className="mt-2.5 text-xs leading-relaxed text-black/60">
+                  « {item.text} »
+                </p>
+              </div>
+              <footer className="mt-4 text-[11px] font-bold text-black/40">
+                {item.city || 'Cotonou'}
+              </footer>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  )
 }

@@ -1,40 +1,266 @@
-import { LayoutDashboard, Menu, Search, ShoppingBag, X, Moon, Sun } from 'lucide-react'
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import {
+  Search,
+  ShoppingBag,
+  Menu,
+  X,
+  ChevronDown,
+  LayoutDashboard,
+} from 'lucide-react'
 import { useCart } from '../../contexts/CartContext'
-import { useTheme } from '../../contexts/ThemeContext'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useCatalog } from '../../contexts/CatalogContext'
 
-const links = [['/', 'Accueil'], ['/collections', 'Collection'], ['/galerie', 'Galerie'], ['/a-propos', 'À propos'], ['/contact', 'Contact']]
-
 export default function Header() {
-  const [open, setOpen] = useState(false)
+  const [showBanner, setShowBanner] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const navigate = useNavigate()
+
   const { itemCount } = useCart()
-  const { theme, toggleTheme } = useTheme()
   const { isAuthenticated } = useAdminAuth()
-  const { settings } = useCatalog()
-  return <>
-    <header className="sticky top-0 z-40 border-b border-goldSoft/15 bg-ivory/90 shadow-sm backdrop-blur-xl dark:bg-plum/90">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link to="/" className="flex min-w-0 items-center gap-2.5 sm:gap-3" aria-label="TK SHOP — Taye et Kinde Shop, accueil">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-gold font-display text-base font-semibold text-gold sm:h-12 sm:w-12 sm:text-lg">TK</span>
-          <span className="leading-none">
-            <span className="block whitespace-nowrap font-display text-lg tracking-[.1em] sm:text-2xl sm:tracking-[.12em]">{settings.shop_name}</span>
-            <span className="mt-1.5 block whitespace-nowrap text-[6px] font-semibold uppercase tracking-[.14em] text-ink/65 sm:text-[8px] sm:tracking-[.22em] lg:text-[9px]">{settings.full_name}</span>
-          </span>
-        </Link>
-        <nav className="hidden items-center gap-7 lg:flex">{links.map(([to, label]) => <NavLink key={to} to={to} className={({ isActive }) => `text-xs font-semibold uppercase tracking-[.13em] ${isActive ? 'text-gold' : 'hover:text-gold'}`}>{label}</NavLink>)}{isAuthenticated&&<Link to="/admin" className="flex items-center gap-2 rounded-full border border-gold/30 bg-mist px-4 py-2 text-[10px] font-bold uppercase tracking-[.1em] text-gold transition hover:bg-gold hover:text-white"><LayoutDashboard className="h-3.5 w-3.5"/>Tableau de bord</Link>}</nav>
-        <div className="flex items-center gap-2.5 sm:gap-4">
-          <Link to="/collections" className="hidden sm:block" aria-label="Rechercher dans la collection"><Search className="h-5 w-5" /></Link>
-          <button onClick={toggleTheme} className="grid h-10 w-10 place-items-center rounded-full bg-mist text-gold transition hover:scale-105 dark:bg-white/10" aria-label={theme === 'light' ? 'Activer le mode sombre' : 'Activer le mode clair'}>
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+  const { categories, settings } = useCatalog()
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/collections?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
+  return (
+    <>
+      {/* 1. Top Announcement Bar */}
+      {showBanner && (
+        <div className="relative bg-black px-4 py-2 text-center text-xs text-white">
+          <p>
+            Profitez de tarifs dégressifs par carton pour professionnels.{' '}
+            <Link
+              to="/contact"
+              className="font-bold underline transition hover:text-white/80"
+            >
+              Demander un devis
+            </Link>
+          </p>
+          <button
+            onClick={() => setShowBanner(false)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+            aria-label="Fermer"
+          >
+            <X className="h-3.5 w-3.5" />
           </button>
-          <Link to="/panier" className="relative" aria-label={`Panier, ${itemCount} articles`}><ShoppingBag className="h-5 w-5" />{itemCount > 0 && <span className="absolute -right-2 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-[9px] text-white">{itemCount}</span>}</Link>
-          <button className="lg:hidden" onClick={() => setOpen(true)} aria-label="Ouvrir le menu"><Menu /></button>
         </div>
-      </div>
-    </header>
-    {open && <div className="fixed inset-0 z-50 bg-ivory p-6 dark:bg-plum lg:hidden"><div className="flex items-start justify-between"><span className="flex items-center gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border-2 border-gold font-display text-lg text-gold">TK</span><span className="leading-none"><span className="block font-display text-2xl tracking-[.12em]">TK SHOP</span><span className="mt-2 block text-[8px] font-semibold uppercase tracking-[.18em] text-ink/60 dark:text-white/60">Taye &amp; Kinde Shop</span></span></span><button onClick={() => setOpen(false)} aria-label="Fermer"><X /></button></div><p className="mt-12 text-xs font-bold uppercase tracking-[.25em] text-gold">Le crochet fait avec amour</p><nav className="mt-8 grid gap-6">{links.map(([to, label]) => <Link className="font-display text-3xl" onClick={() => setOpen(false)} key={to} to={to}>{label}</Link>)}{isAuthenticated&&<Link to="/admin" onClick={() => setOpen(false)} className="mt-2 flex items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-bold uppercase tracking-[.1em] text-white"><LayoutDashboard className="h-4 w-4"/>Tableau de bord</Link>}</nav></div>}
-  </>
+      )}
+
+      {/* 2. Main Navigation Header */}
+      <header className="sticky top-0 z-40 border-b border-black/10 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          {/* Mobile Menu Toggle & Brand Logo */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="grid h-10 w-10 place-items-center rounded-lg text-black hover:bg-[#F0EEED] lg:hidden"
+              aria-label="Ouvrir le menu"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+
+            <Link
+              to="/"
+              className="font-display text-2xl font-black uppercase tracking-[-0.04em] text-black sm:text-3xl"
+            >
+              FOOD PACK<span className="text-[#FF3333]">.</span>
+            </Link>
+          </div>
+
+          {/* Desktop Nav Links */}
+          <nav className="hidden items-center gap-6 lg:flex">
+            {/* Dropdown Catégories */}
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                onBlur={() => setTimeout(() => setDropdownOpen(false), 200)}
+                className="flex items-center gap-1.5 text-sm font-semibold text-black transition hover:text-black/70"
+              >
+                <span>Catalogue</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 w-64 rounded-2xl border border-black/10 bg-white p-3 shadow-xl">
+                  <Link
+                    to="/collections"
+                    className="block rounded-xl px-3 py-2 text-sm font-bold text-black transition hover:bg-[#F0EEED]"
+                  >
+                    Tous les emballages
+                  </Link>
+                  <div className="my-1 border-t border-black/5" />
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      to={`/categories/${cat.slug}`}
+                      className="block rounded-xl px-3 py-2 text-sm text-black/80 transition hover:bg-[#F0EEED] hover:text-black"
+                    >
+                      {cat.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <NavLink
+              to="/collections"
+              className={({ isActive }) =>
+                `text-sm font-semibold transition ${isActive ? 'text-black' : 'text-black/70 hover:text-black'}`
+              }
+            >
+              Boutique
+            </NavLink>
+
+            <NavLink
+              to="/contact"
+              className={({ isActive }) =>
+                `text-sm font-semibold transition ${isActive ? 'text-black' : 'text-black/70 hover:text-black'}`
+              }
+            >
+              Devis & Contact
+            </NavLink>
+          </nav>
+
+          {/* Search Bar Pill */}
+          <form
+            onSubmit={handleSearch}
+            className="hidden max-w-md flex-1 items-center rounded-full bg-[#F0EEED] px-4 py-2.5 sm:flex"
+          >
+            <Search className="h-4 w-4 text-black/40" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher des bouteilles, boîtes kraft, barquettes..."
+              className="w-full bg-transparent pl-3 text-sm text-black outline-none placeholder:text-black/40"
+            />
+          </form>
+
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              to="/panier"
+              className="relative grid h-10 w-10 place-items-center rounded-full text-black hover:bg-[#F0EEED]"
+              aria-label={`Panier, ${itemCount} articles`}
+            >
+              <ShoppingBag className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-black px-1 text-[10px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
+            {isAuthenticated && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 rounded-full bg-black px-3.5 py-2 text-xs font-bold text-white hover:bg-black/80"
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* 3. Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white p-6 lg:hidden">
+          <div className="flex items-center justify-between border-b border-black/10 pb-4">
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-display text-2xl font-black uppercase text-black"
+            >
+              FOOD PACK<span className="text-[#FF3333]">.</span>
+            </Link>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-full p-2 text-black hover:bg-[#F0EEED]"
+              aria-label="Fermer"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSearch} className="mt-5 flex items-center rounded-full bg-[#F0EEED] px-4 py-3">
+            <Search className="h-5 w-5 text-black/40" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher des produits..."
+              className="w-full bg-transparent pl-3 text-sm text-black outline-none placeholder:text-black/40"
+            />
+          </form>
+
+          <nav className="mt-6 flex flex-1 flex-col gap-4 overflow-y-auto">
+            <Link
+              to="/collections"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-lg font-bold text-black"
+            >
+              Tout le catalogue
+            </Link>
+            <div className="flex flex-col gap-2 pl-3">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to={`/categories/${cat.slug}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-semibold text-black/70 hover:text-black"
+                >
+                  • {cat.name}
+                </Link>
+              ))}
+            </div>
+
+            <div className="my-2 border-t border-black/10" />
+
+            <Link
+              to="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-lg font-bold text-black"
+            >
+              Demande de Devis & Contact
+            </Link>
+            <Link
+              to="/faq"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-semibold text-black/70"
+            >
+              Questions fréquentes
+            </Link>
+            <Link
+              to="/a-propos"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-semibold text-black/70"
+            >
+              À propos de FOOD PACK
+            </Link>
+
+            {isAuthenticated && (
+              <Link
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mt-4 flex items-center justify-center gap-2 rounded-full bg-black py-3 text-sm font-bold text-white"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Tableau de bord Admin
+              </Link>
+            )}
+          </nav>
+        </div>
+      )}
+    </>
+  )
 }

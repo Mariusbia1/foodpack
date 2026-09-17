@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 
 export default function InstallAppButton({
   compact = false,
-  label = 'Installer TK SHOP',
+  label = 'Installer Foodpack',
   manifestHref = '/manifest.webmanifest',
 }) {
   const [installPrompt, setInstallPrompt] = useState(null)

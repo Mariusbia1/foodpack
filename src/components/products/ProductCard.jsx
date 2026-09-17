@@ -1,17 +1,108 @@
-import { Heart, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Star, ArrowRight } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatCurrency'
-import { useCart } from '../../contexts/CartContext'
+
 export default function ProductCard({ product }) {
-  const { addItem } = useCart()
-  const unavailable = product.stockStatus === 'Indisponible'
-  const canQuickAdd = !unavailable && !product.sizes.length && !product.colors.length
-  return <article className="group rounded-[1.75rem] bg-white p-2 shadow-soft transition duration-500 hover:-translate-y-1 dark:bg-white/5">
-    <div className="relative aspect-[3/4] overflow-hidden rounded-[1.35rem] bg-mist"><Link to={`/collections/${product.slug}`}>{product.images[0]?<img loading="lazy" src={product.images[0]} alt={product.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />:product.media?.[0]?.type==='video'?<video src={product.media[0].url} muted autoPlay loop playsInline preload="metadata" className="h-full w-full object-cover transition duration-700 group-hover:scale-105"/>:<span className="grid h-full place-items-center text-xs text-black/45">Aucun média</span>}</Link>
-      <span className="absolute left-3 top-3 rounded-full bg-ivory/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-gold backdrop-blur">{product.stockStatus === 'Disponible' ? 'Disponible immédiatement' : product.stockStatus}</span>
-      <button aria-label="Ajouter aux favoris" className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90"><Heart className="h-4 w-4" /></button>
-      <button disabled={unavailable} onClick={() => canQuickAdd ? addItem(product) : null} className="absolute bottom-3 left-3 right-3 flex items-center justify-center gap-2 rounded-full bg-plum/90 py-3 text-xs font-semibold text-white backdrop-blur transition disabled:cursor-not-allowed disabled:opacity-70 md:translate-y-14 md:group-hover:translate-y-0">{unavailable?'Indisponible':canQuickAdd ? <><Plus className="h-4 w-4" /> Ajouter au panier</> : <Link to={`/collections/${product.slug}`}>Choisir les options</Link>}</button>
-    </div>
-    <div className="px-2 pb-3 pt-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-gold">{product.category}</p><Link to={`/collections/${product.slug}`} className="mt-1 block font-display text-xl">{product.name}</Link><p className="mt-1 text-sm font-semibold text-gold">{formatCurrency(product.price)}</p></div>
-  </article>
+  const hasDiscount = product.oldPrice && product.oldPrice > product.price
+  const discountPercent = hasDiscount
+    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    : 0
+
+  const displayImage =
+    product.images?.[0] || '/products/bouteille-pet.jpg'
+
+  return (
+    <article className="group relative flex flex-col rounded-[24px] border border-black/5 bg-white p-3 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-black/15 hover:shadow-xl">
+      {/* 1. Image Container */}
+      <Link
+        to={`/collections/${product.slug}`}
+        className="relative block aspect-square w-full overflow-hidden rounded-[20px] bg-[#F7F6F5]"
+      >
+        <img
+          loading="lazy"
+          src={displayImage}
+          alt={product.name}
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+
+        {/* Top Badges */}
+        <div className="absolute left-3 top-3 right-3 flex items-center justify-between gap-2">
+          {product.category && (
+            <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-black shadow-xs backdrop-blur-md">
+              {product.category}
+            </span>
+          )}
+
+          {hasDiscount ? (
+            <span className="rounded-full bg-[#FF3333] px-2.5 py-1 text-[10px] font-extrabold text-white shadow-xs">
+              -{discountPercent}%
+            </span>
+          ) : product.stockStatus === 'Rupture' ? (
+            <span className="rounded-full bg-black/80 px-2.5 py-1 text-[10px] font-bold uppercase text-white shadow-xs">
+              Rupture
+            </span>
+          ) : null}
+        </div>
+
+        {/* Hover Quick Action Pill */}
+        <div className="absolute inset-x-3 bottom-3 translate-y-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <div className="flex items-center justify-center gap-1.5 rounded-full bg-black/90 py-2.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm transition hover:bg-black">
+            <span>Commander</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </div>
+        </div>
+      </Link>
+
+      {/* 2. Product Info */}
+      <div className="mt-3.5 flex flex-1 flex-col px-1 pb-1">
+        {/* Capacities / Formats Preview */}
+        {product.capacities && product.capacities.length > 0 && (
+          <p className="text-[11px] font-medium text-black/50 line-clamp-1">
+            {product.capacities.slice(0, 3).join(' · ')}
+          </p>
+        )}
+
+        <Link
+          to={`/collections/${product.slug}`}
+          className="mt-1 line-clamp-2 text-sm font-bold text-black transition hover:text-[#FF3333] sm:text-[15px]"
+          title={product.name}
+        >
+          {product.name}
+        </Link>
+
+        {/* Rating Stars */}
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex text-[#FFC633]">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-3.5 w-3.5 ${
+                  i < Math.floor(product.rating || 5)
+                    ? 'fill-[#FFC633]'
+                    : i < (product.rating || 5)
+                    ? 'fill-[#FFC633]/50'
+                    : 'text-black/20'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-semibold text-black/70">
+            {Number(product.rating || 5.0).toFixed(1)}/5
+          </span>
+        </div>
+
+        {/* Price & Discounts */}
+        <div className="mt-2.5 flex items-baseline gap-2">
+          <span className="font-display text-base font-black text-black sm:text-lg">
+            {formatCurrency(product.price)}
+          </span>
+          {hasDiscount && (
+            <span className="text-xs font-bold text-black/40 line-through">
+              {formatCurrency(product.oldPrice)}
+            </span>
+          )}
+        </div>
+      </div>
+    </article>
+  )
 }

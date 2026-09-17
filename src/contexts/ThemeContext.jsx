@@ -4,15 +4,15 @@ const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('atelier-naya-theme-v3')
+    const savedTheme = localStorage.getItem('foodpack-theme')
     if (savedTheme) return savedTheme
-    return 'dark'
+    return 'light'
   })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
     document.documentElement.style.colorScheme = theme
-    localStorage.setItem('atelier-naya-theme-v3', theme)
+    localStorage.setItem('foodpack-theme', theme)
   }, [theme])
 
   const toggleTheme = () => setTheme((current) => current === 'light' ? 'dark' : 'light')
