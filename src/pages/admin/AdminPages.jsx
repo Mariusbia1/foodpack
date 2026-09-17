@@ -22,8 +22,138 @@ import {
   saveSiteSettings, saveTestimonial, updateAdminEmail, updateAdminPassword, updateOrderStatus,
 } from '../../services/catalogService'
 
-export function ProtectedAdminRoute({children}){const {isAuthenticated,loading}=useAdminAuth();if(loading)return <div className="grid min-h-screen place-items-center bg-mist font-display text-2xl text-gold">Vérification de la session…</div>;return isAuthenticated?children:<Navigate to="/admin/connexion" replace/>}
-export function LoginPage(){const [show,setShow]=useState(false);const [submitting,setSubmitting]=useState(false);const {login,isAuthenticated,isSupabaseConfigured}=useAdminAuth();const navigate=useNavigate();if(isAuthenticated)return <Navigate to="/admin" replace/>;const submit=async e=>{e.preventDefault();setSubmitting(true);const formData=new FormData(e.currentTarget);try{await login(formData.get('email'),formData.get('password'));navigate('/admin')}catch(error){toast.error(error.message==='Invalid login credentials'?'E-mail ou mot de passe incorrect.':error.message)}finally{setSubmitting(false)}};return <><SEO title="Connexion administration | FOOD PACK"/><div className="relative grid min-h-screen place-items-center overflow-hidden bg-gradient-to-br from-[#fcf7eb] via-[#efe2c2] to-[#d9c184] p-5 dark:from-[#17130d] dark:via-[#2d2412] dark:to-[#493818]"><div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-[#d2ae50]/25 blur-3xl"/><div className="absolute -right-24 bottom-10 h-96 w-96 rounded-full bg-white/35 blur-3xl"/><form onSubmit={submit} className="relative w-full max-w-md rounded-[2rem] border border-white/60 bg-white/85 p-8 shadow-[0_30px_90px_rgba(74,56,20,.18)] backdrop-blur-xl dark:border-white/10 dark:bg-[#211a0d]/90"><div className="text-center"><div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#d7b65e] to-[#B38A2C] font-display text-2xl text-white shadow-lg">FP</div><p className="text-[10px] font-bold uppercase tracking-[.25em] text-gold">Espace privé</p><h1 className="mt-2 font-display text-3xl">FOOD PACK</h1><p className="mt-2 text-sm text-black/50">Connexion sécurisée à l’administration</p></div>{!isSupabaseConfigured&&<p className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-900">Ajoutez les variables Supabase dans le fichier <code>.env.local</code> pour activer la connexion.</p>}<label className="mt-8 block text-sm font-semibold">E-mail<input name="email" type="email" autoComplete="email" required className="mt-2 w-full rounded-2xl border border-[#dfcfaa] bg-white px-4 py-3 outline-none focus:border-gold"/></label><label className="mt-5 block text-sm font-semibold">Mot de passe<div className="relative mt-2"><input name="password" type={show?'text':'password'} autoComplete="current-password" required className="w-full rounded-2xl border border-[#dfcfaa] bg-white px-4 py-3 pr-12 outline-none focus:border-gold"/><button type="button" onClick={()=>setShow(!show)} className="absolute right-3 top-3 text-gold">{show?<EyeOff/>:<Eye/>}</button></div></label><div className="my-5 flex justify-between text-xs"><label className="flex items-center gap-2"><input type="checkbox" defaultChecked/> Se souvenir de moi</label><Link to="/admin/mot-de-passe-oublie" className="font-semibold text-gold">Mot de passe oublié</Link></div><Button type="submit" className="w-full" disabled={submitting||!isSupabaseConfigured}>{submitting?'Connexion…':'Se connecter'}</Button><div className="mt-3"><InstallAppButton manifestHref="/admin-manifest.webmanifest" label="Installer FP Admin" /></div><Link to="/" className="mt-5 block text-center text-xs text-black/50 hover:text-gold">Retour au site public</Link></form></div></>}
+export function ProtectedAdminRoute({ children }) {
+  const { isAuthenticated, loading } = useAdminAuth()
+  if (loading)
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#F2F0F1] font-display text-xl font-bold text-black">
+        Vérification de la session…
+      </div>
+    )
+  return isAuthenticated ? children : <Navigate to="/admin/connexion" replace />
+}
+
+export function LoginPage() {
+  const [show, setShow] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const { login, isAuthenticated, isSupabaseConfigured } = useAdminAuth()
+  const navigate = useNavigate()
+
+  if (isAuthenticated) return <Navigate to="/admin" replace />
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    const formData = new FormData(e.currentTarget)
+    try {
+      await login(formData.get('email'), formData.get('password'))
+      toast.success('Connexion réussie !')
+      navigate('/admin')
+    } catch (error) {
+      console.error('Erreur login admin :', error)
+      toast.error(
+        error.message === 'Invalid login credentials'
+          ? 'E-mail ou mot de passe incorrect.'
+          : error.message === 'Email not confirmed'
+          ? 'E-mail non confirmé dans Supabase (cochez Auto Confirm).'
+          : error.message
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <SEO title="Connexion administration | FOOD PACK" />
+      <div className="relative grid min-h-screen place-items-center bg-[#F2F0F1] p-5">
+        <form
+          onSubmit={submit}
+          className="relative w-full max-w-md rounded-[24px] border border-black/10 bg-white p-8 shadow-2xl sm:p-10"
+        >
+          <div className="text-center">
+            <Link
+              to="/"
+              className="font-display text-3xl font-black uppercase tracking-tight text-black"
+            >
+              FOOD PACK<span className="text-[#FF3333]">.</span>
+            </Link>
+            <p className="mt-2 text-xs font-bold uppercase tracking-widest text-black/50">
+              Espace Administrateur
+            </p>
+          </div>
+
+          {!isSupabaseConfigured && (
+            <p className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+              Ajoutez les variables Supabase dans le fichier <code>.env.local</code> pour activer la connexion.
+            </p>
+          )}
+
+          <label className="mt-8 block text-xs font-bold uppercase tracking-wider text-black">
+            Adresse E-mail
+            <input
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              placeholder="admin@foodpack.com"
+              className="mt-2 w-full rounded-xl border border-black/15 bg-[#F9F8F8] px-4 py-3 text-sm text-black outline-none transition focus:border-black focus:bg-white"
+            />
+          </label>
+
+          <label className="mt-5 block text-xs font-bold uppercase tracking-wider text-black">
+            Mot de passe
+            <div className="relative mt-2">
+              <input
+                name="password"
+                type={show ? 'text' : 'password'}
+                autoComplete="current-password"
+                required
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-black/15 bg-[#F9F8F8] px-4 py-3 pr-12 text-sm text-black outline-none transition focus:border-black focus:bg-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShow(!show)}
+                className="absolute right-3 top-3 text-black/40 hover:text-black"
+              >
+                {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </label>
+
+          <div className="my-5 flex items-center justify-between text-xs">
+            <label className="flex items-center gap-2 text-black/70">
+              <input type="checkbox" defaultChecked className="rounded accent-black" />
+              Se souvenir de moi
+            </label>
+            <Link
+              to="/admin/mot-de-passe-oublie"
+              className="font-semibold text-black/60 hover:text-black hover:underline"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || !isSupabaseConfigured}
+            className="w-full rounded-full bg-black py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-black/85 disabled:opacity-50"
+          >
+            {submitting ? 'Connexion en cours…' : 'Se connecter'}
+          </button>
+
+          <Link
+            to="/"
+            className="mt-6 block text-center text-xs font-medium text-black/40 hover:text-black"
+          >
+            ← Retour à la boutique
+          </Link>
+        </form>
+      </div>
+    </>
+  )
+}
 const Title=({children,action})=><div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Administration FOOD PACK</p><h1 className="mt-1 font-display text-3xl sm:text-4xl">{children}</h1><p className="mt-2 text-sm text-black/45">Pilotez vos produits, stocks et commandes en toute simplicité.</p></div>{action}</div>
 const Status=({children})=><span className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-bold ${children==='Livrée'||children==='Disponible'?'bg-emerald-100 text-emerald-800':children==='Nouvelle'?'bg-[#f5ead1] text-[#80601f]':'bg-[#eee5cf] text-[#6f5523]'}`}>{children}</span>
 function LegacyDashboardPage(){return <><Title>Tableau de bord</Title><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[[Package,'Produits','15','+3 nouveaux formats'],[ShoppingBag,'Commandes','38','+12% ce mois'],[Clock,'En attente','7','À traiter'],[Banknote,'CA estimé','1,2 M FCFA','+18% ce mois']].map(([Icon,label,value,note],index)=><div key={label} className="group relative overflow-hidden bg-white p-5"><div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#eadbb8] transition group-hover:scale-125 dark:bg-white/5"/><div className="relative flex items-start justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#faf5ea] text-gold dark:bg-white/10"><Icon className="h-5 w-5"/></span><span className="text-[10px] font-bold text-gold">{index===2?'Prioritaire':'En hausse'}</span></div><p className="relative mt-5 text-xs text-black/45">{label}</p><b className="relative mt-1 block text-2xl">{value}</b><p className="relative mt-2 text-[10px] text-black/40">{note}</p></div>)}</div><div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]"><div className="bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-gold">Performance</p><h2 className="mt-1 font-display text-xl">Évolution des commandes</h2></div><span className="rounded-full bg-mist px-3 py-2 text-[10px]">7 derniers mois</span></div><div className="mt-10 flex h-48 items-end gap-4">{[42,55,38,75,60,90,72].map((h,i)=><div key={i} className="flex-1 rounded-t-xl bg-gradient-to-t from-[#B38A2C] to-[#d9bd73] transition hover:brightness-105" style={{height:`${h}%`}}/>)}</div></div><div className="bg-white p-6"><p className="text-[10px] font-bold uppercase tracking-wider text-gold">Catalogue</p><h2 className="mt-1 font-display text-xl">Répartition des catégories</h2><div className="mt-6 grid gap-4">{categories.slice(0,5).map((c,i)=><div key={c.slug}><div className="mb-1.5 flex justify-between text-xs"><span>{c.name}</span><b>{25-i*3}%</b></div><div className="h-2.5 overflow-hidden rounded-full bg-mist"><div className="h-full rounded-full bg-gradient-to-r from-[#B38A2C] to-[#d7b65e]" style={{width:`${25-i*3}%`}}/></div></div>)}</div></div></div><div className="mt-6 bg-white p-6"><div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-gold">À suivre</p><h2 className="mt-1 font-display text-xl">Commandes récentes</h2></div><Link to="/admin/commandes" className="text-xs font-semibold text-gold">Voir toutes</Link></div><OrderTable/></div></>}
