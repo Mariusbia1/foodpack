@@ -52,52 +52,51 @@ export default function Footer() {
   const hasAnySocial = hasWhatsApp || hasInstagram || hasFacebook || hasTikTok
 
   return (
-    <footer className="mt-20 border-t border-black/10 bg-[#F0EEED] pt-12 pb-10 sm:pt-16 sm:pb-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
-        {/* 1. Integrated Newsletter Black Card (In-flow to prevent any overlap) */}
-        <div className="mb-14 sm:mb-16 rounded-[24px] bg-black p-8 text-white shadow-xl md:p-12">
-          <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
-            <div className="max-w-xl text-center md:text-left">
-              <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#FF3333]">
-                Offres & Nouveautés
-              </span>
-              <h2 className="shop-title-display mt-2 text-2xl font-black leading-tight sm:text-3xl lg:text-4xl text-white">
-                RESTEZ INFORMÉ DE NOS ARRIVAGES
-              </h2>
-              <p className="mt-2 text-xs sm:text-sm text-white/70">
-                Recevez en direct nos arrivages de cartons, nouveaux formats et offres pro dégressives.
-              </p>
-            </div>
-
-            <form
-              onSubmit={handleSubscribe}
-              className="flex w-full max-w-md flex-col gap-3.5 sm:w-auto sm:min-w-[340px]"
-            >
-              <div className="flex items-center rounded-full bg-white px-4 py-3 text-black shadow-inner">
-                <Mail className="h-5 w-5 text-black/40 shrink-0" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Entrez votre adresse e-mail"
-                  className="w-full bg-transparent pl-3 text-sm text-black outline-none placeholder:text-black/40"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={subscribing}
-                className="flex items-center justify-center gap-2 rounded-full bg-[#FF3333] py-3 text-sm font-bold text-white transition duration-200 hover:bg-[#e02626] disabled:opacity-75 shadow-md"
-              >
-                <span>{subscribing ? 'Inscription...' : 'S’inscrire à la newsletter'}</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </form>
+    <footer className="relative mt-32 sm:mt-40 bg-[#F0EEED] pt-40 sm:pt-44 lg:pt-36 pb-12">
+      {/* 1. Floating Newsletter Black Card */}
+      <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl px-4 sm:px-6 lg:px-8 z-20">
+        <div className="flex flex-col items-center justify-between gap-6 rounded-[24px] bg-black p-6 sm:p-8 md:p-10 lg:p-12 text-white shadow-2xl md:flex-row">
+          <div className="max-w-xl text-center md:text-left">
+            <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#FF3333]">
+              Offres & Nouveautés
+            </span>
+            <h2 className="shop-title-display mt-1.5 text-2xl font-black leading-tight sm:text-3xl lg:text-4xl text-white">
+              RESTEZ INFORMÉ DE NOS ARRIVAGES
+            </h2>
+            <p className="mt-1.5 text-xs sm:text-sm text-white/70">
+              Recevez en direct nos arrivages de cartons, nouveaux formats et offres pro dégressives.
+            </p>
           </div>
-        </div>
 
-        {/* 2. Main Navigation Columns */}
+          <form
+            onSubmit={handleSubscribe}
+            className="flex w-full max-w-md flex-col gap-3 sm:w-auto sm:min-w-[320px] md:min-w-[340px]"
+          >
+            <div className="flex items-center rounded-full bg-white px-4 py-3 text-black shadow-inner">
+              <Mail className="h-5 w-5 text-black/40 shrink-0" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Entrez votre adresse e-mail"
+                className="w-full bg-transparent pl-3 text-sm text-black outline-none placeholder:text-black/40"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={subscribing}
+              className="flex items-center justify-center gap-2 rounded-full bg-[#FF3333] py-3 text-sm font-bold text-white transition duration-200 hover:bg-[#e02626] disabled:opacity-75 shadow-md"
+            >
+              <span>{subscribing ? 'Inscription...' : 'S’inscrire à la newsletter'}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* 2. Main Navigation Columns with ample top spacing */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-4">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5">
           {/* Col 1: Brand & Direct Contact */}
           <div className="lg:col-span-2 space-y-4">
@@ -302,5 +301,6 @@ export default function Footer() {
     </footer>
   )
 }
+
 
 

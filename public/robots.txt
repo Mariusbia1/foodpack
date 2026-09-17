@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /commande/
+Disallow: /panier
+
+Sitemap: https://foodpack.bj/sitemap.xml
