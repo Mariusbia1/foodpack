@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, Star } from 'lucid
 import SEO from '../../components/common/SEO'
 import ProductCard from '../../components/products/ProductCard'
 import { useCatalog } from '../../contexts/CatalogContext'
-import heroImg from '../../assets/foodpack-hero.jpg'
+import heroImg from '../../assets/foodpack-hero.webp'
 
 const partners = [
   'RESTAURANTS',

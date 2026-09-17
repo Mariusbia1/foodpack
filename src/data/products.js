@@ -19,8 +19,8 @@ export const products = [
     category: 'Jus & Boissons (Bissap)',
     categorySlug: 'jus-boissons',
     images: [
-      '/products/bouteille-pet.jpg',
-      '/products/bidon-alimentaire.jpg',
+      '/products/bouteille-pet.webp',
+      '/products/bidon-alimentaire.webp',
     ],
     formats: ['Lot de 50', 'Lot de 100', 'Carton de 250'],
     capacities: ['250 ml', '330 ml', '500 ml', '1 Litre'],
@@ -42,8 +42,8 @@ export const products = [
     category: 'Jus & Boissons (Bissap)',
     categorySlug: 'jus-boissons',
     images: [
-      '/products/bidon-alimentaire.jpg',
-      '/products/bouteille-pet.jpg',
+      '/products/bidon-alimentaire.webp',
+      '/products/bouteille-pet.webp',
     ],
     formats: ['Lot de 10', 'Lot de 25', 'Lot de 50'],
     capacities: ['1 Litre', '2 Litres', '5 Litres'],
@@ -65,8 +65,8 @@ export const products = [
     category: 'Emballages Kraft',
     categorySlug: 'emballages-kraft',
     images: [
-      '/products/boite-kraft.jpg',
-      '/products/sac-kraft.jpg',
+      '/products/boite-kraft.webp',
+      '/products/sac-kraft.webp',
     ],
     formats: ['Lot de 50', 'Lot de 100', 'Carton de 500'],
     capacities: ['500 ml', '750 ml', '1000 ml', '1500 ml'],
@@ -88,8 +88,8 @@ export const products = [
     category: 'Emballages Kraft',
     categorySlug: 'emballages-kraft',
     images: [
-      '/products/sac-kraft.jpg',
-      '/products/boite-kraft.jpg',
+      '/products/sac-kraft.webp',
+      '/products/boite-kraft.webp',
     ],
     formats: ['Lot de 50', 'Lot de 100', 'Lot de 250'],
     capacities: ['Petit (22x10x28 cm)', 'Moyen (26x14x32 cm)', 'Grand (32x17x42 cm)'],
@@ -111,8 +111,8 @@ export const products = [
     category: 'Plats & Barquettes',
     categorySlug: 'plats-barquettes',
     images: [
-      '/products/barquette-micro.jpg',
-      '/products/barquette-alu.jpg',
+      '/products/barquette-micro.webp',
+      '/products/barquette-alu.webp',
     ],
     formats: ['Lot de 50', 'Lot de 100', 'Carton de 300'],
     capacities: ['500 ml', '750 ml', '1000 ml', '2 Compartiments'],
@@ -134,8 +134,8 @@ export const products = [
     category: 'Plats & Barquettes',
     categorySlug: 'plats-barquettes',
     images: [
-      '/products/barquette-alu.jpg',
-      '/products/barquette-micro.jpg',
+      '/products/barquette-alu.webp',
+      '/products/barquette-micro.webp',
     ],
     formats: ['Lot de 50', 'Lot de 100', 'Carton de 500'],
     capacities: ['650 ml', '900 ml', '1500 ml'],
@@ -157,8 +157,8 @@ export const products = [
     category: 'Gobelets & Pâtisserie',
     categorySlug: 'gobelets-patisserie',
     images: [
-      '/products/gobelet-smoothie.jpg',
-      '/products/bouteille-pet.jpg',
+      '/products/gobelet-smoothie.webp',
+      '/products/bouteille-pet.webp',
     ],
     formats: ['Lot de 50', 'Lot de 100', 'Carton de 500'],
     capacities: ['350 ml', '500 ml'],
@@ -180,8 +180,8 @@ export const products = [
     category: 'Emballages Kraft',
     categorySlug: 'emballages-kraft',
     images: [
-      '/products/sachet-doypack.jpg',
-      '/products/sac-kraft.jpg',
+      '/products/sachet-doypack.webp',
+      '/products/sac-kraft.webp',
     ],
     formats: ['Lot de 50', 'Lot de 100', 'Lot de 500'],
     capacities: ['100 g', '250 g', '500 g', '1 kg'],
@@ -192,3 +192,4 @@ export const products = [
     ...common,
   },
 ]
+
