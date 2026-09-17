@@ -279,59 +279,251 @@ export function SimpleAdminPage({title,type}){
   return <><Title>{title}</Title><p className="bg-white p-10">Cette section est prête.</p></>
 }
 
-function CatalogDashboard(){
-  const [data,setData]=useState(null)
-  useEffect(()=>{getDashboardData().then(setData).catch(error=>toast.error(error.message))},[])
-  if(!data)return <><Title>Tableau de bord</Title><p className="max-w-full bg-white p-10 text-center text-black/45">Chargement des données…</p></>
+function CatalogDashboard() {
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    getDashboardData()
+      .then(setData)
+      .catch((error) => {
+        console.error('Erreur getDashboardData:', error)
+        toast.error(error.message)
+        setData({
+          products: [],
+          orders: [],
+          categories: [],
+          stats: { products: 0, orders: 0, pending: 0, revenue: 0 },
+        })
+      })
+  }, [])
 
-  const cards=[
-    [Package,'Produits',data.stats.products,'Articles au catalogue'],
-    [ShoppingBag,'Commandes',data.stats.orders,'Depuis l’ouverture'],
-    [Clock,'À traiter',data.stats.pending,'Commandes actives'],
-    [Banknote,'Chiffre d’affaires',formatCurrency(data.stats.revenue),'Hors commandes annulées'],
+  if (!data) {
+    return (
+      <>
+        <Title>Tableau de bord</Title>
+        <p className="max-w-full bg-white p-10 text-center text-black/45">Chargement des données…</p>
+      </>
+    )
+  }
+
+  const stats = data.stats || { products: 0, orders: 0, pending: 0, revenue: 0 }
+  const categoriesList = Array.isArray(data.categories) ? data.categories : []
+  const productsList = Array.isArray(data.products) ? data.products : []
+  const ordersList = Array.isArray(data.orders) ? data.orders : []
+
+  const cards = [
+    [Package, 'Produits', stats.products ?? productsList.length, 'Articles au catalogue'],
+    [ShoppingBag, 'Commandes', stats.orders ?? ordersList.length, 'Depuis l’ouverture'],
+    [Clock, 'À traiter', stats.pending ?? 0, 'Commandes actives'],
+    [Banknote, 'Chiffre d’affaires', formatCurrency(stats.revenue ?? 0), 'Hors commandes annulées'],
   ]
-  const counts=data.categories.map(category=>({
+
+  const counts = categoriesList.map((category) => ({
     ...category,
-    count:data.products.filter(product=>product.categoryId===category.id).length,
+    count: productsList.filter((product) => product.categoryId === category.id).length,
   }))
-  const maximum=Math.max(...counts.map(item=>item.count),1)
+  const maximum = Math.max(...counts.map((item) => item.count), 1)
 
-  return <><Title>Tableau de bord</Title>
-    <div className="grid max-w-full gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {cards.map(([Icon,label,value,note])=><div key={label} className="relative min-w-0 overflow-hidden bg-white p-5"><div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#eadbb8]"/><span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-[#faf5ea] text-gold"><Icon className="h-5 w-5"/></span><p className="relative mt-5 text-xs text-black/45">{label}</p><b className="relative mt-1 block text-2xl">{value}</b><p className="relative mt-2 text-[10px] text-black/40">{note}</p></div>)}
-    </div>
-
-    <div className="mt-6 grid min-w-0 max-w-full gap-6">
-      <section className="min-w-0 max-w-full overflow-hidden bg-white p-6">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-gold">Catalogue réel</p>
-        <h2 className="mt-1 font-display text-xl">Produits par catégorie</h2>
-        <div className="dashboard-scroll mt-6 w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-3">
-          <div className="grid min-w-[760px] gap-4">
-            {counts.map(item=><div key={item.id} className="min-w-0"><div className="mb-1.5 flex justify-between gap-4 text-xs"><span>{item.name}</span><b className="shrink-0">{item.count}</b></div><div className="h-2.5 overflow-hidden rounded-full bg-mist"><div className="h-full rounded-full bg-gradient-to-r from-[#B38A2C] to-[#d7b65e]" style={{width:`${item.count/maximum*100}%`}}/></div></div>)}
+  return (
+    <>
+      <Title>Tableau de bord</Title>
+      <div className="grid max-w-full gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map(([Icon, label, value, note]) => (
+          <div key={label} className="relative min-w-0 overflow-hidden bg-white p-5">
+            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#eadbb8]" />
+            <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-[#faf5ea] text-gold">
+              <Icon className="h-5 w-5" />
+            </span>
+            <p className="relative mt-5 text-xs text-black/45">{label}</p>
+            <b className="relative mt-1 block text-2xl">{value}</b>
+            <p className="relative mt-2 text-[10px] text-black/40">{note}</p>
           </div>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      <section className="min-w-0 max-w-full overflow-hidden bg-white p-6">
-        <div className="flex items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-wider text-gold">À suivre</p><h2 className="mt-1 font-display text-xl">Commandes récentes</h2></div><Link to="/admin/commandes" className="shrink-0 text-xs font-semibold text-gold">Voir toutes</Link></div>
-        <div className="w-full min-w-0 max-w-full overflow-hidden">
-          <OrderTable rows={data.orders.slice(0,5)}/>
-        </div>
-      </section>
-    </div>
-  </>
+      <div className="mt-6 grid min-w-0 max-w-full gap-6">
+        <section className="min-w-0 max-w-full overflow-hidden bg-white p-6">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gold">Catalogue réel</p>
+          <h2 className="mt-1 font-display text-xl">Produits par catégorie</h2>
+          <div className="dashboard-scroll mt-6 w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-3">
+            <div className="grid min-w-[760px] gap-4">
+              {counts.map((item) => (
+                <div key={item.id} className="min-w-0">
+                  <div className="mb-1.5 flex justify-between gap-4 text-xs">
+                    <span>{item.name}</span>
+                    <b className="shrink-0">{item.count}</b>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-mist">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#B38A2C] to-[#d7b65e]"
+                      style={{ width: `${(item.count / maximum) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+              {!counts.length && (
+                <p className="py-6 text-center text-xs text-black/45">Aucune catégorie pour le moment.</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="min-w-0 max-w-full overflow-hidden bg-white p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gold">À suivre</p>
+              <h2 className="mt-1 font-display text-xl">Commandes récentes</h2>
+            </div>
+            <Link to="/admin/commandes" className="shrink-0 text-xs font-semibold text-gold">
+              Voir toutes
+            </Link>
+          </div>
+          <div className="w-full min-w-0 max-w-full overflow-hidden">
+            <OrderTable rows={ordersList.slice(0, 5)} />
+          </div>
+        </section>
+      </div>
+    </>
+  )
 }
 
-function TrafficPanel(){
-  const [traffic,setTraffic]=useState({total:0,visitors:0,today:0,daily:[],topPages:[]})
-  const [period,setPeriod]=useState(30)
-  const [loading,setLoading]=useState(false)
-  const load=days=>{setLoading(true);getTrafficStats(days).then(setTraffic).catch(error=>{if(error.code!=='42P01')toast.error(error.message)}).finally(()=>setLoading(false))}
-  useEffect(()=>{load(period)},[period])
-  const maximum=Math.max(...traffic.daily.map(item=>item.count),1)
-  const pageName=path=>{const clean=decodeURIComponent(path).replace(/\/+$/,'')||'/';const fixed={'/':'Accueil','/collections':'Collection','/galerie':'Galerie','/a-propos':'À propos','/contact':'Contact','/panier':'Panier','/commande':'Finalisation de commande','/faq':'Questions fréquentes','/conditions-generales':'Conditions générales','/politique-de-confidentialite':'Confidentialité','/mentions-legales':'Mentions légales','/livraison-et-retours':'Livraison et retours'};if(fixed[clean])return fixed[clean];if(clean.startsWith('/categories/'))return `Catégorie : ${clean.split('/').pop().replaceAll('-',' ')}`;if(clean.startsWith('/collections/'))return `Produit : ${clean.split('/').pop().replaceAll('-',' ')}`;return clean.replaceAll('-',' ').replaceAll('/',' ').trim()}
-  const periodLabel=period?`${period} derniers jours`:'toute la période'
-  return <section className="mt-6 min-w-0 overflow-hidden bg-white p-4 sm:p-6"><div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-gold">Trafic · {periodLabel}</p><h2 className="mt-1 font-display text-xl">Visiteurs du site</h2></div><div className="flex max-w-full flex-wrap gap-2">{[3,7,30,null].map(days=><button key={days??'all'} onClick={()=>setPeriod(days)} className={`rounded-full px-3 py-2 text-[10px] font-bold transition ${period===days?'bg-gold text-white':'bg-mist text-gold'}`}>{days?`${days} jours`:'Tout'}</button>)}<button onClick={()=>setPeriod(30)} className="rounded-full border border-gold/25 px-3 py-2 text-[10px] font-bold text-gold">Réinitialiser</button></div></div><div className="mt-6 grid grid-cols-3 gap-2 sm:max-w-lg sm:gap-4">{[[Users,'Visiteurs',traffic.visitors],[MousePointerClick,'Pages vues',traffic.total],[Clock,'Aujourd’hui',traffic.today]].map(([Icon,label,value])=><div key={label} className="min-w-0 rounded-2xl bg-mist p-3 text-center sm:p-4"><Icon className="mx-auto h-4 w-4 text-gold"/><b className="mt-1 block truncate text-xl">{value}</b><small className="block truncate text-[9px] sm:text-xs">{label}</small></div>)}</div><div className="dashboard-scroll mt-8 min-w-0 overflow-x-auto overscroll-x-contain pb-3"><div className="grid h-40 min-w-[1080px] items-end gap-2" style={{gridTemplateColumns:`repeat(${Math.max(traffic.daily.length,1)}, minmax(0, 1fr))`}}>{traffic.daily.map(item=><div key={item.date} title={`${new Date(item.date).toLocaleDateString('fr-FR')} : ${item.count} vue(s)`} className="group relative min-w-0 rounded-t bg-gradient-to-t from-[#B38A2C] to-[#d9bd73]" style={{height:`${Math.max(8,item.count/maximum*100)}%`}}><span className="absolute -top-5 left-1/2 hidden -translate-x-1/2 text-[9px] font-bold group-hover:block">{item.count}</span></div>)}{!traffic.daily.length&&<p className="col-span-full m-auto text-center text-sm text-black/40">{loading?'Chargement…':'Aucune visite enregistrée pour cette période.'}</p>}</div></div><div className="mt-7"><h3 className="text-xs font-bold uppercase tracking-wider text-gold">Pages les plus visitées</h3><div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3">{traffic.topPages.map(item=><div key={item.path} className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-mist px-3 py-3 text-xs"><span className="min-w-0 truncate capitalize" title={pageName(item.path)}>{pageName(item.path)}</span><b className="shrink-0 text-gold">{item.count}</b></div>)}{!traffic.topPages.length&&<p className="text-xs text-black/40">Aucune page visitée.</p>}</div></div></section>
+function TrafficPanel() {
+  const [traffic, setTraffic] = useState({ total: 0, visitors: 0, today: 0, daily: [], topPages: [] })
+  const [period, setPeriod] = useState(30)
+  const [loading, setLoading] = useState(false)
+
+  const load = (days) => {
+    setLoading(true)
+    getTrafficStats(days)
+      .then((data) => {
+        setTraffic({
+          total: data?.total || 0,
+          visitors: data?.visitors || 0,
+          today: data?.today || 0,
+          daily: Array.isArray(data?.daily) ? data.daily : [],
+          topPages: Array.isArray(data?.topPages) ? data.topPages : [],
+        })
+      })
+      .catch((error) => {
+        if (error?.code !== '42P01') toast.error(error.message)
+      })
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    load(period)
+  }, [period])
+
+  const dailyList = Array.isArray(traffic?.daily) ? traffic.daily : []
+  const topPagesList = Array.isArray(traffic?.topPages) ? traffic.topPages : []
+  const maximum = Math.max(...dailyList.map((item) => item.count), 1)
+
+  const pageName = (path) => {
+    const clean = decodeURIComponent(path || '').replace(/\/+$/, '') || '/'
+    const fixed = {
+      '/': 'Accueil',
+      '/collections': 'Collection',
+      '/galerie': 'Galerie',
+      '/a-propos': 'À propos',
+      '/contact': 'Contact',
+      '/panier': 'Panier',
+      '/commande': 'Finalisation de commande',
+      '/faq': 'Questions fréquentes',
+      '/conditions-generales': 'Conditions générales',
+      '/politique-de-confidentialite': 'Confidentialité',
+      '/mentions-legales': 'Mentions légales',
+      '/livraison-et-retours': 'Livraison et retours',
+    }
+    if (fixed[clean]) return fixed[clean]
+    if (clean.startsWith('/categories/')) return `Catégorie : ${clean.split('/').pop().replaceAll('-', ' ')}`
+    if (clean.startsWith('/collections/')) return `Produit : ${clean.split('/').pop().replaceAll('-', ' ')}`
+    return clean.replaceAll('-', ' ').replaceAll('/', ' ').trim()
+  }
+
+  const periodLabel = period ? `${period} derniers jours` : 'toute la période'
+
+  return (
+    <section className="mt-6 min-w-0 overflow-hidden bg-white p-4 sm:p-6">
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gold">Trafic · {periodLabel}</p>
+          <h2 className="mt-1 font-display text-xl">Visiteurs du site</h2>
+        </div>
+        <div className="flex max-w-full flex-wrap gap-2">
+          {[3, 7, 30, null].map((days) => (
+            <button
+              key={days ?? 'all'}
+              onClick={() => setPeriod(days)}
+              className={`rounded-full px-3 py-2 text-[10px] font-bold transition ${
+                period === days ? 'bg-gold text-white' : 'bg-mist text-gold'
+              }`}
+            >
+              {days ? `${days} jours` : 'Tout'}
+            </button>
+          ))}
+          <button
+            onClick={() => setPeriod(30)}
+            className="rounded-full border border-gold/25 px-3 py-2 text-[10px] font-bold text-gold"
+          >
+            Réinitialiser
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-3 gap-2 sm:max-w-lg sm:gap-4">
+        {[
+          [Users, 'Visiteurs', traffic?.visitors || 0],
+          [MousePointerClick, 'Pages vues', traffic?.total || 0],
+          [Clock, 'Aujourd’hui', traffic?.today || 0],
+        ].map(([Icon, label, value]) => (
+          <div key={label} className="min-w-0 rounded-2xl bg-mist p-3 text-center sm:p-4">
+            <Icon className="mx-auto h-4 w-4 text-gold" />
+            <b className="mt-1 block truncate text-xl">{value}</b>
+            <small className="block truncate text-[9px] sm:text-xs">{label}</small>
+          </div>
+        ))}
+      </div>
+
+      <div className="dashboard-scroll mt-8 min-w-0 overflow-x-auto overscroll-x-contain pb-3">
+        <div
+          className="grid h-40 min-w-[1080px] items-end gap-2"
+          style={{ gridTemplateColumns: `repeat(${Math.max(dailyList.length, 1)}, minmax(0, 1fr))` }}
+        >
+          {dailyList.map((item) => (
+            <div
+              key={item.date}
+              title={`${new Date(item.date).toLocaleDateString('fr-FR')} : ${item.count} vue(s)`}
+              className="group relative min-w-0 rounded-t bg-gradient-to-t from-[#B38A2C] to-[#d9bd73]"
+              style={{ height: `${Math.max(8, (item.count / maximum) * 100)}%` }}
+            >
+              <span className="absolute -top-5 left-1/2 hidden -translate-x-1/2 text-[9px] font-bold group-hover:block">
+                {item.count}
+              </span>
+            </div>
+          ))}
+          {!dailyList.length && (
+            <p className="col-span-full m-auto text-center text-sm text-black/40">
+              {loading ? 'Chargement…' : 'Aucune visite enregistrée pour cette période.'}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-7">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gold">Pages les plus visitées</h3>
+        <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {topPagesList.map((item) => (
+            <div key={item.path} className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-mist px-3 py-3 text-xs">
+              <span className="min-w-0 truncate capitalize" title={pageName(item.path)}>
+                {pageName(item.path)}
+              </span>
+              <b className="shrink-0 text-gold">{item.count}</b>
+            </div>
+          ))}
+          {!topPagesList.length && <p className="text-xs text-black/40">Aucune page visitée.</p>}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export function DashboardPage(){

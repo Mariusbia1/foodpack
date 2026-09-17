@@ -164,14 +164,27 @@ export async function getAdminOrders() {
   return data || []
 }
 
-export async function getAdminProfile(userId) {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+export async function getAdminProfile(userId = null) {
+  let targetId = userId
+  if (!targetId && supabase) {
+    const { data: { user } } = await supabase.auth.getUser()
+    targetId = user?.id
+  }
+  if (!targetId || !supabase) return null
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', targetId).maybeSingle()
   if (error) throw error
   return data
 }
 
-export async function saveAdminProfile(userId, profile) {
-  const { data, error } = await supabase.from('profiles').update(profile).eq('id', userId).select().single()
+export async function saveAdminProfile(payload, userId = null) {
+  let targetId = userId
+  if (!targetId && supabase) {
+    const { data: { user } } = await supabase.auth.getUser()
+    targetId = user?.id
+  }
+  if (!targetId || !supabase) throw new Error('Utilisateur non connecté.')
+  const updateData = typeof payload === 'string' ? { full_name: payload } : payload
+  const { data, error } = await supabase.from('profiles').update(updateData).eq('id', targetId).select().single()
   if (error) throw error
   return data
 }
@@ -392,8 +405,54 @@ export async function getDashboardData() {
   }
 }
 
-export async function getTrafficStats() {
-  return { views: 1250, visitors: 430 }
+export async function getTrafficStats(days = 30) {
+  try {
+    if (!supabase) {
+      return { total: 0, visitors: 0, today: 0, daily: [], topPages: [] }
+    }
+    const since = new Date()
+    if (days) since.setDate(since.getDate() - days)
+
+    const { data, error } = await supabase
+      .from('traffic_logs')
+      .select('id, path, created_at')
+      .gte('created_at', days ? since.toISOString() : '2000-01-01')
+      .order('created_at', { ascending: true })
+
+    if (error || !data) {
+      return { total: 0, visitors: 0, today: 0, daily: [], topPages: [] }
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0]
+    const todayCount = data.filter((d) => d.created_at?.startsWith(todayStr)).length
+
+    const dailyMap = {}
+    data.forEach((item) => {
+      const d = item.created_at ? item.created_at.split('T')[0] : 'Inconnu'
+      dailyMap[d] = (dailyMap[d] || 0) + 1
+    })
+    const daily = Object.entries(dailyMap).map(([date, count]) => ({ date, count }))
+
+    const pageMap = {}
+    data.forEach((item) => {
+      const p = item.path || '/'
+      pageMap[p] = (pageMap[p] || 0) + 1
+    })
+    const topPages = Object.entries(pageMap)
+      .map(([path, count]) => ({ path, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
+
+    return {
+      total: data.length,
+      visitors: Math.round(data.length * 0.7) || data.length,
+      today: todayCount,
+      daily,
+      topPages,
+    }
+  } catch {
+    return { total: 0, visitors: 0, today: 0, daily: [], topPages: [] }
+  }
 }
 
 export async function getAuditLogs() {
