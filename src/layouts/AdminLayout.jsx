@@ -251,15 +251,6 @@ export default function AdminLayout() {
               <span className="rounded bg-slate-200/70 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">⌘K</span>
             </div>
 
-            {/* Quick Add Product Button */}
-            <Link
-              to="/admin/produits/nouveau"
-              className="hidden items-center gap-1.5 rounded-xl bg-black px-3.5 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-slate-800 sm:inline-flex"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Ajouter un produit</span>
-            </Link>
-
             <InstallAppButton compact manifestHref="/admin-manifest.webmanifest" label="Installer App" />
 
             {/* Notifications Dropdown */}
