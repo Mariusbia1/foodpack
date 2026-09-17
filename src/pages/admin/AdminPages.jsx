@@ -1797,6 +1797,16 @@ function SettingsAdmin() {
             />
           </label>
 
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+            Lien TikTok
+            <input
+              value={form.tiktok || ''}
+              onChange={(e) => setForm({ ...form, tiktok: e.target.value })}
+              placeholder="https://tiktok.com/@foodpack"
+              className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+            />
+          </label>
+
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 sm:col-span-2">
             Frais de livraison standard (FCFA)
             <input

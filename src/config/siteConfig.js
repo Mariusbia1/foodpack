@@ -7,9 +7,11 @@ export const siteConfig = {
   phone: '+229 01 00 00 00 00',
   email: 'contact@foodpack.com',
   address: 'Cotonou, Bénin',
-  instagram: 'https://instagram.com',
-  facebook: 'https://facebook.com',
+  instagram: '',
+  facebook: '',
+  tiktok: '',
   currency: 'XOF',
   delivery: 'Livraison express à Cotonou, Calavi et expédition dans tout le Bénin.',
   deliveryFee: 2000,
 }
+

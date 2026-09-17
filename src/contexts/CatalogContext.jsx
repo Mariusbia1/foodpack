@@ -30,6 +30,7 @@ export function CatalogProvider({ children }) {
     address: siteConfig.address,
     instagram: siteConfig.instagram,
     facebook: siteConfig.facebook,
+    tiktok: siteConfig.tiktok,
     delivery_fee: siteConfig.deliveryFee,
     banner_text: 'Inscrivez-vous et profitez de tarifs professionnels dégressifs !',
   })
