@@ -90,6 +90,10 @@ export default function HomePage() {
                 <img
                   src={heroImg}
                   alt="Emballages alimentaires et bouteilles de bissap FOOD PACK"
+                  fetchPriority="high"
+                  decoding="async"
+                  width="1200"
+                  height="896"
                   className="h-[300px] w-full rounded-[18px] object-cover sm:h-[380px] lg:h-[420px] xl:h-[450px]"
                 />
               </div>
