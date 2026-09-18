@@ -60,6 +60,11 @@ Merci de votre retour rapide.`
     const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(body)}`
     window.open(url, '_blank', 'noopener,noreferrer')
     toast.success('Votre demande a été transmise sur WhatsApp !')
+    setName('')
+    setPhone('')
+    setEmail('')
+    setQuantities('')
+    setMessage('')
   }
 
   return (

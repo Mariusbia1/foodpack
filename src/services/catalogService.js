@@ -6,10 +6,10 @@ const mapProduct = (product) => ({
   id: product.id,
   name: product.name,
   slug: product.slug,
-  shortDescription: product.short_description,
-  description: product.description,
-  price: product.price,
-  oldPrice: product.old_price,
+  shortDescription: product.short_description || '',
+  description: product.description || '',
+  price: Number(product.price || 0),
+  oldPrice: product.old_price ? Number(product.old_price) : null,
   rating: Number(product.rating || 5.0),
   ratingCount: product.rating_count || 0,
   category: product.categories?.name || '',
@@ -25,22 +25,14 @@ const mapProduct = (product) => ({
   imageRecords: (product.product_images || [])
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((media) => ({ id: media.id, url: media.url, type: media.media_type || 'image', sortOrder: media.sort_order })),
-  formats: product.formats || [],
-  capacities: product.capacities || [],
+  formats: Array.isArray(product.formats) ? product.formats : [],
+  capacities: Array.isArray(product.capacities) ? product.capacities : [],
   materials: product.materials || '',
-  colors: product.colors || [],
-  sizes: product.sizes || [],
   stockStatus: product.stock_status || 'Disponible',
-  featured: product.featured || false,
-  newProduct: product.new_product || product.new_arrival || false,
-  newArrival: product.new_arrival || product.new_product || false,
-  topSelling: product.top_selling || product.popular || false,
-  popular: product.popular || product.top_selling || false,
-  customizable: product.customizable || false,
-  isPublished: product.is_published,
-  productionTime: product.production_time || 'Expédition sous 24 à 48 h',
-  careInstructions: product.care_instructions || 'Conserver au sec.',
-  deliveryInformation: product.delivery_information || 'Livraison à Cotonou et partout au Bénin.',
+  featured: Boolean(product.featured),
+  newArrival: Boolean(product.new_arrival || product.new_product),
+  topSelling: Boolean(product.top_selling || product.popular),
+  isPublished: product.is_published !== undefined ? Boolean(product.is_published) : true,
 })
 
 export async function getProducts({ includeDrafts = false } = {}) {
@@ -253,30 +245,38 @@ export async function uploadCatalogImage(file) {
 }
 
 export async function saveProduct(product, newFiles = []) {
+  // Normalize formats array
+  let formats = []
+  if (Array.isArray(product.formats)) {
+    formats = product.formats.map((s) => String(s).trim()).filter(Boolean)
+  } else if (typeof product.formats === 'string' && product.formats.trim()) {
+    formats = product.formats.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+
+  // Normalize capacities array
+  let capacities = []
+  if (Array.isArray(product.capacities)) {
+    capacities = product.capacities.map((s) => String(s).trim()).filter(Boolean)
+  } else if (typeof product.capacities === 'string' && product.capacities.trim()) {
+    capacities = product.capacities.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+
   const payload = {
     category_id: product.categoryId ? Number(product.categoryId) : null,
-    name: product.name,
-    slug: product.slug,
-    short_description: product.shortDescription,
-    description: product.description,
-    price: Number(product.price),
-    old_price: product.oldPrice ? Number(product.oldPrice) : null,
-    stock_status: product.stockStatus,
-    featured: product.featured,
-    new_product: product.newProduct ?? product.newArrival ?? false,
-    new_arrival: product.newArrival ?? product.newProduct ?? false,
-    popular: product.popular ?? product.topSelling ?? false,
-    top_selling: product.topSelling ?? product.popular ?? false,
-    customizable: product.customizable,
-    production_time: product.productionTime,
-    materials: product.materials,
-    care_instructions: product.careInstructions,
-    delivery_information: product.deliveryInformation,
-    is_published: product.isPublished,
-    formats: product.formats || [],
-    capacities: product.capacities || [],
-    colors: product.colors || [],
-    sizes: product.sizes || [],
+    name: String(product.name || '').trim(),
+    slug: String(product.slug || '').trim(),
+    short_description: product.shortDescription ? String(product.shortDescription).trim() : null,
+    description: product.description ? String(product.description).trim() : null,
+    price: Math.max(0, Math.round(Number(product.price) || 0)),
+    old_price: product.oldPrice && Number(product.oldPrice) > 0 ? Math.round(Number(product.oldPrice)) : null,
+    stock_status: product.stockStatus || 'Disponible',
+    featured: Boolean(product.featured),
+    new_arrival: Boolean(product.newArrival || product.newProduct),
+    top_selling: Boolean(product.topSelling || product.popular),
+    is_published: product.isPublished !== undefined ? Boolean(product.isPublished) : true,
+    formats,
+    capacities,
+    materials: product.materials ? String(product.materials).trim() : null,
   }
 
   let productId = product.id
@@ -289,7 +289,7 @@ export async function saveProduct(product, newFiles = []) {
     productId = data.id
   }
 
-  if (newFiles.length > 0) {
+  if (newFiles && newFiles.length > 0) {
     const currentMaxSort = (product.imageRecords || []).length
     for (let i = 0; i < newFiles.length; i++) {
       const file = newFiles[i]
@@ -298,7 +298,8 @@ export async function saveProduct(product, newFiles = []) {
         {
           product_id: productId,
           url,
-          media_type: file.type.startsWith('video/') ? 'video' : 'image',
+          alt_text: product.name || 'Emballage FOOD PACK',
+          media_type: file.type?.startsWith('video/') ? 'video' : 'image',
           sort_order: currentMaxSort + i,
         },
       ])
@@ -311,11 +312,11 @@ export async function saveProduct(product, newFiles = []) {
 
 export async function saveCategory(category) {
   const payload = {
-    name: category.name,
-    slug: category.slug,
-    description: category.description,
-    is_active: category.isActive,
-    image_url: category.image || category.image_url,
+    name: String(category.name || '').trim(),
+    slug: String(category.slug || '').trim(),
+    description: category.description ? String(category.description).trim() : null,
+    is_active: category.isActive !== undefined ? Boolean(category.isActive) : true,
+    image_url: category.image || category.image_url || null,
   }
 
   if (category.id) {
@@ -333,11 +334,11 @@ export async function saveGalleryItem(item, file = null) {
   if (file) image_url = await uploadCatalogImage(file)
 
   const payload = {
-    title: item.title,
-    category: item.category,
+    title: String(item.title || '').trim(),
+    category: item.category ? String(item.category).trim() : null,
     image_url,
-    sort_order: item.sortOrder || 0,
-    is_published: item.isPublished ?? true,
+    sort_order: Number(item.sortOrder || 0),
+    is_published: item.isPublished !== undefined ? Boolean(item.isPublished) : true,
   }
 
   if (item.id) {
@@ -352,11 +353,11 @@ export async function saveGalleryItem(item, file = null) {
 
 export async function saveTestimonial(testimonial) {
   const payload = {
-    customer_name: testimonial.name || testimonial.customer_name,
-    city: testimonial.city,
-    content: testimonial.text || testimonial.content,
-    sort_order: testimonial.sortOrder || 0,
-    is_published: testimonial.isPublished ?? true,
+    customer_name: String(testimonial.name || testimonial.customer_name || '').trim(),
+    city: testimonial.city ? String(testimonial.city).trim() : null,
+    content: String(testimonial.text || testimonial.content || '').trim(),
+    sort_order: Number(testimonial.sortOrder || 0),
+    is_published: testimonial.isPublished !== undefined ? Boolean(testimonial.isPublished) : true,
   }
 
   if (testimonial.id) {
@@ -370,9 +371,24 @@ export async function saveTestimonial(testimonial) {
 }
 
 export async function saveSiteSettings(settings) {
-  const { error } = await supabase.from('site_settings').upsert({ id: true, ...settings })
+  const payload = {
+    id: true,
+    shop_name: settings.shop_name || 'FOOD PACK',
+    full_name: settings.full_name || 'Emballages alimentaires & Bouteilles de jus',
+    slogan: settings.slogan || 'Des emballages de qualité professionnelle pour vos boissons et préparations.',
+    whatsapp: settings.whatsapp || '',
+    phone: settings.phone || '',
+    email: settings.email || '',
+    address: settings.address || '',
+    instagram: settings.instagram || '',
+    facebook: settings.facebook || '',
+    delivery_fee: Number(settings.delivery_fee) || 2000,
+    banner_text: settings.banner_text || '',
+  }
+  const { data, error } = await supabase.from('site_settings').upsert(payload).select().maybeSingle()
   if (error) throw error
   notifyCatalogChanged()
+  return data || settings
 }
 
 export async function saveSiteContent(key, value) {

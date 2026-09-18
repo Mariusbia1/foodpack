@@ -16,6 +16,7 @@ import SEO from '../../components/common/SEO'
 import PhoneInput from '../../components/common/PhoneInput'
 import ProductMediaThumb from '../../components/products/ProductMediaThumb'
 import { supabase } from '../../lib/supabase'
+import { formatErrorMessage } from '../../utils/formatError'
 import {
   deleteCategory, deleteGalleryItem, deleteProduct, deleteProductImage, deleteTestimonial,
   getAdminOrders, getAdminProfile, getCategories, getDashboardData, getGallery,
@@ -58,13 +59,7 @@ export function LoginPage() {
       navigate('/admin')
     } catch (error) {
       console.error('Erreur login admin :', error)
-      toast.error(
-        error.message === 'Invalid login credentials'
-          ? 'E-mail ou mot de passe incorrect.'
-          : error.message === 'Email not confirmed'
-          ? 'E-mail non confirmé dans Supabase (cochez Auto Confirm).'
-          : error.message
-      )
+      toast.error(formatErrorMessage(error, 'E-mail ou mot de passe incorrect.'))
     } finally {
       setSubmitting(false)
     }
@@ -277,7 +272,7 @@ function CatalogDashboard() {
       .then(setData)
       .catch((error) => {
         console.error('Erreur getDashboardData:', error)
-        toast.error(error.message)
+        toast.error(formatErrorMessage(error, 'Impossible de charger le tableau de bord.'))
         setData({
           products: [],
           orders: [],
@@ -476,7 +471,7 @@ function TrafficPanel() {
         })
       })
       .catch((error) => {
-        if (error?.code !== '42P01') toast.error(error.message)
+        if (error?.code !== '42P01') toast.error(formatErrorMessage(error, 'Impossible de charger les statistiques.'))
       })
       .finally(() => setLoading(false))
   }
@@ -614,14 +609,14 @@ export function DashboardPage() {
 export function ProductsAdmin() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
-  const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
 
   useEffect(() => {
     getProducts({ includeDrafts: true })
       .then(setItems)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -632,12 +627,12 @@ export function ProductsAdmin() {
       setItems((current) => current.filter((item) => item.id !== product.id))
       toast.success('Produit supprimé du catalogue.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     }
   }
 
   const filtered = items.filter((p) => {
-    const matchesQuery = p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase())
+    const matchesQuery = (p.name || '').toLowerCase().includes(query.toLowerCase()) || (p.category || '').toLowerCase().includes(query.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || p.categorySlug === categoryFilter || p.category === categoryFilter
     return matchesQuery && matchesCategory
   })
@@ -759,34 +754,25 @@ const emptyProduct = {
   oldPrice: '',
   shortDescription: '',
   description: '',
-  colors: [],
-  sizes: [],
+  formats: [],
+  capacities: [],
+  materials: '',
   stockStatus: 'Disponible',
   featured: false,
-  newProduct: true,
-  popular: false,
-  customizable: true,
-  productionTime: '',
-  materials: '',
-  careInstructions: '',
-  deliveryInformation: '',
+  newArrival: true,
+  topSelling: false,
   isPublished: true,
   images: [],
+  imageRecords: [],
 }
 
 const slugify = (value) =>
-  value
+  String(value || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
-
-const normalizeColorEntry = (value) => {
-  const clean = value.trim()
-  return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : ''
-}
-const normalizeSizeEntry = (value) => value.trim()
 
 function ExistingProductImages({ records = [], onChange }) {
   const move = async (index, direction) => {
@@ -799,7 +785,7 @@ function ExistingProductImages({ records = [], onChange }) {
       onChange(next)
       toast.success('Ordre des visuels actualisé.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     }
   }
 
@@ -810,7 +796,7 @@ function ExistingProductImages({ records = [], onChange }) {
       onChange(records.filter((item) => item.id !== record.id))
       toast.success('Visuel supprimé.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     }
   }
 
@@ -874,9 +860,12 @@ export function ProductFormPage() {
         if (editing) {
           const found = nextProducts.find((item) => item.id === Number(id))
           if (found) setProduct(found)
+        } else {
+          setProduct(emptyProduct)
+          setFiles([])
         }
       })
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
   }, [editing, id])
 
   const update = (key, value) => setProduct((current) => ({ ...current, [key]: value }))
@@ -886,10 +875,13 @@ export function ProductFormPage() {
     setSaving(true)
     try {
       await saveProduct({ ...product, slug: product.slug || slugify(product.name) }, files)
-      toast.success('Produit enregistré avec succès dans FOOD PACK.')
+      toast.success(editing ? 'Produit modifié avec succès !' : 'Produit ajouté avec succès dans le catalogue !')
+      setProduct(emptyProduct)
+      setFiles([])
       navigate('/admin/produits')
     } catch (error) {
-      toast.error(error.message)
+      console.error('Erreur saveProduct:', error)
+      toast.error(formatErrorMessage(error, "Impossible d'enregistrer le produit. Vérifiez les informations saisies."))
     } finally {
       setSaving(false)
     }
@@ -897,7 +889,7 @@ export function ProductFormPage() {
 
   const previewFile = files[0]
   const preview = previewFile ? URL.createObjectURL(previewFile) : product.media?.[0]?.url || product.images?.[0]
-  const previewIsVideo = previewFile ? previewFile.type.startsWith('video/') : product.media?.[0]?.type === 'video'
+  const previewIsVideo = previewFile ? previewFile.type?.startsWith('video/') : product.media?.[0]?.type === 'video'
 
   return (
     <>
@@ -912,10 +904,10 @@ export function ProductFormPage() {
         <div className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
           <div className="space-y-4">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-              Nom de l'emballage / Référence
+              Nom de l'emballage / Référence *
               <input
                 required
-                value={product.name}
+                value={product.name || ''}
                 onChange={(e) => update('name', e.target.value)}
                 placeholder="Ex. Bouteille PET Cristal 330ml avec bouchon noir"
                 className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black focus:ring-2 focus:ring-black/5"
@@ -925,16 +917,16 @@ export function ProductFormPage() {
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
               Identifiant URL (slug)
               <input
-                value={product.slug}
+                value={product.slug || ''}
                 onChange={(e) => update('slug', slugify(e.target.value))}
                 placeholder={slugify(product.name) || 'bouteille-pet-cristal-330ml'}
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-xs text-slate-700 outline-none focus:border-black focus:bg-white"
               />
             </label>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Catégorie
+                Catégorie *
                 <select
                   required
                   value={product.categoryId || ''}
@@ -951,24 +943,36 @@ export function ProductFormPage() {
               </label>
 
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Prix unitaire (FCFA)
+                Prix de vente (FCFA) *
                 <input
                   required
                   min="0"
                   type="number"
-                  value={product.price}
+                  value={product.price ?? ''}
                   onChange={(e) => update('price', e.target.value)}
-                  placeholder="Ex. 180"
+                  placeholder="Ex. 6500"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black"
+                />
+              </label>
+
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Ancien prix barré (FCFA)
+                <input
+                  min="0"
+                  type="number"
+                  value={product.oldPrice || ''}
+                  onChange={(e) => update('oldPrice', e.target.value)}
+                  placeholder="Ex. 7500 (Optionnel)"
                   className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black"
                 />
               </label>
             </div>
 
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-              État du stock
+              État du stock *
               <select
                 required
-                value={product.stockStatus}
+                value={product.stockStatus || 'Disponible'}
                 onChange={(e) => update('stockStatus', e.target.value)}
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-black"
               >
@@ -982,9 +986,9 @@ export function ProductFormPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                 Contenances / Capacités
                 <input
-                  value={product.colors?.join(', ') || ''}
-                  onChange={(e) => update('colors', e.target.value.split(',').map(normalizeColorEntry))}
-                  placeholder="250ml, 330ml, 500ml, 1L"
+                  value={Array.isArray(product.capacities) ? product.capacities.join(', ') : product.capacities || ''}
+                  onChange={(e) => update('capacities', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                  placeholder="Ex. 250 ml, 330 ml, 500 ml, 1 Litre"
                   className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
                 />
                 <span className="mt-1 block text-[10px] text-slate-400">Séparées par des virgules</span>
@@ -993,9 +997,9 @@ export function ProductFormPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                 Formats / Conditionnements
                 <input
-                  value={product.sizes?.join(', ') || ''}
-                  onChange={(e) => update('sizes', e.target.value.split(',').map(normalizeSizeEntry))}
-                  placeholder="Lot de 50, Carton de 500"
+                  value={Array.isArray(product.formats) ? product.formats.join(', ') : product.formats || ''}
+                  onChange={(e) => update('formats', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                  placeholder="Ex. Lot de 50, Lot de 100, Carton de 500"
                   className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
                 />
                 <span className="mt-1 block text-[10px] text-slate-400">Séparés par des virgules</span>
@@ -1003,12 +1007,22 @@ export function ProductFormPage() {
             </div>
 
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+              Matériaux & Type de plastique / papier
+              <input
+                value={product.materials || ''}
+                onChange={(e) => update('materials', e.target.value)}
+                placeholder="Ex. PET transparent recyclable / Kraft naturel étanche / PP micro-ondable"
+                className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+              />
+            </label>
+
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
               Description courte
               <textarea
                 rows="2"
                 value={product.shortDescription || ''}
                 onChange={(e) => update('shortDescription', e.target.value)}
-                placeholder="Description rapide affichée sur la boutique…"
+                placeholder="Courte phrase d'accroche pour la boutique et les cartes produits…"
                 className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
               />
             </label>
@@ -1019,32 +1033,10 @@ export function ProductFormPage() {
                 rows="5"
                 value={product.description || ''}
                 onChange={(e) => update('description', e.target.value)}
-                placeholder="Normes alimentaires, étanchéité, conseils d'utilisation…"
+                placeholder="Normes alimentaires, étanchéité, résistance thermique, conseils pour restaurateurs…"
                 className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-xs text-slate-900 outline-none focus:border-black"
               />
             </label>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Délai d'expédition
-                <input
-                  value={product.productionTime || ''}
-                  onChange={(e) => update('productionTime', e.target.value)}
-                  placeholder="Ex. Expédition sous 24h à 48h"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-                />
-              </label>
-
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Matériaux
-                <input
-                  value={product.materials || ''}
-                  onChange={(e) => update('materials', e.target.value)}
-                  placeholder="Ex. Plastique PET alimentaire cristal"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-                />
-              </label>
-            </div>
           </div>
 
           <div className="border-t border-slate-100 pt-4">
@@ -1053,7 +1045,7 @@ export function ProductFormPage() {
               disabled={saving}
               className="w-full rounded-xl bg-black py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
             >
-              {saving ? 'Enregistrement en cours…' : 'Enregistrer le produit'}
+              {saving ? 'Enregistrement en cours…' : editing ? 'Mettre à jour le produit' : 'Enregistrer le produit'}
             </button>
           </div>
         </div>
@@ -1108,16 +1100,7 @@ export function ProductFormPage() {
             <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
-                checked={product.customizable}
-                onChange={(e) => update('customizable', e.target.checked)}
-                className="h-4 w-4 rounded accent-black"
-              />
-              Option logo / personnalisation
-            </label>
-            <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={product.featured}
+                checked={Boolean(product.featured)}
                 onChange={(e) => update('featured', e.target.checked)}
                 className="h-4 w-4 rounded accent-black"
               />
@@ -1126,8 +1109,8 @@ export function ProductFormPage() {
             <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
-                checked={product.newProduct}
-                onChange={(e) => update('newProduct', e.target.checked)}
+                checked={Boolean(product.newArrival)}
+                onChange={(e) => update('newArrival', e.target.checked)}
                 className="h-4 w-4 rounded accent-black"
               />
               Marquer comme Nouveauté
@@ -1135,7 +1118,16 @@ export function ProductFormPage() {
             <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
-                checked={product.isPublished}
+                checked={Boolean(product.topSelling)}
+                onChange={(e) => update('topSelling', e.target.checked)}
+                className="h-4 w-4 rounded accent-black"
+              />
+              Marquer comme Meilleure Vente
+            </label>
+            <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={product.isPublished !== undefined ? Boolean(product.isPublished) : true}
                 onChange={(e) => update('isPublished', e.target.checked)}
                 className="h-4 w-4 rounded accent-black"
               />
@@ -1149,14 +1141,15 @@ export function ProductFormPage() {
 }
 
 export function CategoriesAdmin() {
+  const empty = { name: '', slug: '', description: '', isActive: true }
   const [items, setItems] = useState([])
-  const [form, setForm] = useState({ name: '', slug: '', description: '', isActive: true })
+  const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
 
   const load = () =>
     getCategories({ includeInactive: true })
       .then(setItems)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
 
   useEffect(() => {
     load()
@@ -1167,11 +1160,11 @@ export function CategoriesAdmin() {
     setSaving(true)
     try {
       await saveCategory({ ...form, slug: form.slug || slugify(form.name), image: null })
-      toast.success('Catégorie enregistrée.')
-      setForm({ name: '', slug: '', description: '', isActive: true })
+      toast.success(form.id ? 'Catégorie modifiée avec succès.' : 'Catégorie enregistrée avec succès.')
+      setForm(empty)
       load()
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error, "Impossible d'enregistrer la catégorie."))
     } finally {
       setSaving(false)
     }
@@ -1184,7 +1177,7 @@ export function CategoriesAdmin() {
       setItems((current) => current.filter((item) => item.id !== category.id))
       toast.success('Catégorie supprimée.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error, 'Impossible de supprimer cette catégorie.'))
     }
   }
 
@@ -1196,9 +1189,16 @@ export function CategoriesAdmin() {
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <form onSubmit={submit} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4 h-fit">
-          <h2 className="font-display text-base font-bold text-slate-900">Ajouter une catégorie</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-base font-bold text-slate-900">{form.id ? 'Modifier la catégorie' : 'Ajouter une catégorie'}</h2>
+            {form.id && (
+              <button type="button" onClick={() => setForm(empty)} title="Annuler la modification">
+                <X className="h-4 w-4 text-slate-400 hover:text-black" />
+              </button>
+            )}
+          </div>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-            Nom de la catégorie
+            Nom de la catégorie *
             <input
               required
               value={form.name}
@@ -1231,7 +1231,7 @@ export function CategoriesAdmin() {
             disabled={saving}
             className="w-full rounded-xl bg-black py-3 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
           >
-            {saving ? 'Enregistrement…' : 'Ajouter la catégorie'}
+            {saving ? 'Enregistrement…' : form.id ? 'Enregistrer les modifications' : 'Ajouter la catégorie'}
           </button>
         </form>
 
@@ -1243,13 +1243,24 @@ export function CategoriesAdmin() {
                 <p className="mt-1 text-xs text-slate-400 font-mono">/{item.slug}</p>
                 {item.description && <p className="mt-2 text-xs text-slate-500 line-clamp-2">{item.description}</p>}
               </div>
-              <button
-                onClick={() => remove(item)}
-                className="grid h-8 w-8 place-items-center rounded-lg text-rose-500 hover:bg-rose-50"
-                aria-label={`Supprimer ${item.name}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setForm({ id: item.id, name: item.name || '', slug: item.slug || '', description: item.description || '', isActive: item.isActive !== false })}
+                  className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-black"
+                  aria-label={`Modifier ${item.name}`}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(item)}
+                  className="grid h-8 w-8 place-items-center rounded-lg text-rose-500 hover:bg-rose-50"
+                  aria-label={`Supprimer ${item.name}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </article>
           ))}
           {!items.length && (
@@ -1271,7 +1282,7 @@ export function OrdersAdmin() {
   useEffect(() => {
     getAdminOrders()
       .then(setRows)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -1329,7 +1340,7 @@ export function OrderDetail() {
   useEffect(() => {
     getAdminOrders()
       .then((rows) => setOrder(rows.find((item) => item.id === id) || null))
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
   }, [id])
 
   const changeStatus = async (status) => {
@@ -1338,7 +1349,7 @@ export function OrderDetail() {
       setOrder((current) => ({ ...current, ...updated }))
       toast.success('Statut de la commande mis à jour.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     }
   }
 
@@ -1360,8 +1371,8 @@ export function OrderDetail() {
                   <b className="text-sm font-bold text-slate-900">{item.product_name || 'Emballage FOOD PACK'}</b>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Quantité : <span className="font-bold text-slate-800">{item.quantity}</span>
-                    {item.size ? ` · Format ${item.size}` : ''}
-                    {item.color ? ` · ${item.color}` : ''}
+                    {item.format ? ` · Format ${item.format}` : item.size ? ` · Format ${item.size}` : ''}
+                    {item.capacity ? ` · ${item.capacity}` : item.color ? ` · ${item.color}` : ''}
                   </p>
                 </div>
                 <b className="text-sm font-bold text-slate-900">
@@ -1445,7 +1456,7 @@ function GalleryAdmin() {
   const load = () =>
     getGallery({ includeDrafts: true })
       .then(setItems)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
 
   useEffect(() => {
     load()
@@ -1456,12 +1467,12 @@ function GalleryAdmin() {
     setSaving(true)
     try {
       await saveGalleryItem(form, file)
-      toast.success(form.id ? 'Réalisation modifiée.' : 'Réalisation ajoutée.')
+      toast.success(form.id ? 'Réalisation modifiée avec succès.' : 'Réalisation ajoutée avec succès.')
       setForm(empty)
       setFile(null)
       load()
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error, "Impossible d'enregistrer cette réalisation."))
     } finally {
       setSaving(false)
     }
@@ -1474,7 +1485,7 @@ function GalleryAdmin() {
       load()
       toast.success('Réalisation supprimée.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     }
   }
 
@@ -1495,7 +1506,7 @@ function GalleryAdmin() {
             )}
           </div>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-            Titre
+            Titre *
             <input
               required
               value={form.title}
@@ -1514,9 +1525,9 @@ function GalleryAdmin() {
             />
           </label>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-            Photo ou vidéo
+            Photo ou vidéo {!form.id && '*'}
             <input
-              required={!form.image}
+              required={!form.id && !form.image}
               type="file"
               accept="image/*,video/mp4,video/webm"
               onChange={(e) => setFile(e.target.files[0])}
@@ -1576,7 +1587,7 @@ function TestimonialsAdmin() {
   const load = () =>
     getTestimonials({ includeDrafts: true })
       .then(setItems)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
 
   useEffect(() => {
     load()
@@ -1587,11 +1598,11 @@ function TestimonialsAdmin() {
     setSaving(true)
     try {
       await saveTestimonial(form)
-      toast.success(form.id ? 'Avis modifié.' : 'Avis ajouté.')
+      toast.success(form.id ? 'Avis modifié avec succès.' : 'Témoignage ajouté avec succès.')
       setForm(empty)
       load()
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error, "Impossible d'enregistrer le témoignage."))
     } finally {
       setSaving(false)
     }
@@ -1604,7 +1615,7 @@ function TestimonialsAdmin() {
       load()
       toast.success('Avis supprimé.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     }
   }
 
@@ -1616,9 +1627,16 @@ function TestimonialsAdmin() {
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <form onSubmit={submit} className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4 h-fit">
-          <h2 className="font-display text-base font-bold text-slate-900">{form.id ? 'Modifier l’avis' : 'Nouveau témoignage'}</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-base font-bold text-slate-900">{form.id ? 'Modifier l’avis' : 'Nouveau témoignage'}</h2>
+            {form.id && (
+              <button type="button" onClick={() => setForm(empty)} title="Annuler la modification">
+                <X className="h-4 w-4 text-slate-400 hover:text-black" />
+              </button>
+            )}
+          </div>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-            Nom du client / Établissement
+            Nom du client / Établissement *
             <input
               required
               value={form.name}
@@ -1637,7 +1655,7 @@ function TestimonialsAdmin() {
             />
           </label>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-            Témoignage
+            Témoignage *
             <textarea
               required
               rows="4"
@@ -1694,7 +1712,7 @@ function SettingsAdmin() {
   useEffect(() => {
     getSiteSettings()
       .then(setForm)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
   }, [])
 
   if (!form) {
@@ -1715,7 +1733,7 @@ function SettingsAdmin() {
       setForm(await saveSiteSettings(form))
       toast.success('Paramètres FOOD PACK enregistrés.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     } finally {
       setSaving(false)
     }
@@ -1840,7 +1858,7 @@ function ProfileAdmin() {
   useEffect(() => {
     getAdminProfile()
       .then(setProfile)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
   }, [])
 
   if (!profile) {
@@ -1860,17 +1878,17 @@ function ProfileAdmin() {
     try {
       const nextProfile = await saveAdminProfile(profile.full_name)
       if (password) {
-        if (password.length < 8) throw new Error('Le mot de passe doit contenir au moins 8 caractères.')
+        if (password.length < 6) throw new Error('Le mot de passe doit contenir au moins 6 caractères.')
         if (password !== confirmation) throw new Error('Les mots de passe ne correspondent pas.')
         await updateAdminPassword(password)
         setPassword('')
         setConfirmation('')
-        toast.success('Mot de passe mis à jour.')
+        toast.success('Mot de passe mis à jour avec succès.')
       }
       setProfile({ ...nextProfile, email: profile.email })
       toast.success('Profil administrateur mis à jour.')
     } catch (error) {
-      toast.error(error.message)
+      toast.error(formatErrorMessage(error))
     } finally {
       setSaving(false)
     }
@@ -1910,11 +1928,11 @@ function ProfileAdmin() {
               Nouveau mot de passe
               <input
                 type="password"
-                minLength="8"
+                minLength="6"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="8 caractères minimum"
+                placeholder="6 caractères minimum"
                 className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
               />
             </label>
@@ -1922,7 +1940,7 @@ function ProfileAdmin() {
               Confirmer le mot de passe
               <input
                 type="password"
-                minLength="8"
+                minLength="6"
                 autoComplete="new-password"
                 value={confirmation}
                 onChange={(e) => setConfirmation(e.target.value)}
@@ -1972,7 +1990,7 @@ export function ForgotPasswordPage() {
       redirectTo: `${window.location.origin}/admin/reinitialiser`,
     })
     setLoading(false)
-    if (error) return toast.error(error.message)
+    if (error) return toast.error(formatErrorMessage(error))
     setSent(true)
   }
 
@@ -2031,12 +2049,12 @@ export function ResetPasswordPage() {
 
   const submit = async (e) => {
     e.preventDefault()
-    if (password.length < 8) return toast.error('Le mot de passe doit contenir au moins 8 caractères.')
+    if (password.length < 6) return toast.error('Le mot de passe doit contenir au moins 6 caractères.')
     if (password !== confirmation) return toast.error('Les mots de passe ne correspondent pas.')
     setSaving(true)
     const { error } = await supabase.auth.updateUser({ password })
     setSaving(false)
-    if (error) return toast.error(error.message)
+    if (error) return toast.error(formatErrorMessage(error))
     toast.success('Mot de passe mis à jour avec succès.')
     window.location.replace('/admin')
   }
@@ -2055,11 +2073,11 @@ export function ResetPasswordPage() {
             Nouveau mot de passe
             <input
               required
-              minLength="8"
+              minLength="6"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="8 caractères minimum"
+              placeholder="6 caractères minimum"
               className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black"
             />
           </label>
@@ -2067,7 +2085,7 @@ export function ResetPasswordPage() {
             Confirmer le mot de passe
             <input
               required
-              minLength="8"
+              minLength="6"
               type="password"
               value={confirmation}
               onChange={(e) => setConfirmation(e.target.value)}
@@ -2095,7 +2113,7 @@ export function AuditLogPage() {
   useEffect(() => {
     getAuditLogs()
       .then(setLogs)
-      .catch((error) => toast.error(error.message))
+      .catch((error) => toast.error(formatErrorMessage(error)))
       .finally(() => setLoading(false))
   }, [])
 

@@ -9,6 +9,7 @@ import { createWhatsAppMessage, whatsappUrl } from '../../services/whatsappServi
 import { createOrder } from '../../services/orderService'
 import { useCatalog } from '../../contexts/CatalogContext'
 import PhoneInput from '../../components/common/PhoneInput'
+import { formatErrorMessage } from '../../utils/formatError'
 
 const initialForm = {
   name: '',
@@ -74,7 +75,7 @@ export default function CheckoutPage() {
       clearCart()
       navigate('/commande/confirmation')
     } catch (error) {
-      toast.error(`Erreur lors de la validation : ${error.message}`)
+      toast.error(formatErrorMessage(error, 'Impossible d’enregistrer la commande. Veuillez vérifier vos coordonnées.'))
     } finally {
       setSubmitting(false)
     }
