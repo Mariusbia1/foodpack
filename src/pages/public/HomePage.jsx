@@ -182,7 +182,7 @@ export default function HomePage() {
             >
               {/* Image in Background Right with Soft Gradient Blend */}
               <img
-                src={categories[0]?.image || '/products/bouteille-pet.jpg'}
+                src={categories[0]?.image || '/products/bouteille-pet.webp'}
                 alt="Bouteilles de jus et bissap"
                 className="absolute right-0 top-0 h-full w-3/5 sm:w-2/3 object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
               />
@@ -216,7 +216,7 @@ export default function HomePage() {
               className="group relative flex min-h-[280px] sm:min-h-[310px] flex-col justify-between overflow-hidden rounded-[26px] bg-white p-7 sm:p-8 transition-all duration-300 hover:shadow-xl md:col-span-7 border border-black/5"
             >
               <img
-                src={categories[1]?.image || '/products/boite-kraft.jpg'}
+                src={categories[1]?.image || '/products/boite-kraft.webp'}
                 alt="Emballages kraft étanches"
                 className="absolute right-0 top-0 h-full w-3/5 sm:w-2/3 object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
               />
@@ -248,7 +248,7 @@ export default function HomePage() {
               className="group relative flex min-h-[280px] sm:min-h-[310px] flex-col justify-between overflow-hidden rounded-[26px] bg-white p-7 sm:p-8 transition-all duration-300 hover:shadow-xl md:col-span-7 border border-black/5"
             >
               <img
-                src={categories[2]?.image || '/products/barquette-micro.jpg'}
+                src={categories[2]?.image || '/products/barquette-micro.webp'}
                 alt="Barquettes micro-ondables et contenants aluminium"
                 className="absolute right-0 top-0 h-full w-3/5 sm:w-2/3 object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
               />
@@ -280,7 +280,7 @@ export default function HomePage() {
               className="group relative flex min-h-[280px] sm:min-h-[310px] flex-col justify-between overflow-hidden rounded-[26px] bg-white p-7 sm:p-8 transition-all duration-300 hover:shadow-xl md:col-span-5 border border-black/5"
             >
               <img
-                src={categories[3]?.image || '/products/gobelet-smoothie.jpg'}
+                src={categories[3]?.image || '/products/gobelet-smoothie.webp'}
                 alt="Gobelets smoothies et boîtes à pâtisserie"
                 className="absolute right-0 top-0 h-full w-3/5 sm:w-2/3 object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
               />

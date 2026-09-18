@@ -95,7 +95,7 @@ export function CatalogProvider({ children }) {
             image:
               category.image ||
               fallbackCategories.find((fb) => fb.slug === category.slug)?.image ||
-              '/products/bouteille-pet.jpg',
+              '/products/bouteille-pet.webp',
           }))
         )
       }

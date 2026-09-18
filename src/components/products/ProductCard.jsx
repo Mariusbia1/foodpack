@@ -9,7 +9,7 @@ export default function ProductCard({ product }) {
     : 0
 
   const displayImage =
-    product.images?.[0] || '/products/bouteille-pet.jpg'
+    product.images?.[0] || '/products/bouteille-pet.webp'
 
   return (
     <article className="group relative flex flex-col rounded-[24px] border border-black/5 bg-white p-3 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-black/15 hover:shadow-xl">

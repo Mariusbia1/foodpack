@@ -1,4 +1,4 @@
-# Configuration Supabase — TK SHOP
+# Configuration Supabase — FOOD PACK
 
 ## 1. Créer le projet
 
@@ -8,9 +8,9 @@ Créez un projet sur Supabase, puis attendez que sa base de données soit prête
 
 Dans **SQL Editor**, ouvrez puis exécutez intégralement :
 
-`supabase/migrations/202607280001_initial_schema.sql`
+`supabase/schema_emballages.sql`
 
-Le script crée les tables, les relations, les règles RLS et le bucket public `catalog`.
+Le script crée les tables (`products`, `categories`, `product_images`, `orders`, `order_items`, `gallery_items`, `testimonials`, `site_settings`, `profiles`), les règles de sécurité RLS, les buckets de stockage public `catalog` et `gallery`, ainsi que les données d'initialisation.
 
 ## 3. Configurer le frontend local
 
@@ -31,13 +31,13 @@ npm run dev
 
 ## 4. Créer le compte administrateur
 
-Dans **Authentication → Users**, créez l’utilisatrice avec son e-mail et son mot de passe.
+Dans **Authentication → Users**, créez l’administrateur avec son e-mail et son mot de passe.
 
 Dans **SQL Editor**, remplacez l’adresse ci-dessous et exécutez :
 
 ```sql
 update public.profiles
-set role = 'admin', full_name = 'Administratrice TK SHOP'
+set role = 'admin', full_name = 'Administrateur FOOD PACK'
 where id = (
   select id from auth.users where email = 'admin@exemple.com'
 );
