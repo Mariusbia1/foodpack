@@ -5,11 +5,6 @@ import Footer from '../components/layout/Footer'
 
 export default function PublicLayout() {
   const { pathname } = useLocation()
-  
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
-
   const hideFooterOnCheckout = pathname === '/commande'
 
   return (
