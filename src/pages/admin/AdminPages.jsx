@@ -3,7 +3,8 @@ import { Navigate, Link, useNavigate, useParams } from 'react-router-dom'
 import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
-  AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw
+  AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw,
+  ImagePlus, Upload, Sparkles, Tag
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -853,6 +854,16 @@ export function ProductFormPage() {
   const [saving, setSaving] = useState(false)
   const editing = Boolean(id)
 
+  const quickCapacities = ['250 ml', '330 ml', '500 ml', '750 ml', '1 Litre', '2 Litres', '5 Litres', '100 g', '250 g', '500 g', '1 kg']
+  const quickFormats = ['À l’unité', 'Lot de 25', 'Lot de 50', 'Lot de 100', 'Carton de 250', 'Carton de 500', 'Carton de 1000']
+  const quickMaterials = [
+    'PET transparent recyclable',
+    'PEHD rigide haute densité',
+    'Carton Kraft naturel ingraissable',
+    'Polypropylène (PP) micro-ondable',
+    'Aluminium alimentaire pur',
+  ]
+
   useEffect(() => {
     Promise.all([getCategories(), editing ? getProducts({ includeDrafts: true }) : Promise.resolve([])])
       .then(([nextCategories, nextProducts]) => {
@@ -869,6 +880,36 @@ export function ProductFormPage() {
   }, [editing, id])
 
   const update = (key, value) => setProduct((current) => ({ ...current, [key]: value }))
+
+  const toggleCapacity = (cap) => {
+    const currentList = Array.isArray(product.capacities)
+      ? [...product.capacities]
+      : (product.capacities || '').split(',').map((s) => s.trim()).filter(Boolean)
+    const exists = currentList.includes(cap)
+    const next = exists ? currentList.filter((item) => item !== cap) : [...currentList, cap]
+    update('capacities', next)
+  }
+
+  const toggleFormat = (fmt) => {
+    const currentList = Array.isArray(product.formats)
+      ? [...product.formats]
+      : (product.formats || '').split(',').map((s) => s.trim()).filter(Boolean)
+    const exists = currentList.includes(fmt)
+    const next = exists ? currentList.filter((item) => item !== fmt) : [...currentList, fmt]
+    update('formats', next)
+  }
+
+  const handleFilesAdded = (e) => {
+    const selected = Array.from(e.target.files)
+    if (selected.length) {
+      setFiles((prev) => [...prev, ...selected])
+    }
+    e.target.value = ''
+  }
+
+  const removePendingFile = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -887,19 +928,15 @@ export function ProductFormPage() {
     }
   }
 
-  const previewFile = files[0]
-  const preview = previewFile ? URL.createObjectURL(previewFile) : product.media?.[0]?.url || product.images?.[0]
-  const previewIsVideo = previewFile ? previewFile.type?.startsWith('video/') : product.media?.[0]?.type === 'video'
-
   return (
     <>
       <Title
-        subtitle={editing ? `Modification de « ${product.name} »` : 'Ajoutez un nouveau format d’emballage au catalogue.'}
+        subtitle={editing ? `Modification de « ${product.name} »` : 'Ajoutez un nouveau format d’emballage avec ses photos et variantes au catalogue.'}
       >
         {editing ? 'Modifier le produit' : 'Nouveau produit'}
       </Title>
 
-      <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_380px]">
         {/* Main Details */}
         <div className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
           <div className="space-y-4">
@@ -982,39 +1019,104 @@ export function ProductFormPage() {
               </select>
             </label>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Contenances / Capacités
-                <input
-                  value={Array.isArray(product.capacities) ? product.capacities.join(', ') : product.capacities || ''}
-                  onChange={(e) => update('capacities', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
-                  placeholder="Ex. 250 ml, 330 ml, 500 ml, 1 Litre"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-                />
-                <span className="mt-1 block text-[10px] text-slate-400">Séparées par des virgules</span>
-              </label>
-
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Formats / Conditionnements
-                <input
-                  value={Array.isArray(product.formats) ? product.formats.join(', ') : product.formats || ''}
-                  onChange={(e) => update('formats', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
-                  placeholder="Ex. Lot de 50, Lot de 100, Carton de 500"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-                />
-                <span className="mt-1 block text-[10px] text-slate-400">Séparés par des virgules</span>
-              </label>
+            {/* Contenances / Capacités */}
+            <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Contenances / Capacités (Variantes)
+                </label>
+                <span className="text-[11px] text-slate-400">Cliquez pour ajouter</span>
+              </div>
+              <input
+                value={Array.isArray(product.capacities) ? product.capacities.join(', ') : product.capacities || ''}
+                onChange={(e) => update('capacities', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                placeholder="Ex. 250 ml, 330 ml, 500 ml, 1 Litre"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+              />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {quickCapacities.map((cap) => {
+                  const active = Array.isArray(product.capacities) && product.capacities.includes(cap)
+                  return (
+                    <button
+                      type="button"
+                      key={cap}
+                      onClick={() => toggleCapacity(cap)}
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                        active
+                          ? 'bg-black text-white shadow-xs'
+                          : 'border border-slate-200 bg-white text-slate-600 hover:border-black/40 hover:text-black'
+                      }`}
+                    >
+                      {active ? `✓ ${cap}` : `+ ${cap}`}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-              Matériaux & Type de plastique / papier
+            {/* Formats / Conditionnements */}
+            <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Formats / Conditionnements (Variantes)
+                </label>
+                <span className="text-[11px] text-slate-400">Cliquez pour ajouter</span>
+              </div>
               <input
-                value={product.materials || ''}
-                onChange={(e) => update('materials', e.target.value)}
-                placeholder="Ex. PET transparent recyclable / Kraft naturel étanche / PP micro-ondable"
-                className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                value={Array.isArray(product.formats) ? product.formats.join(', ') : product.formats || ''}
+                onChange={(e) => update('formats', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                placeholder="Ex. Lot de 50, Lot de 100, Carton de 500"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
               />
-            </label>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {quickFormats.map((fmt) => {
+                  const active = Array.isArray(product.formats) && product.formats.includes(fmt)
+                  return (
+                    <button
+                      type="button"
+                      key={fmt}
+                      onClick={() => toggleFormat(fmt)}
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                        active
+                          ? 'bg-black text-white shadow-xs'
+                          : 'border border-slate-200 bg-white text-slate-600 hover:border-black/40 hover:text-black'
+                      }`}
+                    >
+                      {active ? `✓ ${fmt}` : `+ ${fmt}`}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Matériaux */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Matériaux & Type d'emballage
+                <input
+                  value={product.materials || ''}
+                  onChange={(e) => update('materials', e.target.value)}
+                  placeholder="Ex. PET transparent recyclable / Kraft naturel étanche / PP micro-ondable"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                />
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {quickMaterials.map((mat) => (
+                  <button
+                    type="button"
+                    key={mat}
+                    onClick={() => update('materials', mat)}
+                    className={`rounded-lg px-2 py-0.5 text-[10px] font-medium transition ${
+                      product.materials === mat
+                        ? 'bg-slate-800 text-white'
+                        : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {mat}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
               Description courte
@@ -1043,7 +1145,7 @@ export function ProductFormPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-xl bg-black py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
+              className="w-full rounded-xl bg-black py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
             >
               {saving ? 'Enregistrement en cours…' : editing ? 'Mettre à jour le produit' : 'Enregistrer le produit'}
             </button>
@@ -1052,36 +1154,76 @@ export function ProductFormPage() {
 
         {/* Media & Settings Sidebar */}
         <aside className="space-y-6">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
-            <h2 className="font-display text-base font-bold text-slate-900">Photos & Médias</h2>
-            <label className="mt-3 grid aspect-square cursor-pointer place-items-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-center transition hover:border-black hover:bg-slate-100/60">
-              {preview ? (
-                previewIsVideo ? (
-                  <video src={preview} muted controls playsInline className="h-full w-full bg-black object-contain" />
-                ) : (
-                  <img src={preview} alt="" className="h-full w-full object-cover" />
-                )
-              ) : (
-                <div className="p-4">
-                  <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-slate-200 text-slate-700">
-                    <Plus className="h-5 w-5" />
-                  </div>
-                  <p className="mt-2 text-xs font-bold text-slate-700">Ajouter des photos</p>
-                  <p className="mt-1 text-[10px] text-slate-400">JPG, PNG, WebP</p>
+          {/* Multi-Photos Upload Section */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-base font-bold text-slate-900">Photos & Vidéos</h2>
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600">
+                {(product.imageRecords?.length || 0) + files.length} média(s)
+              </span>
+            </div>
+
+            {/* Dropzone to Add Files */}
+            <label className="grid cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/70 p-6 text-center transition hover:border-black hover:bg-slate-100/60">
+              <div className="flex flex-col items-center gap-2">
+                <div className="grid h-10 w-10 place-items-center rounded-full bg-black text-white shadow-xs">
+                  <Upload className="h-5 w-5" />
                 </div>
-              )}
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Ajouter des photos / vidéos</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Sélection multiple supportée (WebP, JPG, PNG, MP4)</p>
+                </div>
+              </div>
               <input
                 type="file"
                 accept="image/*,video/mp4,video/webm,video/quicktime"
                 multiple
-                onChange={(e) => setFiles([...e.target.files])}
+                onChange={handleFilesAdded}
                 className="sr-only"
               />
             </label>
-            <p className="mt-2 text-[10px] text-slate-400">
-              {files.length ? `${files.length} nouveau(x) fichier(s) sélectionné(s)` : 'Visuel HD recommandé'}
-            </p>
 
+            {/* Pending Newly Selected Files */}
+            {files.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+                  Nouvelles photos à enregistrer ({files.length})
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {files.map((file, idx) => {
+                    const isVideo = file.type?.startsWith('video/')
+                    const previewUrl = URL.createObjectURL(file)
+                    return (
+                      <div key={idx} className="group relative overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50/30 p-1.5 shadow-2xs">
+                        {isVideo ? (
+                          <video src={previewUrl} muted className="h-24 w-full rounded-lg bg-black object-cover" />
+                        ) : (
+                          <img src={previewUrl} alt="" className="h-24 w-full rounded-lg object-cover" />
+                        )}
+                        <div className="mt-1 flex items-center justify-between px-1">
+                          <span className="truncate text-[10px] font-medium text-slate-600 max-w-[90px]">
+                            {file.name}
+                          </span>
+                          <span className="text-[9px] text-slate-400">
+                            {Math.round(file.size / 1024)} Ko
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removePendingFile(idx)}
+                          className="absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white shadow-sm hover:bg-rose-600 transition"
+                          title="Retirer cette photo"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Existing Database Images */}
             <ExistingProductImages
               records={product.imageRecords}
               onChange={(records) =>

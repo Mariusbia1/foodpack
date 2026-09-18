@@ -261,10 +261,33 @@ export async function saveProduct(product, newFiles = []) {
     capacities = product.capacities.split(',').map((s) => s.trim()).filter(Boolean)
   }
 
+  let baseSlug = (product.slug || product.name || 'produit')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'produit'
+
+  let finalSlug = baseSlug
+  let productId = product.id ? Number(product.id) : null
+
+  // Ensure unique slug in database
+  if (!productId) {
+    const { data: existing } = await supabase.from('products').select('id').eq('slug', finalSlug).maybeSingle()
+    if (existing) {
+      finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`
+    }
+  } else {
+    const { data: existing } = await supabase.from('products').select('id').eq('slug', finalSlug).neq('id', productId).maybeSingle()
+    if (existing) {
+      finalSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`
+    }
+  }
+
   const payload = {
     category_id: product.categoryId ? Number(product.categoryId) : null,
     name: String(product.name || '').trim(),
-    slug: String(product.slug || '').trim(),
+    slug: finalSlug,
     short_description: product.shortDescription ? String(product.shortDescription).trim() : null,
     description: product.description ? String(product.description).trim() : null,
     price: Math.max(0, Math.round(Number(product.price) || 0)),
@@ -279,14 +302,23 @@ export async function saveProduct(product, newFiles = []) {
     materials: product.materials ? String(product.materials).trim() : null,
   }
 
-  let productId = product.id
   if (productId) {
     const { error } = await supabase.from('products').update(payload).eq('id', productId)
     if (error) throw error
   } else {
-    const { data, error } = await supabase.from('products').insert([payload]).select().single()
-    if (error) throw error
-    productId = data.id
+    let insertResult = await supabase.from('products').insert([payload]).select().single()
+    if (insertResult.error) {
+      // If sequence or slug collision occurred, retry with next max id or modified slug
+      if (insertResult.error.code === '23505') {
+        const { data: maxProd } = await supabase.from('products').select('id').order('id', { ascending: false }).limit(1).maybeSingle()
+        const nextId = (maxProd?.id || 10) + 1
+        const fallbackSlug = `${finalSlug}-${Date.now().toString(36).slice(-4)}`
+        const retryPayload = { ...payload, id: nextId, slug: fallbackSlug }
+        insertResult = await supabase.from('products').insert([retryPayload]).select().single()
+      }
+      if (insertResult.error) throw insertResult.error
+    }
+    productId = insertResult.data.id
   }
 
   if (newFiles && newFiles.length > 0) {

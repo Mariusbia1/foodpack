@@ -446,3 +446,12 @@ values
   ('Aïcha B.', 'Cotonou', 'Les bouteilles de bissap et les boîtes repas kraft sont d’une qualité irréprochable. Livraison en 24h respectée.', 1),
   ('Maison Naya', 'Calavi', 'Nos gâteaux et plats à emporter sont sublimés par ces emballages. Le service client est très réactif.', 2),
   ('Kevin T.', 'Porto-Novo', 'Le meilleur rapport qualité/prix pour les bidons et gobelets de jus au Bénin.', 3);
+
+-- Synchronisation des compteurs de séquences après insertion des identifiants seed
+select setval(pg_get_serial_sequence('public.categories', 'id'), coalesce(max(id), 1)) from public.categories;
+select setval(pg_get_serial_sequence('public.products', 'id'), coalesce(max(id), 1)) from public.products;
+select setval(pg_get_serial_sequence('public.product_images', 'id'), coalesce(max(id), 1)) from public.product_images;
+select setval(pg_get_serial_sequence('public.reviews', 'id'), coalesce(max(id), 1)) from public.reviews;
+select setval(pg_get_serial_sequence('public.testimonials', 'id'), coalesce(max(id), 1)) from public.testimonials;
+select setval(pg_get_serial_sequence('public.promo_codes', 'id'), coalesce(max(id), 1)) from public.promo_codes;
+
