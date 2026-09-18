@@ -180,14 +180,27 @@ export default function CartPage() {
                 </div>
               )}
 
-              <div className="flex justify-between text-black/60">
+              <div className="flex items-center justify-between text-black/60">
                 <span>Frais de livraison</span>
-                <span className="font-bold text-black">{formatCurrency(deliveryFee)}</span>
+                {deliveryFee > 0 ? (
+                  <span className="font-bold text-black">{formatCurrency(deliveryFee)}</span>
+                ) : (
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                    À régler avec le livreur
+                  </span>
+                )}
               </div>
 
-              <div className="border-t border-black/10 pt-4 flex justify-between text-base font-bold">
-                <span className="text-black">Total</span>
-                <span className="text-xl font-black text-black">{formatCurrency(total)}</span>
+              <div className="border-t border-black/10 pt-4">
+                <div className="flex justify-between text-base font-bold">
+                  <span className="text-black">Total</span>
+                  <span className="text-xl font-black text-black">{formatCurrency(total)}</span>
+                </div>
+                {deliveryFee === 0 && (
+                  <p className="mt-1 text-right text-[11px] text-black/50">
+                    Hors frais de livraison (réglés au livreur)
+                  </p>
+                )}
               </div>
             </div>
 

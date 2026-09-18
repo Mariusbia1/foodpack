@@ -414,7 +414,10 @@ export async function saveSiteSettings(settings) {
     address: settings.address || '',
     instagram: settings.instagram || '',
     facebook: settings.facebook || '',
-    delivery_fee: Number(settings.delivery_fee) || 2000,
+    tiktok: settings.tiktok || '',
+    delivery_fee: settings.delivery_fee !== undefined && settings.delivery_fee !== null && settings.delivery_fee !== ''
+      ? Math.max(0, Number(settings.delivery_fee))
+      : 0,
     banner_text: settings.banner_text || '',
   }
   const { data, error } = await supabase.from('site_settings').upsert(payload).select().maybeSingle()
@@ -438,7 +441,14 @@ export async function getDashboardData() {
 
   const pendingOrders = orders.filter((o) => ['new', 'confirmed', 'in_progress'].includes(o.status))
   const completedOrders = orders.filter((o) => o.status !== 'cancelled')
-  const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.total || 0), 0)
+  
+  // Chiffre d'affaires = ventes nettes de produits (sous-total - réductions), sans les frais de livraison
+  const totalRevenue = completedOrders.reduce((sum, o) => {
+    const productRevenue = o.subtotal != null
+      ? Math.max(0, Number(o.subtotal) - Number(o.discount_amount || 0))
+      : Math.max(0, Number(o.total || 0) - Number(o.delivery_fee || 0))
+    return sum + productRevenue
+  }, 0)
 
   return {
     products,

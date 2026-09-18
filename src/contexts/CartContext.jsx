@@ -113,7 +113,11 @@ export function CartProvider({ children }) {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountAmount = promo ? Math.round((subtotal * promo.discountPercent) / 100) : 0
-  const deliveryFee = items.length ? Number(settings?.delivery_fee ?? siteConfig.deliveryFee) : 0
+  const configuredFee = settings?.delivery_fee !== undefined && settings?.delivery_fee !== null
+    ? Number(settings.delivery_fee)
+    : Number(siteConfig.deliveryFee || 0)
+  const deliveryFee = items.length ? Math.max(0, configuredFee) : 0
+  const isCourierDelivery = deliveryFee === 0
   const total = Math.max(0, subtotal - discountAmount + deliveryFee)
 
   const value = useMemo(
@@ -130,9 +134,10 @@ export function CartProvider({ children }) {
       removePromo,
       discountAmount,
       deliveryFee,
+      isCourierDelivery,
       total,
     }),
-    [items, itemCount, subtotal, promo, discountAmount, deliveryFee, total]
+    [items, itemCount, subtotal, promo, discountAmount, deliveryFee, isCourierDelivery, total]
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

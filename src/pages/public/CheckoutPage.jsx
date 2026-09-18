@@ -47,7 +47,12 @@ export default function CheckoutPage() {
       let order = null
       try {
         order = await createOrder(
-          { ...form, promo_code: promo?.code, discount_amount: discountAmount },
+          {
+            ...form,
+            promo_code: promo?.code,
+            discount_amount: discountAmount,
+            delivery_fee: deliveryFee,
+          },
           items
         )
       } catch (err) {
@@ -63,7 +68,9 @@ export default function CheckoutPage() {
         secureTotal,
         discountAmount,
         promo?.code,
-        settings.shop_name
+        settings.shop_name,
+        deliveryFee,
+        subtotal
       )
       window.open(whatsappUrl(waMsg, settings.whatsapp), '_blank', 'noopener,noreferrer')
 
@@ -249,13 +256,26 @@ export default function CheckoutPage() {
                   <span className="font-bold">-{formatCurrency(discountAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-black/60">
+              <div className="flex items-center justify-between text-black/60">
                 <span>Livraison</span>
-                <span className="font-bold text-black">{formatCurrency(deliveryFee)}</span>
+                {deliveryFee > 0 ? (
+                  <span className="font-bold text-black">{formatCurrency(deliveryFee)}</span>
+                ) : (
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                    À régler avec le livreur
+                  </span>
+                )}
               </div>
-              <div className="border-t border-black/10 pt-3 flex justify-between text-base font-bold">
-                <span className="text-black">Total net</span>
-                <span className="text-xl font-black text-black">{formatCurrency(total)}</span>
+              <div className="border-t border-black/10 pt-3">
+                <div className="flex justify-between text-base font-bold">
+                  <span className="text-black">Total net</span>
+                  <span className="text-xl font-black text-black">{formatCurrency(total)}</span>
+                </div>
+                {deliveryFee === 0 && (
+                  <p className="mt-1 text-right text-[11px] text-black/50">
+                    Frais de livraison à régler séparément au coursier
+                  </p>
+                )}
               </div>
             </div>
 

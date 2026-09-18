@@ -6,7 +6,9 @@ export async function createOrder(form, items) {
   // 1. Calculate totals
   const subtotal = items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1), 0)
   const discountAmount = Number(form.discount_amount) || 0
-  const deliveryFee = Number(form.delivery_fee) || 2000
+  const deliveryFee = form.delivery_fee !== undefined && form.delivery_fee !== null
+    ? Math.max(0, Number(form.delivery_fee))
+    : 0
   const total = Math.max(0, subtotal - discountAmount + deliveryFee)
 
   try {

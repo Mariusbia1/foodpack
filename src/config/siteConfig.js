@@ -12,6 +12,6 @@ export const siteConfig = {
   tiktok: '',
   currency: 'XOF',
   delivery: 'Livraison express à Cotonou, Calavi et expédition dans tout le Bénin.',
-  deliveryFee: 2000,
+  deliveryFee: 0,
 }
 

@@ -4,7 +4,7 @@ import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
   AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw,
-  ImagePlus, Upload, Sparkles, Tag
+  ImagePlus, Upload, Sparkles, Tag, Truck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -334,9 +334,9 @@ function CatalogDashboard() {
       icon: Banknote,
       label: 'Chiffre d’affaires',
       value: formatCurrency(stats.revenue ?? 0),
-      note: 'Hors commandes annulées',
+      note: 'Ventes produits nettes (hors livraison)',
       color: 'bg-emerald-600 text-white',
-      trend: 'Total cumulé',
+      trend: 'CA net produits',
     },
   ]
 
@@ -1527,9 +1527,31 @@ export function OrderDetail() {
             )}
           </div>
 
-          <div className="flex justify-between items-center text-base font-black text-slate-900 pt-2">
-            <span>Montant total</span>
-            <span className="text-xl">{formatCurrency(order?.total || 0)}</span>
+          <div className="rounded-xl bg-slate-50 p-4 space-y-2.5 text-xs border border-slate-100">
+            <div className="flex justify-between text-slate-600">
+              <span>Sous-total articles (CA réel)</span>
+              <b className="font-bold text-slate-900">{formatCurrency(order?.subtotal || order?.total || 0)}</b>
+            </div>
+            {(order?.discount_amount || 0) > 0 && (
+              <div className="flex justify-between text-rose-600">
+                <span>Remise promo ({order?.promo_code || 'Code'})</span>
+                <b>-{formatCurrency(order.discount_amount)}</b>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-slate-600">
+              <span>Frais de livraison</span>
+              {(order?.delivery_fee && Number(order.delivery_fee) > 0) ? (
+                <b className="font-bold text-slate-900">{formatCurrency(order.delivery_fee)}</b>
+              ) : (
+                <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
+                  À régler avec le livreur (hors CA)
+                </span>
+              )}
+            </div>
+            <div className="border-t border-slate-200 pt-2.5 flex justify-between items-center text-sm font-black text-slate-900">
+              <span>Montant total commande</span>
+              <span className="text-lg">{formatCurrency(order?.total || 0)}</span>
+            </div>
           </div>
         </div>
 
@@ -1967,16 +1989,85 @@ function SettingsAdmin() {
             />
           </label>
 
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 sm:col-span-2">
-            Frais de livraison standard (FCFA)
-            <input
-              type="number"
-              min="0"
-              value={form.delivery_fee || 0}
-              onChange={(e) => setForm({ ...form, delivery_fee: e.target.value })}
-              className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-            />
-          </label>
+          <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 sm:col-span-2 space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800">
+              <Truck className="h-4 w-4 text-slate-700" />
+              <span>Gestion des frais de livraison</span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label
+                className={`flex cursor-pointer flex-col justify-between rounded-xl border p-4 transition ${
+                  Number(form.delivery_fee || 0) === 0
+                    ? 'border-black bg-white shadow-xs ring-1 ring-black'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="deliveryMode"
+                    checked={Number(form.delivery_fee || 0) === 0}
+                    onChange={() => setForm({ ...form, delivery_fee: 0 })}
+                    className="mt-0.5 accent-black"
+                  />
+                  <div>
+                    <b className="block text-xs font-bold text-slate-900">À régler avec le livreur</b>
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                      Aucun frais fixe ajouté au panier. Le client règle le transport directement au livreur selon sa localisation.
+                    </p>
+                  </div>
+                </div>
+                <span className="mt-3 inline-flex w-fit rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                  Option recommandée
+                </span>
+              </label>
+
+              <label
+                className={`flex cursor-pointer flex-col justify-between rounded-xl border p-4 transition ${
+                  Number(form.delivery_fee || 0) > 0
+                    ? 'border-black bg-white shadow-xs ring-1 ring-black'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="deliveryMode"
+                    checked={Number(form.delivery_fee || 0) > 0}
+                    onChange={() => setForm({ ...form, delivery_fee: Number(form.delivery_fee) > 0 ? Number(form.delivery_fee) : 2000 })}
+                    className="mt-0.5 accent-black"
+                  />
+                  <div>
+                    <b className="block text-xs font-bold text-slate-900">Frais de livraison fixes</b>
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                      Un montant forfaitaire fixe est ajouté au total de chaque commande sur le site.
+                    </p>
+                  </div>
+                </div>
+
+                {Number(form.delivery_fee || 0) > 0 && (
+                  <div className="mt-3">
+                    <label className="block text-[11px] font-bold uppercase text-slate-700">
+                      Montant fixe (FCFA)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="100"
+                      value={form.delivery_fee}
+                      onChange={(e) => setForm({ ...form, delivery_fee: Math.max(0, Number(e.target.value)) })}
+                      className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-black focus:bg-white"
+                    />
+                  </div>
+                )}
+              </label>
+            </div>
+
+            <p className="text-[11px] text-slate-500 italic">
+              💡 Le chiffre d’affaires affiché sur votre tableau de bord comptabilise uniquement les ventes nettes d'emballages et exclut automatiquement les frais de livraison.
+            </p>
+          </div>
         </div>
 
         <button
