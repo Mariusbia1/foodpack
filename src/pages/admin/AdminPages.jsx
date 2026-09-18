@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Link, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
@@ -310,17 +310,19 @@ function CatalogDashboard() {
       icon: Package,
       label: 'Produits au catalogue',
       value: stats.products ?? productsList.length,
-      note: 'Références actives',
+      note: 'Voir toutes les références',
       color: 'bg-slate-900 text-white',
-      trend: '+3 formats',
+      trend: 'Catalogue',
+      link: '/admin/produits',
     },
     {
       icon: ShoppingBag,
       label: 'Commandes totales',
       value: stats.orders ?? ordersList.length,
-      note: 'Depuis le lancement',
+      note: 'Historique des commandes',
       color: 'bg-blue-600 text-white',
-      trend: 'En direct',
+      trend: 'Commandes',
+      link: '/admin/commandes',
     },
     {
       icon: Clock,
@@ -328,7 +330,8 @@ function CatalogDashboard() {
       value: stats.pending ?? 0,
       note: 'En attente ou préparation',
       color: 'bg-amber-500 text-white',
-      trend: 'Prioritaire',
+      trend: 'À traiter',
+      link: '/admin/commandes?status=pending',
     },
     {
       icon: Banknote,
@@ -336,7 +339,8 @@ function CatalogDashboard() {
       value: formatCurrency(stats.revenue ?? 0),
       note: 'Ventes produits nettes (hors livraison)',
       color: 'bg-emerald-600 text-white',
-      trend: 'CA net produits',
+      trend: 'Ventes',
+      link: '/admin/commandes',
     },
   ]
 
@@ -373,27 +377,29 @@ function CatalogDashboard() {
         Tableau de bord
       </Title>
 
-      {/* KPI Cards Grid */}
+      {/* KPI Cards Grid (Clickable) */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((c) => {
           const Icon = c.icon
           return (
-            <div
+            <Link
               key={c.label}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition hover:shadow-md"
+              to={c.link}
+              className="group relative block overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition duration-200 hover:-translate-y-0.5 hover:border-black/40 hover:shadow-md cursor-pointer"
             >
               <div className="flex items-start justify-between">
-                <span className={`grid h-11 w-11 place-items-center rounded-xl ${c.color} shadow-sm`}>
+                <span className={`grid h-11 w-11 place-items-center rounded-xl ${c.color} shadow-sm transition-transform duration-200 group-hover:scale-105`}>
                   <Icon className="h-5 w-5" />
                 </span>
-                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                  {c.trend}
+                <span className="flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 transition group-hover:bg-slate-900 group-hover:text-white">
+                  <span>{c.trend}</span>
+                  <ArrowUpRight className="h-3 w-3" />
                 </span>
               </div>
               <p className="mt-4 text-xs font-medium text-slate-500">{c.label}</p>
               <b className="mt-1 block text-2xl font-black tracking-tight text-slate-900">{c.value}</b>
               <p className="mt-1 text-[11px] text-slate-400">{c.note}</p>
-            </div>
+            </Link>
           )
         })}
       </div>
@@ -1419,9 +1425,18 @@ export function CategoriesAdmin() {
 }
 
 export function OrdersAdmin() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState('all')
+  const statusFilter = searchParams.get('status') || 'all'
+
+  const setStatusFilter = (status) => {
+    if (status === 'all') {
+      setSearchParams({})
+    } else {
+      setSearchParams({ status })
+    }
+  }
 
   useEffect(() => {
     getAdminOrders()
@@ -1430,7 +1445,11 @@ export function OrdersAdmin() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = rows.filter((r) => statusFilter === 'all' || r.status === statusFilter)
+  const filtered = rows.filter((r) => {
+    if (statusFilter === 'all') return true
+    if (statusFilter === 'pending') return ['new', 'confirmed', 'in_progress'].includes(r.status)
+    return r.status === statusFilter
+  })
 
   return (
     <>
@@ -1443,6 +1462,7 @@ export function OrdersAdmin() {
         <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-2xs">
           {[
             ['all', 'Toutes'],
+            ['pending', 'À traiter'],
             ['new', 'Nouvelles'],
             ['confirmed', 'Confirmées'],
             ['in_progress', 'En préparation'],
