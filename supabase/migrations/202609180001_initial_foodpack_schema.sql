@@ -270,6 +270,15 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Rattrapage et assignation automatique du rôle admin à tous les utilisateurs existants
+insert into public.profiles (id, full_name, role)
+select 
+  id, 
+  coalesce(raw_user_meta_data->>'full_name', email), 
+  'admin'
+from auth.users
+on conflict (id) do update set role = 'admin';
+
 -- Trigger notification admin lors d'une nouvelle commande
 create or replace function public.notify_admins_of_new_order()
 returns trigger language plpgsql security definer set search_path = public as $$
