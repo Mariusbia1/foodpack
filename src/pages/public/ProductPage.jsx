@@ -496,11 +496,11 @@ export default function ProductPage() {
                   onChange={(e) => setNewReview({ ...newReview, rating: Number(e.target.value) })}
                   className="mt-1 w-full rounded-xl border border-black/15 bg-[#F0EEED] px-4 py-2.5 text-sm outline-none"
                 >
-                  <option value={5}>⭐⭐⭐⭐⭐ (5/5)</option>
-                  <option value={4}>⭐⭐⭐⭐ (4/5)</option>
-                  <option value={3}>⭐⭐⭐ (3/5)</option>
-                  <option value={2}>⭐⭐ (2/5)</option>
-                  <option value={1}>⭐ (1/5)</option>
+                  <option value={5}>5 / 5 — Excellent</option>
+                  <option value={4}>4 / 5 — Très bien</option>
+                  <option value={3}>3 / 5 — Bien</option>
+                  <option value={2}>2 / 5 — Moyen</option>
+                  <option value={1}>1 / 5 — Insuffisant</option>
                 </select>
               </div>
 

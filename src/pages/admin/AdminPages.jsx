@@ -4,7 +4,7 @@ import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
   AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw,
-  ImagePlus, Upload, Sparkles, Tag, Truck
+  ImagePlus, Upload, Sparkles, Tag, Truck, Check
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -1041,13 +1041,14 @@ export function ProductFormPage() {
                       type="button"
                       key={cap}
                       onClick={() => toggleCapacity(cap)}
-                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                      className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
                         active
                           ? 'bg-black text-white shadow-xs'
                           : 'border border-slate-200 bg-white text-slate-600 hover:border-black/40 hover:text-black'
                       }`}
                     >
-                      {active ? `✓ ${cap}` : `+ ${cap}`}
+                      {active ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3 opacity-60" />}
+                      <span>{cap}</span>
                     </button>
                   )
                 })}
@@ -1076,13 +1077,14 @@ export function ProductFormPage() {
                       type="button"
                       key={fmt}
                       onClick={() => toggleFormat(fmt)}
-                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                      className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
                         active
                           ? 'bg-black text-white shadow-xs'
                           : 'border border-slate-200 bg-white text-slate-600 hover:border-black/40 hover:text-black'
                       }`}
                     >
-                      {active ? `✓ ${fmt}` : `+ ${fmt}`}
+                      {active ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3 opacity-60" />}
+                      <span>{fmt}</span>
                     </button>
                   )
                 })}
@@ -1273,7 +1275,7 @@ export function ProductFormPage() {
                 onChange={(e) => update('isPublished', e.target.checked)}
                 className="h-4 w-4 rounded accent-black"
               />
-              Publier sur la boutique en ligne
+              Publier sur le site
             </label>
           </div>
         </aside>
@@ -2065,7 +2067,7 @@ function SettingsAdmin() {
             </div>
 
             <p className="text-[11px] text-slate-500 italic">
-              💡 Le chiffre d’affaires affiché sur votre tableau de bord comptabilise uniquement les ventes nettes d'emballages et exclut automatiquement les frais de livraison.
+              Note : Le chiffre d’affaires affiché sur votre tableau de bord comptabilise uniquement les ventes nettes d'emballages et exclut automatiquement les frais de livraison.
             </p>
           </div>
         </div>

@@ -25,13 +25,13 @@ Sous-total : ${formatCurrency(item.price * item.quantity)}`
 
   let discountText = ''
   if (discount > 0) {
-    discountText = `\n🏷️ Remise (${promoCode || 'Code Promo'}) : -${formatCurrency(discount)}`
+    discountText = `\nRemise (${promoCode || 'Code Promo'}) : -${formatCurrency(discount)}`
   }
 
   const numericDelivery = Number(deliveryFee) || 0
   const deliveryText = numericDelivery > 0
-    ? `🚚 Frais de livraison : ${formatCurrency(numericDelivery)}`
-    : `🚚 Livraison : À régler directement avec le livreur à la réception`
+    ? `Frais de livraison : ${formatCurrency(numericDelivery)}`
+    : `Livraison : À régler directement avec le livreur à la réception`
 
   const calcSubtotal = subtotal > 0 ? subtotal : items.reduce((s, it) => s + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0)
 
@@ -39,24 +39,24 @@ Sous-total : ${formatCurrency(item.price * item.quantity)}`
 
 Je souhaite passer une commande d’emballages.
 
-👤 *Informations client :*
-• Nom : ${customer.name}
-• Téléphone : ${customer.phone}
-• Ville : ${customer.city}
-• Quartier / Adresse : ${customer.address}
-• Option livraison : ${customer.delivery}
+*INFORMATIONS CLIENT :*
+- Nom : ${customer.name}
+- Téléphone : ${customer.phone}
+- Ville : ${customer.city}
+- Quartier / Adresse : ${customer.address}
+- Option livraison : ${customer.delivery}
 
-📦 *Articles commandés :*
+*ARTICLES COMMANDÉS :*
 
 ${articles}
 
-━━━━━━━━━━━━━━━━━━━
-💵 *Sous-total articles :* ${formatCurrency(calcSubtotal)}${discountText}
+----------------------------------------
+Sous-total articles : ${formatCurrency(calcSubtotal)}${discountText}
 ${deliveryText}
-💰 *Total de la commande : ${formatCurrency(total)}* ${numericDelivery === 0 ? '(hors livraison)' : ''}
-━━━━━━━━━━━━━━━━━━━
+*TOTAL DE LA COMMANDE : ${formatCurrency(total)}* ${numericDelivery === 0 ? '(hors livraison)' : ''}
+----------------------------------------
 
-📝 *Commentaire / Précisions :*
+*COMMENTAIRE / PRÉCISIONS :*
 ${customer.comment || 'Aucun commentaire'}
 
 Merci de me confirmer la disponibilité et l’heure de livraison.`

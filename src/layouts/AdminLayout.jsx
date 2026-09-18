@@ -55,16 +55,8 @@ function SidebarContent({ onNavigate }) {
 
         {/* Navigation Section */}
         <div className="px-3.5 py-6">
-          <div className="mb-2.5 flex items-center justify-between px-3">
+          <div className="mb-2.5 px-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Principal</p>
-            <Link
-              to="/admin/produits/nouveau"
-              onClick={onNavigate}
-              className="flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white transition hover:bg-white/20"
-            >
-              <Plus className="h-3 w-3" />
-              <span>Nouveau</span>
-            </Link>
           </div>
           <nav className="grid gap-1">
             {nav.map(([to, Icon, label]) => (
@@ -101,13 +93,10 @@ function SidebarContent({ onNavigate }) {
         <Link
           to="/"
           onClick={onNavigate}
-          className="mb-3 flex w-full items-center justify-between rounded-xl border border-slate-700/80 bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
+          className="mb-3 flex w-full items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
         >
-          <span className="flex items-center gap-2">
-            <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
-            <span>Voir la boutique en ligne</span>
-          </span>
-          <span className="rounded bg-slate-700/60 px-1.5 py-0.5 text-[9px] text-slate-300">Live</span>
+          <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+          <span>Voir le site</span>
         </Link>
 
         <div className="flex items-center justify-between rounded-xl bg-slate-800/60 p-2.5">

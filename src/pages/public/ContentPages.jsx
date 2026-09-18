@@ -45,13 +45,13 @@ export function ContactPage() {
 
 Je vous contacte pour : *${subjectType}*
 
-👤 *Coordonnées :*
-• Nom : ${name}
-• Téléphone : ${phone}
-• E-mail : ${email || 'Non renseigné'}
-• Quantités estimées : ${quantities || 'À définir'}
+*COORDONNÉES CLIENT :*
+- Nom : ${name}
+- Téléphone : ${phone}
+- E-mail : ${email || 'Non renseigné'}
+- Quantités estimées : ${quantities || 'À définir'}
 
-💬 *Message :*
+*MESSAGE / PRÉCISIONS :*
 ${message || 'Je souhaite obtenir plus d’informations et vos disponibilités.'}
 
 Merci de votre retour rapide.`
