@@ -4,7 +4,7 @@ import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
   AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw,
-  ImagePlus, Upload, Sparkles, Tag, Truck, Check
+  ImagePlus, Upload, Sparkles, Tag, Truck, Check, Layers, Copy
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -763,6 +763,7 @@ const emptyProduct = {
   description: '',
   formats: [],
   capacities: [],
+  variants: [],
   materials: '',
   stockStatus: 'Disponible',
   featured: false,
@@ -860,7 +861,21 @@ export function ProductFormPage() {
   const [saving, setSaving] = useState(false)
   const editing = Boolean(id)
 
-  const quickCapacities = ['250 ml', '330 ml', '500 ml', '750 ml', '1 Litre', '2 Litres', '5 Litres', '100 g', '250 g', '500 g', '1 kg']
+  const quickVariantPresets = [
+    { label: '250 ml', capacity: '250 ml' },
+    { label: '330 ml', capacity: '330 ml' },
+    { label: '500 ml', capacity: '500 ml' },
+    { label: '750 ml', capacity: '750 ml' },
+    { label: '1 Litre', capacity: '1 Litre' },
+    { label: '1.5 Litres', capacity: '1.5 Litres' },
+    { label: '2 Litres', capacity: '2 Litres' },
+    { label: '5 Litres', capacity: '5 Litres' },
+    { label: '100 g', capacity: '100 g' },
+    { label: '250 g', capacity: '250 g' },
+    { label: '500 g', capacity: '500 g' },
+    { label: '1 kg', capacity: '1 kg' },
+  ]
+
   const quickFormats = ['À l’unité', 'Lot de 25', 'Lot de 50', 'Lot de 100', 'Carton de 250', 'Carton de 500', 'Carton de 1000']
   const quickMaterials = [
     'PET transparent recyclable',
@@ -887,13 +902,45 @@ export function ProductFormPage() {
 
   const update = (key, value) => setProduct((current) => ({ ...current, [key]: value }))
 
-  const toggleCapacity = (cap) => {
-    const currentList = Array.isArray(product.capacities)
-      ? [...product.capacities]
-      : (product.capacities || '').split(',').map((s) => s.trim()).filter(Boolean)
-    const exists = currentList.includes(cap)
-    const next = exists ? currentList.filter((item) => item !== cap) : [...currentList, cap]
-    update('capacities', next)
+  const variants = Array.isArray(product.variants) ? product.variants : []
+
+  const addVariant = (preset = {}) => {
+    const newVar = {
+      id: 'var-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6),
+      name: preset.capacity || preset.name || '',
+      capacity: preset.capacity || preset.name || '',
+      format: preset.format || '',
+      price: preset.price || (product.price ? Number(product.price) : ''),
+      old_price: preset.old_price || '',
+      stock_status: preset.stock_status || 'Disponible',
+    }
+    const next = [...variants, newVar]
+    update('variants', next)
+    if (newVar.capacity && (!product.capacities || !product.capacities.includes(newVar.capacity))) {
+      update('capacities', [...(product.capacities || []), newVar.capacity])
+    }
+  }
+
+  const updateVariant = (index, key, value) => {
+    const next = variants.map((v, i) => (i === index ? { ...v, [key]: value } : v))
+    update('variants', next)
+  }
+
+  const duplicateVariant = (index) => {
+    const target = variants[index]
+    if (!target) return
+    const cloned = {
+      ...target,
+      id: 'var-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6),
+      name: target.name ? `${target.name} (copie)` : 'Nouvelle variante',
+    }
+    const next = [...variants.slice(0, index + 1), cloned, ...variants.slice(index + 1)]
+    update('variants', next)
+  }
+
+  const removeVariant = (index) => {
+    const next = variants.filter((_, i) => i !== index)
+    update('variants', next)
   }
 
   const toggleFormat = (fmt) => {
@@ -937,7 +984,7 @@ export function ProductFormPage() {
   return (
     <>
       <Title
-        subtitle={editing ? `Modification de « ${product.name} »` : 'Ajoutez un nouveau format d’emballage avec ses photos et variantes au catalogue.'}
+        subtitle={editing ? `Modification de « ${product.name} »` : 'Ajoutez un nouveau format d’emballage avec ses photos, variantes et tarifs au catalogue.'}
       >
         {editing ? 'Modifier le produit' : 'Nouveau produit'}
       </Title>
@@ -952,7 +999,7 @@ export function ProductFormPage() {
                 required
                 value={product.name || ''}
                 onChange={(e) => update('name', e.target.value)}
-                placeholder="Ex. Bouteille PET Cristal 330ml avec bouchon noir"
+                placeholder="Ex. Bidon Plastique Alimentaire / Bouteille PET Cristal"
                 className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black focus:ring-2 focus:ring-black/5"
               />
             </label>
@@ -986,16 +1033,21 @@ export function ProductFormPage() {
               </label>
 
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                Prix de vente (FCFA) *
+                Prix standard (FCFA) *
                 <input
-                  required
+                  required={!variants.length}
                   min="0"
                   type="number"
                   value={product.price ?? ''}
                   onChange={(e) => update('price', e.target.value)}
-                  placeholder="Ex. 6500"
+                  placeholder={variants.length ? 'Calculé auto depuis variantes' : 'Ex. 6500'}
                   className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black"
                 />
+                {variants.length > 0 && (
+                  <span className="mt-1 block text-[10px] text-slate-500 font-medium">
+                    (Auto-ajusté sur le tarif le plus bas des variantes)
+                  </span>
+                )}
               </label>
 
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -1012,7 +1064,7 @@ export function ProductFormPage() {
             </div>
 
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-              État du stock *
+              État du stock général *
               <select
                 required
                 value={product.stockStatus || 'Disponible'}
@@ -1025,47 +1077,190 @@ export function ProductFormPage() {
               </select>
             </label>
 
-            {/* Contenances / Capacités */}
-            <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Contenances / Capacités (Variantes)
-                </label>
-                <span className="text-[11px] text-slate-400">Cliquez pour ajouter</span>
+            {/* Section Variantes & Tarifs par contenance / format */}
+            <div className="space-y-4 rounded-2xl border-2 border-slate-900/10 bg-slate-50/70 p-5 shadow-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-slate-900" />
+                    <h3 className="font-display text-sm font-bold text-slate-900">
+                      Variantes & Tarifs par contenance / format
+                    </h3>
+                    {variants.length > 0 && (
+                      <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">
+                        {variants.length} variante(s)
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Définissez les différentes capacités (ex. 250 ml, 500 ml, 1 Litre) avec leurs prix distincts. Une seule photo suffit !
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => addVariant()}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-black px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Ajouter une variante</span>
+                </button>
               </div>
-              <input
-                value={Array.isArray(product.capacities) ? product.capacities.join(', ') : product.capacities || ''}
-                onChange={(e) => update('capacities', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
-                placeholder="Ex. 250 ml, 330 ml, 500 ml, 1 Litre"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-              />
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {quickCapacities.map((cap) => {
-                  const active = Array.isArray(product.capacities) && product.capacities.includes(cap)
-                  return (
-                    <button
-                      type="button"
-                      key={cap}
-                      onClick={() => toggleCapacity(cap)}
-                      className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
-                        active
-                          ? 'bg-black text-white shadow-xs'
-                          : 'border border-slate-200 bg-white text-slate-600 hover:border-black/40 hover:text-black'
-                      }`}
+
+              {/* Presets rapides */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Ajout rapide de formats / contenances usuels :
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {quickVariantPresets.map((preset) => {
+                    const active = variants.some((v) => v.capacity === preset.capacity || v.name === preset.capacity)
+                    return (
+                      <button
+                        type="button"
+                        key={preset.label}
+                        onClick={() => addVariant(preset)}
+                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                          active
+                            ? 'border border-emerald-300 bg-emerald-50 text-emerald-800'
+                            : 'border border-slate-200 bg-white text-slate-700 hover:border-black hover:text-black shadow-2xs'
+                        }`}
+                      >
+                        <Plus className="h-3 w-3 opacity-70" />
+                        <span>{preset.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Liste des variantes */}
+              {variants.length > 0 ? (
+                <div className="space-y-3 pt-2">
+                  {variants.map((v, idx) => (
+                    <div
+                      key={v.id || idx}
+                      className="relative rounded-xl border border-slate-200 bg-white p-4 shadow-2xs transition hover:border-slate-300"
                     >
-                      {active ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3 opacity-60" />}
-                      <span>{cap}</span>
-                    </button>
-                  )
-                })}
-              </div>
+                      <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-slate-100 text-[10px] font-black text-slate-700">
+                            {idx + 1}
+                          </span>
+                          <span className="text-xs font-bold text-slate-900">
+                            {v.name || v.capacity || `Variante #${idx + 1}`}
+                          </span>
+                          {v.price ? (
+                            <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
+                              {formatCurrency(Number(v.price))}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => duplicateVariant(idx)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 hover:border-black hover:text-black transition"
+                            title="Dupliquer cette variante"
+                          >
+                            <Copy className="h-3 w-3" />
+                            <span>Dupliquer</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(idx)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-100 transition"
+                            title="Supprimer cette variante"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span>Supprimer</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                          Contenance / Nom *
+                          <input
+                            required
+                            value={v.name || v.capacity || ''}
+                            onChange={(e) => {
+                              updateVariant(idx, 'name', e.target.value)
+                              updateVariant(idx, 'capacity', e.target.value)
+                            }}
+                            placeholder="Ex. 250 ml, 1 Litre..."
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-black"
+                          />
+                        </label>
+
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                          Conditionnement / Format
+                          <input
+                            value={v.format || ''}
+                            onChange={(e) => updateVariant(idx, 'format', e.target.value)}
+                            placeholder="Ex. Lot de 50, Carton..."
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-black"
+                          />
+                        </label>
+
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                          Prix (FCFA) *
+                          <input
+                            required
+                            type="number"
+                            min="0"
+                            value={v.price ?? ''}
+                            onChange={(e) => updateVariant(idx, 'price', e.target.value)}
+                            placeholder="Ex. 1500"
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-black"
+                          />
+                        </label>
+
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                          Ancien prix (FCFA)
+                          <input
+                            type="number"
+                            min="0"
+                            value={v.old_price ?? ''}
+                            onChange={(e) => updateVariant(idx, 'old_price', e.target.value)}
+                            placeholder="Ex. 1800 (Optionnel)"
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-black"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="mt-2.5 flex items-center justify-between">
+                        <label className="flex items-center gap-2 text-xs font-medium text-slate-600">
+                          <span>Disponibilité du stock :</span>
+                          <select
+                            value={v.stock_status || 'Disponible'}
+                            onChange={(e) => updateVariant(idx, 'stock_status', e.target.value)}
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-800 outline-none focus:border-black"
+                          >
+                            <option value="Disponible">Disponible immédiatement</option>
+                            <option value="Sur commande">Sur commande</option>
+                            <option value="Indisponible">Rupture</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-white p-4 text-center">
+                  <p className="text-xs text-slate-500">
+                    Aucune variante tarifaire configurée. Si ce produit a plusieurs contenances ou prix, cliquez sur un bouton ci-dessus pour les ajouter.
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Formats / Conditionnements */}
+            {/* Conditionnements globaux & Formats */}
             <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Formats / Conditionnements (Variantes)
+                  Conditionnements / Conditionnement de vente
                 </label>
                 <span className="text-[11px] text-slate-400">Cliquez pour ajouter</span>
               </div>

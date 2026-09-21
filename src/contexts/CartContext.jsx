@@ -5,7 +5,7 @@ import { useCatalog } from './CatalogContext'
 import { checkPromoCode } from '../services/catalogService'
 
 const CartContext = createContext(null)
-const keyFor = (product, options = {}) => [product.id, options.format || '', options.capacity || '', options.note || ''].join('|')
+const keyFor = (product, options = {}) => [product.id, options.variantId || '', options.format || '', options.capacity || '', options.note || ''].join('|')
 
 export function CartProvider({ children }) {
   const { settings, products } = useCatalog()
@@ -44,6 +44,10 @@ export function CartProvider({ children }) {
 
   const addItem = (product, options = {}) => {
     const lineKey = keyFor(product, options)
+    const finalPrice = options.price !== undefined && options.price !== null
+      ? Number(options.price)
+      : Number(product.price || 0)
+
     setItems((current) => {
       const exists = current.find((item) => item.lineKey === lineKey)
       if (exists) {
@@ -51,9 +55,19 @@ export function CartProvider({ children }) {
           item.lineKey === lineKey ? { ...item, quantity: item.quantity + (options.quantity || 1) } : item
         )
       }
-      return [...current, { ...product, ...options, lineKey, quantity: options.quantity || 1 }]
+      return [
+        ...current,
+        {
+          ...product,
+          ...options,
+          price: finalPrice,
+          lineKey,
+          quantity: options.quantity || 1,
+        },
+      ]
     })
-    toast.success(`${product.name} ajouté au panier !`)
+    const variantLabel = options.capacity || options.format || options.variantName
+    toast.success(`${product.name}${variantLabel ? ` (${variantLabel})` : ''} ajouté au panier !`)
   }
 
   const updateQuantity = (lineKey, quantity) => {

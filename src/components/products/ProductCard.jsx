@@ -3,13 +3,25 @@ import { Star, ArrowRight } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatCurrency'
 
 export default function ProductCard({ product }) {
-  const hasDiscount = product.oldPrice && product.oldPrice > product.price
+  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
+  const variantPrices = hasVariants ? product.variants.map((v) => Number(v.price) || 0).filter((p) => p > 0) : []
+  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : Number(product.price || 0)
+  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : Number(product.price || 0)
+  const isMultiPrice = hasVariants && minPrice < maxPrice
+
+  const hasDiscount = product.oldPrice && product.oldPrice > minPrice
   const discountPercent = hasDiscount
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    ? Math.round(((product.oldPrice - minPrice) / product.oldPrice) * 100)
     : 0
 
   const displayImage =
     product.images?.[0] || '/products/bouteille-pet.webp'
+
+  const capacityList = (product.capacities && product.capacities.length > 0)
+    ? product.capacities
+    : hasVariants
+    ? product.variants.map((v) => v.capacity || v.name).filter(Boolean)
+    : []
 
   return (
     <article className="group relative flex flex-col rounded-[24px] border border-black/5 bg-white p-3 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-black/15 hover:shadow-xl">
@@ -42,6 +54,10 @@ export default function ProductCard({ product }) {
             <span className="rounded-full bg-black/80 px-2.5 py-1 text-[10px] font-bold uppercase text-white shadow-xs">
               Rupture
             </span>
+          ) : hasVariants && variantPrices.length > 1 ? (
+            <span className="rounded-full bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold text-white shadow-xs backdrop-blur-xs">
+              {product.variants.length} formats
+            </span>
           ) : null}
         </div>
 
@@ -57,9 +73,9 @@ export default function ProductCard({ product }) {
       {/* 2. Product Info */}
       <div className="mt-3.5 flex flex-1 flex-col px-1 pb-1">
         {/* Capacities / Formats Preview */}
-        {product.capacities && product.capacities.length > 0 && (
+        {capacityList.length > 0 && (
           <p className="text-[11px] font-medium text-black/50 line-clamp-1">
-            {product.capacities.slice(0, 3).join(' · ')}
+            {capacityList.slice(0, 3).join(' · ')}
           </p>
         )}
 
@@ -93,9 +109,12 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Price & Discounts */}
-        <div className="mt-2.5 flex items-baseline gap-2">
+        <div className="mt-2.5 flex items-baseline gap-1.5">
+          {isMultiPrice && (
+            <span className="text-xs font-semibold text-black/50">Dès</span>
+          )}
           <span className="font-display text-base font-black text-black sm:text-lg">
-            {formatCurrency(product.price)}
+            {formatCurrency(minPrice)}
           </span>
           {hasDiscount && (
             <span className="text-xs font-bold text-black/40 line-through">

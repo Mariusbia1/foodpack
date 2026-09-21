@@ -66,6 +66,7 @@ create table public.products (
   rating_count integer not null default 0,
   formats text[] not null default '{}',       -- Ex: ['Lot de 50', 'Carton de 500', 'Carton de 1000']
   capacities text[] not null default '{}',    -- Ex: ['250 ml', '330 ml', '500 ml', '1 L']
+  variants jsonb not null default '[]'::jsonb, -- Ex: [{"name": "250 ml", "price": 150}, {"name": "500 ml", "price": 250}, {"name": "1 L", "price": 400}]
   materials text,                             -- Ex: 'PET transparent recyclable', 'Carton Kraft ingraissable'
   stock_status text not null default 'Disponible', -- 'Disponible', 'Sur commande', 'Rupture'
   featured boolean not null default false,

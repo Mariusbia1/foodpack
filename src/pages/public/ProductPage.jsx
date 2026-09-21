@@ -50,25 +50,49 @@ export default function ProductPage() {
     )
   }
 
+  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
+
   // Pre-select first options if available
   const availableFormats = product.formats?.length ? product.formats : ['Lot de 50', 'Lot de 100', 'Carton de 500']
   const availableCapacities = product.capacities?.length ? product.capacities : ['Format standard']
 
-  const activeFormat = selectedFormat || availableFormats[0]
-  const activeCapacity = selectedCapacity || availableCapacities[0]
+  const activeVariant = hasVariants ? product.variants[selectedVariantIndex] || product.variants[0] : null
+  const currentPrice = hasVariants && activeVariant ? Number(activeVariant.price) : Number(product.price || 0)
+  const currentOldPrice = hasVariants && activeVariant
+    ? (activeVariant.old_price ? Number(activeVariant.old_price) : null)
+    : (product.oldPrice ? Number(product.oldPrice) : null)
+  const currentStockStatus = hasVariants && activeVariant
+    ? (activeVariant.stock_status || product.stockStatus || 'Disponible')
+    : (product.stockStatus || 'Disponible')
 
-  const hasDiscount = product.oldPrice && product.oldPrice > product.price
+  const activeFormat = selectedFormat || (activeVariant?.format || availableFormats[0])
+  const activeCapacity = selectedCapacity || (activeVariant?.capacity || activeVariant?.name || availableCapacities[0])
+
+  const hasDiscount = currentOldPrice && currentOldPrice > currentPrice
   const discountPercent = hasDiscount
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    ? Math.round(((currentOldPrice - currentPrice) / currentOldPrice) * 100)
     : 0
 
   const handleAddToCart = () => {
-    if (product.stockStatus === 'Rupture') {
-      return toast.error('Ce produit est actuellement en rupture de stock.')
+    if (currentStockStatus === 'Rupture' || currentStockStatus === 'Indisponible') {
+      return toast.error('Cette variante est actuellement en rupture de stock.')
     }
+    const finalCapacity = hasVariants
+      ? activeVariant?.capacity || activeVariant?.name || activeCapacity
+      : activeCapacity
+
+    const finalFormat = hasVariants
+      ? activeVariant?.format || activeFormat
+      : activeFormat
+
     addItem(product, {
-      format: activeFormat,
-      capacity: activeCapacity,
+      variantId: hasVariants ? activeVariant?.id : null,
+      variantName: hasVariants ? activeVariant?.name : null,
+      price: currentPrice,
+      oldPrice: currentOldPrice,
+      format: finalFormat,
+      capacity: finalCapacity,
       quantity,
     })
   }
@@ -199,17 +223,22 @@ export default function ProductPage() {
             {/* Price & Discounts */}
             <div className="mt-4 flex items-center gap-3">
               <span className="text-2xl font-black text-black sm:text-3xl">
-                {formatCurrency(product.price)}
+                {formatCurrency(currentPrice)}
               </span>
               {hasDiscount && (
                 <>
                   <span className="text-2xl font-black text-black/30 line-through sm:text-3xl">
-                    {formatCurrency(product.oldPrice)}
+                    {formatCurrency(currentOldPrice)}
                   </span>
                   <span className="rounded-full bg-[#FF3333]/10 px-3 py-1 text-xs font-black text-[#FF3333]">
                     -{discountPercent}%
                   </span>
                 </>
+              )}
+              {currentStockStatus === 'Rupture' && (
+                <span className="rounded-full bg-black/80 px-3 py-1 text-xs font-bold uppercase text-white">
+                  Rupture de stock
+                </span>
               )}
             </div>
 
@@ -219,53 +248,112 @@ export default function ProductPage() {
 
             <div className="my-6 border-t border-black/10" />
 
-            {/* Contenances / Volumes Pills */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-black/50">
-                Choisir la Contenance / Volume
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2.5">
-                {availableCapacities.map((cap) => (
-                  <button
-                    key={cap}
-                    type="button"
-                    onClick={() => setSelectedCapacity(cap)}
-                    className={`rounded-full px-5 py-2.5 text-xs font-bold transition ${
-                      activeCapacity === cap
-                        ? 'bg-black text-white'
-                        : 'bg-[#F0EEED] text-black/70 hover:bg-black/10'
-                    }`}
-                  >
-                    {cap}
-                  </button>
-                ))}
+            {/* Options Selection (Variants with Prices OR Capacities/Formats) */}
+            {hasVariants ? (
+              <div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-black/50">
+                    Choisir la Contenance / Variante
+                  </p>
+                  <span className="text-xs font-semibold text-black/40">
+                    {product.variants.length} option{product.variants.length > 1 ? 's' : ''} disponible{product.variants.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  {product.variants.map((variant, idx) => {
+                    const isSelected = selectedVariantIndex === idx
+                    const varHasDiscount = variant.old_price && variant.old_price > variant.price
+                    return (
+                      <button
+                        key={variant.id || idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedVariantIndex(idx)
+                          if (variant.capacity) setSelectedCapacity(variant.capacity)
+                          if (variant.format) setSelectedFormat(variant.format)
+                        }}
+                        className={`flex flex-col items-start justify-between rounded-2xl border p-3.5 text-left transition ${
+                          isSelected
+                            ? 'border-black bg-black text-white shadow-md ring-1 ring-black'
+                            : 'border-black/10 bg-[#F0EEED]/60 text-black hover:border-black/30 hover:bg-[#F0EEED]'
+                        }`}
+                      >
+                        <span className="text-xs font-extrabold line-clamp-1">
+                          {variant.name || variant.capacity}
+                        </span>
+                        <div className="mt-2 flex items-baseline gap-1.5">
+                          <span className={`text-sm font-black ${isSelected ? 'text-white' : 'text-black'}`}>
+                            {formatCurrency(variant.price)}
+                          </span>
+                          {varHasDiscount && (
+                            <span className={`text-[10px] line-through ${isSelected ? 'text-white/60' : 'text-black/40'}`}>
+                              {formatCurrency(variant.old_price)}
+                            </span>
+                          )}
+                        </div>
+                        {variant.format && (
+                          <span className={`mt-1 text-[10px] font-medium ${isSelected ? 'text-white/70' : 'text-black/50'}`}>
+                            {variant.format}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Contenances / Volumes Pills */}
+                {availableCapacities.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/50">
+                      Choisir la Contenance / Volume
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2.5">
+                      {availableCapacities.map((cap) => (
+                        <button
+                          key={cap}
+                          type="button"
+                          onClick={() => setSelectedCapacity(cap)}
+                          className={`rounded-full px-5 py-2.5 text-xs font-bold transition ${
+                            activeCapacity === cap
+                              ? 'bg-black text-white'
+                              : 'bg-[#F0EEED] text-black/70 hover:bg-black/10'
+                          }`}
+                        >
+                          {cap}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            <div className="my-6 border-t border-black/10" />
-
-            {/* Formats & Conditionnements Pills */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-black/50">
-                Conditionnement / Format
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2.5">
-                {availableFormats.map((format) => (
-                  <button
-                    key={format}
-                    type="button"
-                    onClick={() => setSelectedFormat(format)}
-                    className={`rounded-full px-5 py-2.5 text-xs font-bold transition ${
-                      activeFormat === format
-                        ? 'bg-black text-white'
-                        : 'bg-[#F0EEED] text-black/70 hover:bg-black/10'
-                    }`}
-                  >
-                    {format}
-                  </button>
-                ))}
+                {/* Formats & Conditionnements Pills */}
+                {availableFormats.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/50">
+                      Conditionnement / Format
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2.5">
+                      {availableFormats.map((format) => (
+                        <button
+                          key={format}
+                          type="button"
+                          onClick={() => setSelectedFormat(format)}
+                          className={`rounded-full px-5 py-2.5 text-xs font-bold transition ${
+                            activeFormat === format
+                              ? 'bg-black text-white'
+                              : 'bg-[#F0EEED] text-black/70 hover:bg-black/10'
+                          }`}
+                        >
+                          {format}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             <div className="my-6 border-t border-black/10" />
 

@@ -27,6 +27,7 @@ const mapProduct = (product) => ({
     .map((media) => ({ id: media.id, url: media.url, type: media.media_type || 'image', sortOrder: media.sort_order })),
   formats: Array.isArray(product.formats) ? product.formats : [],
   capacities: Array.isArray(product.capacities) ? product.capacities : [],
+  variants: Array.isArray(product.variants) ? product.variants : [],
   materials: product.materials || '',
   stockStatus: product.stock_status || 'Disponible',
   featured: Boolean(product.featured),
@@ -284,13 +285,40 @@ export async function saveProduct(product, newFiles = []) {
     }
   }
 
+  // Normalize variants array with custom pricing
+  let variants = []
+  if (Array.isArray(product.variants)) {
+    variants = product.variants
+      .map((v) => ({
+        id: v.id || `var-${Math.random().toString(36).substring(2, 8)}`,
+        name: String(v.name || v.capacity || v.format || '').trim(),
+        capacity: v.capacity ? String(v.capacity).trim() : (v.name ? String(v.name).trim() : null),
+        format: v.format ? String(v.format).trim() : null,
+        price: Math.max(0, Math.round(Number(v.price) || 0)),
+        old_price: v.oldPrice || v.old_price ? Math.max(0, Math.round(Number(v.oldPrice || v.old_price))) : null,
+        stock_status: v.stockStatus || v.stock_status || 'Disponible',
+      }))
+      .filter((v) => v.name && v.price > 0)
+  }
+
+  // If capacities array is empty but variants has capacities, auto-populate capacities for filters
+  if (capacities.length === 0 && variants.length > 0) {
+    capacities = Array.from(new Set(variants.map((v) => v.capacity || v.name).filter(Boolean)))
+  }
+
+  // Base price: if variants are present and base price is 0/empty, use the lowest variant price
+  let finalPrice = Math.max(0, Math.round(Number(product.price) || 0))
+  if (variants.length > 0 && (!finalPrice || finalPrice === 0)) {
+    finalPrice = Math.min(...variants.map((v) => v.price))
+  }
+
   const payload = {
     category_id: product.categoryId ? Number(product.categoryId) : null,
     name: String(product.name || '').trim(),
     slug: finalSlug,
     short_description: product.shortDescription ? String(product.shortDescription).trim() : null,
     description: product.description ? String(product.description).trim() : null,
-    price: Math.max(0, Math.round(Number(product.price) || 0)),
+    price: finalPrice,
     old_price: product.oldPrice && Number(product.oldPrice) > 0 ? Math.round(Number(product.oldPrice)) : null,
     stock_status: product.stockStatus || 'Disponible',
     featured: Boolean(product.featured),
@@ -299,14 +327,27 @@ export async function saveProduct(product, newFiles = []) {
     is_published: product.isPublished !== undefined ? Boolean(product.isPublished) : true,
     formats,
     capacities,
+    variants,
     materials: product.materials ? String(product.materials).trim() : null,
   }
 
   if (productId) {
-    const { error } = await supabase.from('products').update(payload).eq('id', productId)
-    if (error) throw error
+    let { error } = await supabase.from('products').update(payload).eq('id', productId)
+    if (error && error.code === '42703') {
+      // Column 'variants' does not exist yet, fallback without variants column
+      const { variants: _v, ...fallbackPayload } = payload
+      const retry = await supabase.from('products').update(fallbackPayload).eq('id', productId)
+      if (retry.error) throw retry.error
+    } else if (error) {
+      throw error
+    }
   } else {
     let insertResult = await supabase.from('products').insert([payload]).select().single()
+    if (insertResult.error && insertResult.error.code === '42703') {
+      // Column 'variants' does not exist yet, fallback without variants column
+      const { variants: _v, ...fallbackPayload } = payload
+      insertResult = await supabase.from('products').insert([fallbackPayload]).select().single()
+    }
     if (insertResult.error) {
       // If sequence or slug collision occurred, retry with next max id or modified slug
       if (insertResult.error.code === '23505') {
@@ -315,6 +356,10 @@ export async function saveProduct(product, newFiles = []) {
         const fallbackSlug = `${finalSlug}-${Date.now().toString(36).slice(-4)}`
         const retryPayload = { ...payload, id: nextId, slug: fallbackSlug }
         insertResult = await supabase.from('products').insert([retryPayload]).select().single()
+        if (insertResult.error && insertResult.error.code === '42703') {
+          const { variants: _v, ...fallbackRetryPayload } = retryPayload
+          insertResult = await supabase.from('products').insert([fallbackRetryPayload]).select().single()
+        }
       }
       if (insertResult.error) throw insertResult.error
     }
