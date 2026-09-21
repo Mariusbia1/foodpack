@@ -856,6 +856,7 @@ export function ProductFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [product, setProduct] = useState(emptyProduct)
+  const [formatsInput, setFormatsInput] = useState('')
   const [categoryOptions, setCategoryOptions] = useState([])
   const [files, setFiles] = useState([])
   const [saving, setSaving] = useState(false)
@@ -891,9 +892,13 @@ export function ProductFormPage() {
         setCategoryOptions(nextCategories)
         if (editing) {
           const found = nextProducts.find((item) => item.id === Number(id))
-          if (found) setProduct(found)
+          if (found) {
+            setProduct(found)
+            setFormatsInput(Array.isArray(found.formats) ? found.formats.join(', ') : found.formats || '')
+          }
         } else {
           setProduct(emptyProduct)
+          setFormatsInput('')
           setFiles([])
         }
       })
@@ -944,12 +949,15 @@ export function ProductFormPage() {
   }
 
   const toggleFormat = (fmt) => {
-    const currentList = Array.isArray(product.formats)
-      ? [...product.formats]
-      : (product.formats || '').split(',').map((s) => s.trim()).filter(Boolean)
+    const currentList = formatsInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
     const exists = currentList.includes(fmt)
-    const next = exists ? currentList.filter((item) => item !== fmt) : [...currentList, fmt]
-    update('formats', next)
+    const nextList = exists ? currentList.filter((item) => item !== fmt) : [...currentList, fmt]
+    const nextString = nextList.join(', ')
+    setFormatsInput(nextString)
+    update('formats', nextString)
   }
 
   const handleFilesAdded = (e) => {
@@ -968,9 +976,17 @@ export function ProductFormPage() {
     e.preventDefault()
     setSaving(true)
     try {
-      await saveProduct({ ...product, slug: product.slug || slugify(product.name) }, files)
+      await saveProduct(
+        {
+          ...product,
+          formats: formatsInput,
+          slug: product.slug || slugify(product.name),
+        },
+        files
+      )
       toast.success(editing ? 'Produit modifié avec succès !' : 'Produit ajouté avec succès dans le catalogue !')
       setProduct(emptyProduct)
+      setFormatsInput('')
       setFiles([])
       navigate('/admin/produits')
     } catch (error) {
@@ -1262,17 +1278,22 @@ export function ProductFormPage() {
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                   Conditionnements / Conditionnement de vente
                 </label>
-                <span className="text-[11px] text-slate-400">Cliquez pour ajouter</span>
+                <span className="text-[11px] text-slate-400">Tapez librement ou cliquez pour ajouter</span>
               </div>
               <input
-                value={Array.isArray(product.formats) ? product.formats.join(', ') : product.formats || ''}
-                onChange={(e) => update('formats', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                value={formatsInput}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormatsInput(val)
+                  update('formats', val)
+                }}
                 placeholder="Ex. Lot de 50, Lot de 100, Carton de 500"
                 className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
               />
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {quickFormats.map((fmt) => {
-                  const active = Array.isArray(product.formats) && product.formats.includes(fmt)
+                  const activeList = formatsInput.split(',').map((s) => s.trim()).filter(Boolean)
+                  const active = activeList.includes(fmt)
                   return (
                     <button
                       type="button"
