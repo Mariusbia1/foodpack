@@ -33,7 +33,7 @@ export default function HomePage() {
 
   return (
     <>
-      <SEO title="FOOD PACK | Bouteilles de jus, boîtes kraft & emballages alimentaires à Cotonou" />
+      <SEO title="FOOD PACK | Bouteilles de jus, boîtes kraft & emballages alimentaires à Cotonou & Parakou" />
 
       {/* 1. HERO + MARQUEE WRAPPER (Docked precisely to initial viewport) */}
       <div className="flex min-h-[calc(100vh-116px)] flex-col justify-between bg-[#F2F0F1]">
@@ -48,7 +48,7 @@ export default function HomePage() {
 
               <p className="mt-4 max-w-lg text-sm leading-relaxed text-black/70 sm:text-[15px]">
                 Bouteilles PET cristal pour jus de bissap, boîtes repas kraft 100% étanches, barquettes micro-ondables et
-                contenants soignés pour restaurateurs, traiteurs et marques artisanales à Cotonou.
+                contenants soignés pour restaurateurs, traiteurs et marques artisanales à Cotonou, Parakou et partout au Bénin.
               </p>
               
               <div className="mt-6 flex flex-wrap items-center gap-3">

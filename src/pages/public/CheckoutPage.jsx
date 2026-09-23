@@ -149,11 +149,12 @@ export default function CheckoutPage() {
                     className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
                   >
                     <option value="Cotonou">Cotonou</option>
+                    <option value="Parakou">Parakou</option>
                     <option value="Abomey-Calavi">Abomey-Calavi</option>
                     <option value="Porto-Novo">Porto-Novo</option>
-                    <option value="Ouidah">Ouidah</option>
-                    <option value="Parakou">Parakou</option>
                     <option value="Bohicon">Bohicon</option>
+                    <option value="Ouidah">Ouidah</option>
+                    <option value="Natitingou">Natitingou</option>
                     <option value="Autre ville">Autre ville du Bénin</option>
                   </select>
                 </div>
@@ -165,7 +166,7 @@ export default function CheckoutPage() {
                     name="address"
                     value={form.address}
                     onChange={handleChange}
-                    placeholder="Ex. Haie Vive, rue 12, face pharmacie"
+                    placeholder="Ex. Haie Vive / Albarika, rue 12, face pharmacie"
                     className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
                   />
                 </div>
@@ -182,11 +183,11 @@ export default function CheckoutPage() {
                   <option value="Livraison express à domicile / restaurant">
                     Livraison express à domicile / restaurant
                   </option>
-                  <option value="Retrait direct au showroom">
-                    Retrait direct au showroom (Cotonou)
+                  <option value="Retrait direct au showroom (Cotonou / Parakou)">
+                    Retrait direct au showroom (Cotonou / Parakou)
                   </option>
                   <option value="Expédition par gare / transporteur">
-                    Expédition par gare / transporteur (Provinces)
+                    Expédition par gare / transporteur (Toutes villes du Bénin)
                   </option>
                 </select>
               </div>

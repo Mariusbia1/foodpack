@@ -9,7 +9,7 @@ export const faq = [
   },
   {
     question: 'Quels sont les délais et zones de livraison ?',
-    answer: 'Nous livrons sous 24h à Cotonou et Calavi. Pour les autres villes du Bénin (Porto-Novo, Parakou, Bohicon, etc.), les expéditions partent quotidiennement.',
+    answer: 'Nous assurons des livraisons rapides à Cotonou et Parakou principalement (sous 24h). Pour toutes les autres villes du Bénin (Calavi, Porto-Novo, Bohicon, Natitingou, etc.), les expéditions partent quotidiennement.',
   },
   {
     question: 'Proposez-vous des tarifs dégressifs pour les grossistes ?',

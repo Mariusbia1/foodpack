@@ -250,7 +250,7 @@ export function AboutPage() {
 
         <div className="mt-12 space-y-8 text-base leading-relaxed text-black/70">
           <p>
-            Basée à Cotonou au Bénin, <b>FOOD PACK</b> est spécialisée dans la distribution
+            Présente à <b>Cotonou</b> et <b>Parakou</b> au Bénin, <b>FOOD PACK</b> est spécialisée dans la distribution
             d’emballages alimentaires et contenants de haute qualité destinés aux professionnels
             de la restauration, aux producteurs de boissons et jus artisanaux (bissap, baobab, sirops),
             aux pâtissiers et traiteurs.
@@ -261,8 +261,8 @@ export function AboutPage() {
               <p className="mt-2 text-xs font-bold uppercase text-black/60">Sécurité alimentaire</p>
             </div>
             <div className="rounded-[20px] bg-[#F0EEED] p-6 text-center">
-              <b className="block text-3xl font-black text-black">24h</b>
-              <p className="mt-2 text-xs font-bold uppercase text-black/60">Livraison Cotonou & Calavi</p>
+              <b className="block text-3xl font-black text-black">Express</b>
+              <p className="mt-2 text-xs font-bold uppercase text-black/60">Cotonou, Parakou & Tout le Bénin</p>
             </div>
             <div className="rounded-[20px] bg-[#F0EEED] p-6 text-center">
               <b className="block text-3xl font-black text-black">Grossistes</b>

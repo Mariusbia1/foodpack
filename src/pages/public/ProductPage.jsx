@@ -528,8 +528,8 @@ export default function ProductPage() {
               <div className="rounded-[16px] border border-black/10 p-5">
                 <h4 className="font-bold text-black">Quelles sont les modalités de livraison ?</h4>
                 <p className="mt-2 text-sm text-black/60">
-                  Nous livrons sous 24h à Cotonou et Calavi. Pour les autres villes du Bénin,
-                  les départs se font par les gares de transport tous les jours.
+                  Nous assurons des livraisons rapides à Cotonou et Parakou principalement (sous 24h). Pour toutes les autres villes du Bénin,
+                  les départs se font quotidiennement par les gares et transporteurs.
                 </p>
               </div>
               <div className="rounded-[16px] border border-black/10 p-5">

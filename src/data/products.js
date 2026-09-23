@@ -2,7 +2,7 @@ const common = {
   stockStatus: 'Disponible',
   productionTime: 'Expédition sous 24 à 48 h',
   careInstructions: 'Conserver au sec, à l’abri de la chaleur et de l’humidité.',
-  deliveryInformation: 'Livraison express à Cotonou & Calavi. Expédition dans tout le Bénin.',
+  deliveryInformation: 'Livraison express à Cotonou & Parakou. Expédition rapide dans tout le Bénin.',
   ratingCount: 35,
 }
 
