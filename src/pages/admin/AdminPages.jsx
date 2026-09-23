@@ -2982,23 +2982,6 @@ function TeamAdmin() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-                <label className="flex items-start gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.sendEmailLink}
-                    onChange={(e) => setFormData({ ...formData, sendEmailLink: e.target.checked })}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-black focus:ring-black"
-                  />
-                  <div>
-                    <span className="text-xs font-bold text-slate-900">Envoyer un e-mail d'invitation avec lien sécurisé</span>
-                    <p className="text-[11px] text-slate-500">
-                      Le collaborateur recevra automatiquement un e-mail dans sa boîte de réception lui permettant de définir ou changer son mot de passe en 1 clic.
-                    </p>
-                  </div>
-                </label>
-              </div>
-
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
@@ -3012,7 +2995,7 @@ function TeamAdmin() {
                   disabled={creating}
                   className="rounded-xl bg-black px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition"
                 >
-                  {creating ? 'Création et envoi…' : 'Créer & Envoyer l’accès'}
+                  {creating ? 'Création en cours…' : 'Créer le compte'}
                 </button>
               </div>
             </form>
