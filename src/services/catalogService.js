@@ -213,7 +213,7 @@ export async function revokeAdminAccess(targetUserId) {
   return updateAdminRole(targetUserId, 'customer')
 }
 
-export async function createAdminAccount({ email, password, full_name, role = 'admin' }) {
+export async function createAdminAccount({ email, password, full_name, role = 'admin', sendResetEmail = true }) {
   if (!supabase) throw new Error('Supabase non configuré.')
   // Création du compte via Supabase Auth
   const { data, error } = await supabase.auth.signUp({
@@ -240,6 +240,26 @@ export async function createAdminAccount({ email, password, full_name, role = 'a
       })
   }
 
+  // Envoyer l'e-mail de configuration / réinitialisation si souhaité
+  if (sendResetEmail) {
+    try {
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/reinitialiser`,
+      })
+    } catch (err) {
+      console.warn('Envoi e-mail réinitialisation :', err)
+    }
+  }
+
+  return data
+}
+
+export async function sendAdminPasswordResetEmail(email) {
+  if (!supabase) throw new Error('Supabase non configuré.')
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/admin/reinitialiser`,
+  })
+  if (error) throw error
   return data
 }
 

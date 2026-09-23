@@ -4,7 +4,7 @@ import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
   AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw,
-  ImagePlus, Upload, Sparkles, Tag, Truck, Check, Layers, Copy
+  ImagePlus, Upload, Sparkles, Tag, Truck, Check, Layers, Copy, Mail, Key, Send
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -25,7 +25,7 @@ import {
   reorderProductImages, saveAdminProfile, saveCategory, saveGalleryItem, saveProduct,
   saveSiteContent, uploadCatalogImage, saveSiteSettings, saveTestimonial,
   updateAdminEmail, updateAdminPassword, updateAdminRole, createAdminAccount, revokeAdminAccess,
-  updateOrderStatus,
+  sendAdminPasswordResetEmail, updateOrderStatus,
 } from '../../services/catalogService'
 
 export function ProtectedAdminRoute({ children }) {
@@ -2450,6 +2450,7 @@ function TeamAdmin() {
     email: '',
     password: '',
     role: 'admin',
+    sendEmailLink: true,
   })
 
   const loadTeam = async () => {
@@ -2509,6 +2510,40 @@ function TeamAdmin() {
     }
   }
 
+  const handleSendResetEmail = async (targetUser) => {
+    const emailToUse = targetUser.email || targetUser.full_name
+    if (!emailToUse || !emailToUse.includes('@')) {
+      const promptEmail = window.prompt(`Confirmez l'adresse e-mail de ${targetUser.full_name || 'l’administrateur'} :`)
+      if (!promptEmail) return
+      setActionLoadingId(targetUser.id)
+      try {
+        await sendAdminPasswordResetEmail(promptEmail.trim())
+        toast.success(`Lien d'accès envoyé à ${promptEmail.trim()}.`)
+      } catch (error) {
+        toast.error(formatErrorMessage(error, 'Erreur lors de l’envoi de l’e-mail.'))
+      } finally {
+        setActionLoadingId(null)
+      }
+      return
+    }
+
+    setActionLoadingId(targetUser.id)
+    try {
+      await sendAdminPasswordResetEmail(emailToUse)
+      toast.success(`E-mail de configuration / réinitialisation envoyé à ${emailToUse}.`)
+    } catch (error) {
+      toast.error(formatErrorMessage(error, 'Erreur lors de l’envoi de l’e-mail.'))
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleCopyInvitationMessage = (member) => {
+    const text = `Bonjour ${member.full_name || ''},\n\nVous avez été ajouté(e) comme administrateur sur la boutique FOOD PACK Bénin.\n\nLien de connexion : https://www.maurellefoodpack.store/admin/connexion\nLien pour définir ou modifier votre mot de passe : https://www.maurellefoodpack.store/admin/mot-de-passe-oublie\n\nBienvenue dans l'équipe !`
+    navigator.clipboard.writeText(text)
+    toast.success('Message d’invitation copié dans le presse-papier !')
+  }
+
   const handleCreateAdmin = async (e) => {
     e.preventDefault()
     if (!formData.email || !formData.password || !formData.full_name) {
@@ -2525,9 +2560,14 @@ function TeamAdmin() {
         password: formData.password,
         full_name: formData.full_name.trim(),
         role: formData.role,
+        sendResetEmail: Boolean(formData.sendEmailLink),
       })
-      toast.success(`Le compte ${formData.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'} a été créé avec succès.`)
-      setFormData({ full_name: '', email: '', password: '', role: 'admin' })
+      toast.success(
+        formData.sendEmailLink
+          ? `Compte créé ! Un e-mail d'accès et de configuration a été envoyé à ${formData.email}.`
+          : `Compte ${formData.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'} créé avec succès.`
+      )
+      setFormData({ full_name: '', email: '', password: '', role: 'admin', sendEmailLink: true })
       setModalOpen(false)
       await loadTeam()
     } catch (error) {
@@ -2554,7 +2594,7 @@ function TeamAdmin() {
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Title subtitle="Gérez les comptes autorisés, les rôles de gestion et les accès Super Administrateur.">
+        <Title subtitle="Gérez les comptes autorisés, envoyez des invitations par e-mail et définissez les rôles.">
           Équipe & Administrateurs
         </Title>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -2634,7 +2674,7 @@ function TeamAdmin() {
                 Super Administrateur
               </span>
               <p className="text-[11px] text-slate-600 leading-relaxed">
-                Accès illimité. Peut créer et supprimer des administrateurs, modifier les rôles de l'équipe, consulter les logs de sécurité et configurer les paramètres clés du site.
+                Accès illimité. Peut créer et supprimer des administrateurs, envoyer des e-mails d'accès, modifier les rôles de l'équipe et gérer les paramètres clés du site.
               </p>
             </div>
             <div className="rounded-xl border border-blue-200/80 bg-white p-3.5 space-y-1">
@@ -2694,13 +2734,13 @@ function TeamAdmin() {
           <div className="py-12 text-center text-xs text-slate-400">Chargement des membres de l'équipe…</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[750px] text-left text-xs">
+            <table className="w-full min-w-[780px] text-left text-xs">
               <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Membre</th>
                   <th className="px-4 py-3">Rôle & Privilèges</th>
                   <th className="px-4 py-3">Identifiant / Date</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 text-right">Actions & Accès</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -2728,7 +2768,7 @@ function TeamAdmin() {
                                 </span>
                               )}
                             </div>
-                            <span className="text-[11px] text-slate-500">{member.phone || 'Contact non renseigné'}</span>
+                            <span className="text-[11px] text-slate-500">{member.phone || 'Collaborateur Food Pack'}</span>
                           </div>
                         </div>
                       </td>
@@ -2757,44 +2797,64 @@ function TeamAdmin() {
                       </td>
 
                       <td className="px-4 py-3.5 text-right">
-                        {isSuperAdmin ? (
-                          <div className="flex items-center justify-end gap-2">
-                            {/* Toggle role button */}
-                            {isMemberSuperAdmin ? (
-                              <button
-                                onClick={() => handleRoleChange(member, 'admin')}
-                                disabled={actionLoadingId === member.id}
-                                title="Rétrograder en administrateur"
-                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition"
-                              >
-                                {actionLoadingId === member.id ? '…' : 'Passer en Admin'}
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleRoleChange(member, 'superadmin')}
-                                disabled={actionLoadingId === member.id}
-                                title="Promouvoir en Super Administrateur"
-                                className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-100 disabled:opacity-50 transition"
-                              >
-                                {actionLoadingId === member.id ? '…' : 'Promouvoir Super Admin'}
-                              </button>
-                            )}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Send password reset / setup email */}
+                          <button
+                            onClick={() => handleSendResetEmail(member)}
+                            disabled={actionLoadingId === member.id}
+                            title="Envoyer un e-mail pour définir ou réinitialiser le mot de passe"
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition"
+                          >
+                            <Mail className="h-3 w-3 text-slate-500" />
+                            <span className="hidden sm:inline">E-mail d'accès</span>
+                          </button>
 
-                            {/* Revoke button */}
-                            {!isCurrent && (
-                              <button
-                                onClick={() => handleRevoke(member)}
-                                disabled={actionLoadingId === member.id}
-                                title="Révoquer l'accès"
-                                className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 italic">Lecture seule</span>
-                        )}
+                          {/* Copy invitation text */}
+                          <button
+                            onClick={() => handleCopyInvitationMessage(member)}
+                            title="Copier le message d'invitation avec les liens d'accès"
+                            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+
+                          {isSuperAdmin && (
+                            <>
+                              {/* Toggle role button */}
+                              {isMemberSuperAdmin ? (
+                                <button
+                                  onClick={() => handleRoleChange(member, 'admin')}
+                                  disabled={actionLoadingId === member.id}
+                                  title="Rétrograder en administrateur"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition"
+                                >
+                                  {actionLoadingId === member.id ? '…' : 'Passer Admin'}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleRoleChange(member, 'superadmin')}
+                                  disabled={actionLoadingId === member.id}
+                                  title="Promouvoir en Super Administrateur"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-100 disabled:opacity-50 transition"
+                                >
+                                  {actionLoadingId === member.id ? '…' : 'Promouvoir Super Admin'}
+                                </button>
+                              )}
+
+                              {/* Revoke button */}
+                              {!isCurrent && (
+                                <button
+                                  onClick={() => handleRevoke(member)}
+                                  disabled={actionLoadingId === member.id}
+                                  title="Révoquer l'accès"
+                                  className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -2820,7 +2880,7 @@ function TeamAdmin() {
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h2 className="font-display text-lg font-bold text-slate-900">Ajouter un administrateur</h2>
-                <p className="text-xs text-slate-500">Créez un nouveau compte avec accès au panneau de gestion.</p>
+                <p className="text-xs text-slate-500">Créez le compte et envoyez-lui ses accès automatiquement par e-mail.</p>
               </div>
               <button
                 onClick={() => setModalOpen(false)}
@@ -2873,7 +2933,7 @@ function TeamAdmin() {
                   />
                 </label>
                 <span className="mt-1 block text-[10px] text-slate-400">
-                  Le collaborateur pourra modifier son mot de passe depuis son profil.
+                  Le collaborateur pourra soit utiliser ce mot de passe, soit le changer via le lien envoyé dans son e-mail.
                 </span>
               </div>
 
@@ -2922,6 +2982,23 @@ function TeamAdmin() {
                 </div>
               </div>
 
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.sendEmailLink}
+                    onChange={(e) => setFormData({ ...formData, sendEmailLink: e.target.checked })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-black focus:ring-black"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-900">Envoyer un e-mail d'invitation avec lien sécurisé</span>
+                    <p className="text-[11px] text-slate-500">
+                      Le collaborateur recevra automatiquement un e-mail dans sa boîte de réception lui permettant de définir ou changer son mot de passe en 1 clic.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
@@ -2935,7 +3012,7 @@ function TeamAdmin() {
                   disabled={creating}
                   className="rounded-xl bg-black px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition"
                 >
-                  {creating ? 'Création en cours…' : 'Créer le compte'}
+                  {creating ? 'Création et envoi…' : 'Créer & Envoyer l’accès'}
                 </button>
               </div>
             </form>
