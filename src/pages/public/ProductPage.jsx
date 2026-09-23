@@ -136,13 +136,27 @@ export default function ProductPage() {
     .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)
     .slice(0, 4)
 
+  const breadcrumbs = [
+    { name: 'Accueil', url: '/' },
+    { name: 'Catalogue', url: '/collections' },
+    { name: product.category || 'Emballages', url: `/categories/${product.categorySlug}` },
+    { name: product.name, url: `/collections/${product.slug}` },
+  ]
+
   return (
     <>
-      <SEO title={`${product.name} | FOOD PACK`} />
+      <SEO
+        title={`${product.name} | Grossiste FOOD PACK Bénin`}
+        description={product.shortDescription || product.description || `Commandez ${product.name} en gros et demi-gros à Cotonou et Parakou chez FOOD PACK.`}
+        image={images[0]}
+        type="product"
+        productData={product}
+        breadcrumbs={breadcrumbs}
+      />
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Breadcrumbs */}
-        <nav className="mb-8 flex items-center gap-2 text-xs text-black/50">
+        <nav className="mb-8 flex items-center gap-2 text-xs text-black/50" aria-label="Fil d'Ariane">
           <Link to="/" className="hover:text-black">
             Accueil
           </Link>
@@ -176,6 +190,8 @@ export default function ProductPage() {
                     <img
                       src={imgUrl}
                       alt={`${product.name} vue ${i + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-contain mix-blend-multiply"
                     />
                   </button>
@@ -188,6 +204,8 @@ export default function ProductPage() {
               <img
                 src={images[activeImage] || images[0]}
                 alt={product.name}
+                fetchPriority="high"
+                decoding="async"
                 className="h-full w-full object-contain mix-blend-multiply transition duration-300 hover:scale-105"
               />
             </div>

@@ -96,6 +96,17 @@ export default function ShopPage({ categorySlug }) {
   const activeCategoryObj = categories.find((c) => c.slug === category)
   const currentTitle = category === 'tous' ? 'Tous les emballages' : activeCategoryObj?.name || 'Catalogue'
 
+  const breadcrumbs = [
+    { name: 'Accueil', url: '/' },
+    { name: 'Catalogue', url: '/collections' },
+    ...(category !== 'tous' ? [{ name: currentTitle, url: `/categories/${category}` }] : []),
+  ]
+
+  const seoDescription =
+    category === 'tous'
+      ? 'Découvrez tout notre catalogue d’emballages alimentaires et bouteilles PET pour jus à Cotonou et Parakou : boîtes kraft, barquettes, gobelets au meilleur prix.'
+      : `Achetez vos ${currentTitle.toLowerCase()} en gros et demi-gros à Cotonou et Parakou. Emballages alimentaires de qualité supérieure livrés partout au Bénin.`
+
   const resetFilters = () => {
     setCategory('tous')
     setSelectedCapacity('tous')
@@ -108,7 +119,11 @@ export default function ShopPage({ categorySlug }) {
 
   return (
     <>
-      <SEO title={`${currentTitle} | FOOD PACK`} />
+      <SEO
+        title={`${currentTitle} | Boutique FOOD PACK Bénin`}
+        description={seoDescription}
+        breadcrumbs={breadcrumbs}
+      />
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Breadcrumb */}

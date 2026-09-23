@@ -4,9 +4,7 @@ import LoadingScreen from './components/common/LoadingScreen'
 import ScrollToTop from './components/common/ScrollToTop'
 import { useCatalog } from './contexts/CatalogContext'
 
-export default function App(){
-  const {loading}=useCatalog()
-  if(loading)return <LoadingScreen/>
+export default function App() {
   return (
     <>
       <ScrollToTop />

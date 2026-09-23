@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { compressImage } from '../utils/imageOptimizer'
 
 const notifyCatalogChanged = () => window.dispatchEvent(new Event('tk-catalog-changed'))
 
@@ -237,9 +238,11 @@ export async function deleteTestimonial(testimonialId) {
 }
 
 export async function uploadCatalogImage(file) {
-  const extension = file.name.split('.').pop()
+  // Automatically optimize and compress images (downsampling + WebP conversion)
+  const optimizedFile = await compressImage(file)
+  const extension = optimizedFile.name.split('.').pop()
   const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${extension}`
-  const { error } = await supabase.storage.from('catalog').upload(filename, file)
+  const { error } = await supabase.storage.from('catalog').upload(filename, optimizedFile)
   if (error) throw error
   const { data } = supabase.storage.from('catalog').getPublicUrl(filename)
   return data.publicUrl
