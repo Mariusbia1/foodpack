@@ -1,72 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://maurellefoodpack.store/</loc>
+    <loc>https://www.maurellefoodpack.store/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/collections</loc>
+    <loc>https://www.maurellefoodpack.store/collections</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/categories/jus-boissons</loc>
+    <loc>https://www.maurellefoodpack.store/categories/jus-boissons</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/categories/emballages-kraft</loc>
+    <loc>https://www.maurellefoodpack.store/categories/emballages-kraft</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/categories/plats-barquettes</loc>
+    <loc>https://www.maurellefoodpack.store/categories/plats-barquettes</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/categories/gobelets-patisserie</loc>
+    <loc>https://www.maurellefoodpack.store/categories/gobelets-patisserie</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/galerie</loc>
+    <loc>https://www.maurellefoodpack.store/galerie</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/a-propos</loc>
+    <loc>https://www.maurellefoodpack.store/a-propos</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/faq</loc>
+    <loc>https://www.maurellefoodpack.store/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/contact</loc>
+    <loc>https://www.maurellefoodpack.store/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/livraison-et-retours</loc>
+    <loc>https://www.maurellefoodpack.store/livraison-et-retours</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/conditions-generales</loc>
+    <loc>https://www.maurellefoodpack.store/conditions-generales</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/politique-de-confidentialite</loc>
+    <loc>https://www.maurellefoodpack.store/politique-de-confidentialite</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://maurellefoodpack.store/mentions-legales</loc>
+    <loc>https://www.maurellefoodpack.store/mentions-legales</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

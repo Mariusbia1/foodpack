@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async'
 import { useLocation } from 'react-router-dom'
 import { siteConfig } from '../../config/siteConfig'
 
-const BASE_DOMAIN = 'https://maurellefoodpack.store'
+const BASE_DOMAIN = 'https://www.maurellefoodpack.store'
 
 export default function SEO({
   title,
