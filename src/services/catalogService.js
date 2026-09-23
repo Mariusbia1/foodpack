@@ -215,11 +215,14 @@ export async function revokeAdminAccess(targetUserId) {
 
 export async function createAdminAccount({ email, password, full_name, role = 'admin', sendResetEmail = true }) {
   if (!supabase) throw new Error('Supabase non configuré.')
+  const siteOrigin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://www.maurellefoodpack.store'
+
   // Création du compte via Supabase Auth
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${siteOrigin}/admin/reinitialiser`,
       data: {
         full_name,
         role,
@@ -244,7 +247,7 @@ export async function createAdminAccount({ email, password, full_name, role = 'a
   if (sendResetEmail) {
     try {
       await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/admin/reinitialiser`,
+        redirectTo: `${siteOrigin}/admin/reinitialiser`,
       })
     } catch (err) {
       console.warn('Envoi e-mail réinitialisation :', err)
@@ -256,8 +259,9 @@ export async function createAdminAccount({ email, password, full_name, role = 'a
 
 export async function sendAdminPasswordResetEmail(email) {
   if (!supabase) throw new Error('Supabase non configuré.')
+  const siteOrigin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://www.maurellefoodpack.store'
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/admin/reinitialiser`,
+    redirectTo: `${siteOrigin}/admin/reinitialiser`,
   })
   if (error) throw error
   return data
