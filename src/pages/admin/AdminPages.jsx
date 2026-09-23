@@ -20,11 +20,12 @@ import { supabase } from '../../lib/supabase'
 import { formatErrorMessage } from '../../utils/formatError'
 import {
   deleteCategory, deleteGalleryItem, deleteProduct, deleteProductImage, deleteTestimonial,
-  getAdminOrders, getAdminProfile, getCategories, getDashboardData, getGallery,
+  getAdminOrders, getAdminProfile, getAdminTeam, getCategories, getDashboardData, getGallery,
   getProducts, getSiteContent, getSiteSettings, getTestimonials, getTrafficStats, getAuditLogs,
   reorderProductImages, saveAdminProfile, saveCategory, saveGalleryItem, saveProduct,
   saveSiteContent, uploadCatalogImage, saveSiteSettings, saveTestimonial,
-  updateAdminEmail, updateAdminPassword, updateOrderStatus,
+  updateAdminEmail, updateAdminPassword, updateAdminRole, createAdminAccount, revokeAdminAccess,
+  updateOrderStatus,
 } from '../../services/catalogService'
 
 export function ProtectedAdminRoute({ children }) {
@@ -2434,9 +2435,521 @@ function ProfileAdmin() {
   )
 }
 
+function TeamAdmin() {
+  const { profile: currentProfile, isSuperAdmin } = useAdminAuth()
+  const [team, setTeam] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [actionLoadingId, setActionLoadingId] = useState(null)
+  const [showSqlHelper, setShowSqlHelper] = useState(false)
+
+  const [formData, setFormData] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    role: 'admin',
+  })
+
+  const loadTeam = async () => {
+    setLoading(true)
+    try {
+      const data = await getAdminTeam()
+      setTeam(data)
+    } catch (error) {
+      toast.error(formatErrorMessage(error, 'Impossible de charger l’équipe.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadTeam()
+  }, [])
+
+  const handleRoleChange = async (targetUser, newRole) => {
+    if (targetUser.id === currentProfile?.id && newRole !== 'superadmin') {
+      const superAdmins = team.filter((m) => m.role === 'superadmin')
+      if (superAdmins.length <= 1) {
+        return toast.error('Vous êtes le seul Super Administrateur. Désignez un autre Super Admin avant de changer votre rôle.')
+      }
+    }
+
+    setActionLoadingId(targetUser.id)
+    try {
+      await updateAdminRole(targetUser.id, newRole)
+      toast.success(`Rôle de ${targetUser.full_name || 'l’utilisateur'} mis à jour (${newRole === 'superadmin' ? 'Super Admin' : 'Admin'}).`)
+      await loadTeam()
+    } catch (error) {
+      toast.error(formatErrorMessage(error, 'Erreur lors du changement de rôle.'))
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleRevoke = async (targetUser) => {
+    if (targetUser.id === currentProfile?.id) {
+      return toast.error('Vous ne pouvez pas révoquer votre propre accès administrateur.')
+    }
+
+    if (!window.confirm(`Êtes-vous certain de vouloir retirer les accès administrateur de ${targetUser.full_name || 'ce membre'} ?`)) {
+      return
+    }
+
+    setActionLoadingId(targetUser.id)
+    try {
+      await revokeAdminAccess(targetUser.id)
+      toast.success(`Accès administrateur révoqué pour ${targetUser.full_name || 'le compte'}.`)
+      await loadTeam()
+    } catch (error) {
+      toast.error(formatErrorMessage(error, 'Erreur lors de la révocation.'))
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault()
+    if (!formData.email || !formData.password || !formData.full_name) {
+      return toast.error('Veuillez remplir tous les champs obligatoires.')
+    }
+    if (formData.password.length < 6) {
+      return toast.error('Le mot de passe doit contenir au moins 6 caractères.')
+    }
+
+    setCreating(true)
+    try {
+      await createAdminAccount({
+        email: formData.email.trim(),
+        password: formData.password,
+        full_name: formData.full_name.trim(),
+        role: formData.role,
+      })
+      toast.success(`Le compte ${formData.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'} a été créé avec succès.`)
+      setFormData({ full_name: '', email: '', password: '', role: 'admin' })
+      setModalOpen(false)
+      await loadTeam()
+    } catch (error) {
+      console.error('Erreur création admin :', error)
+      toast.error(formatErrorMessage(error, 'Impossible de créer le compte administrateur.'))
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const filteredTeam = team.filter((member) => {
+    const q = searchQuery.toLowerCase()
+    return (
+      member.full_name?.toLowerCase().includes(q) ||
+      member.phone?.toLowerCase().includes(q) ||
+      member.id?.toLowerCase().includes(q) ||
+      member.role?.toLowerCase().includes(q)
+    )
+  })
+
+  const superAdminsCount = team.filter((m) => m.role === 'superadmin').length
+  const standardAdminsCount = team.filter((m) => m.role === 'admin').length
+
+  return (
+    <>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <Title subtitle="Gérez les comptes autorisés, les rôles de gestion et les accès Super Administrateur.">
+          Équipe & Administrateurs
+        </Title>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => setShowSqlHelper(!showSqlHelper)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
+            <span>Guide SQL & Rôles</span>
+          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 transition"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Ajouter un administrateur</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Overview Cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Membres de l'équipe</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-700">
+              <Users className="h-4 w-4" />
+            </span>
+          </div>
+          <p className="mt-2 font-display text-2xl font-black text-slate-900">{team.length}</p>
+          <p className="mt-1 text-[11px] text-slate-500">Comptes avec accès au panneau admin</p>
+        </div>
+
+        <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50/50 to-white p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-900">Super Administrateurs</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-amber-100 text-amber-800 font-bold text-xs">
+              SA
+            </span>
+          </div>
+          <p className="mt-2 font-display text-2xl font-black text-amber-950">{superAdminsCount}</p>
+          <p className="mt-1 text-[11px] text-amber-800/80">Accès total et gestion des accès</p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Gestionnaires</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">
+              AD
+            </span>
+          </div>
+          <p className="mt-2 font-display text-2xl font-black text-slate-900">{standardAdminsCount}</p>
+          <p className="mt-1 text-[11px] text-slate-500">Gestion des commandes et du catalogue</p>
+        </div>
+      </div>
+
+      {/* SQL & Role Info Box */}
+      {showSqlHelper && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-6 text-xs text-blue-950 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-blue-700" />
+              <strong className="text-sm font-bold">Rôles et permissions dans FOOD PACK</strong>
+            </div>
+            <button
+              onClick={() => setShowSqlHelper(false)}
+              className="text-blue-600 hover:text-blue-900"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 pt-1">
+            <div className="rounded-xl border border-blue-200/80 bg-white p-3.5 space-y-1">
+              <span className="inline-block rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-800">
+                Super Administrateur
+              </span>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Accès illimité. Peut créer et supprimer des administrateurs, modifier les rôles de l'équipe, consulter les logs de sécurité et configurer les paramètres clés du site.
+              </p>
+            </div>
+            <div className="rounded-xl border border-blue-200/80 bg-white p-3.5 space-y-1">
+              <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-800">
+                Administrateur / Gestionnaire
+              </span>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Gestion opérationnelle quotidienne : ajout et modification de produits, traitement des commandes, mise à jour des stocks, galerie et avis clients.
+              </p>
+            </div>
+          </div>
+          <div className="pt-2 border-t border-blue-200/60">
+            <p className="text-[11px] text-slate-600 mb-1.5">
+              Si vous souhaitez promouvoir directement un compte via l'éditeur SQL de Supabase :
+            </p>
+            <div className="flex items-center justify-between rounded-lg bg-slate-900 px-3 py-2 font-mono text-[11px] text-emerald-400">
+              <code>update public.profiles set role = 'superadmin' where id = 'VOTRE_USER_ID';</code>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText("update public.profiles set role = 'superadmin' where id = 'VOTRE_USER_ID';")
+                  toast.success('Requête SQL copiée !')
+                }}
+                className="ml-3 rounded bg-slate-800 px-2 py-1 text-[10px] text-slate-200 hover:bg-slate-700"
+              >
+                Copier
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Table */}
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Rechercher par nom, rôle ou ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 pl-9 pr-4 py-2 text-xs text-slate-900 outline-none focus:border-black"
+            />
+          </div>
+          <button
+            onClick={loadTeam}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Actualiser</span>
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="py-12 text-center text-xs text-slate-400">Chargement des membres de l'équipe…</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[750px] text-left text-xs">
+              <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Membre</th>
+                  <th className="px-4 py-3">Rôle & Privilèges</th>
+                  <th className="px-4 py-3">Identifiant / Date</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredTeam.map((member) => {
+                  const isCurrent = member.id === currentProfile?.id
+                  const isMemberSuperAdmin = member.role === 'superadmin'
+
+                  return (
+                    <tr key={member.id} className="hover:bg-slate-50/80 transition">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-xs font-bold text-white shadow-xs ${
+                            isMemberSuperAdmin
+                              ? 'bg-gradient-to-tr from-amber-600 to-amber-500'
+                              : 'bg-gradient-to-tr from-slate-700 to-slate-600'
+                          }`}>
+                            {member.full_name ? member.full_name.charAt(0).toUpperCase() : 'A'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900">{member.full_name || 'Administrateur'}</span>
+                              {isCurrent && (
+                                <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-800">
+                                  Vous
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-slate-500">{member.phone || 'Contact non renseigné'}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        {isMemberSuperAdmin ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900 shadow-xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            Super Administrateur
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                            Administrateur
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3.5 font-mono text-[11px] text-slate-500">
+                        <div title={member.id} className="truncate max-w-[160px]">
+                          ID: {member.id?.slice(0, 12)}…
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-sans">
+                          Depuis le {member.created_at ? new Date(member.created_at).toLocaleDateString('fr-FR') : '—'}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3.5 text-right">
+                        {isSuperAdmin ? (
+                          <div className="flex items-center justify-end gap-2">
+                            {/* Toggle role button */}
+                            {isMemberSuperAdmin ? (
+                              <button
+                                onClick={() => handleRoleChange(member, 'admin')}
+                                disabled={actionLoadingId === member.id}
+                                title="Rétrograder en administrateur"
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition"
+                              >
+                                {actionLoadingId === member.id ? '…' : 'Passer en Admin'}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleRoleChange(member, 'superadmin')}
+                                disabled={actionLoadingId === member.id}
+                                title="Promouvoir en Super Administrateur"
+                                className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-100 disabled:opacity-50 transition"
+                              >
+                                {actionLoadingId === member.id ? '…' : 'Promouvoir Super Admin'}
+                              </button>
+                            )}
+
+                            {/* Revoke button */}
+                            {!isCurrent && (
+                              <button
+                                onClick={() => handleRevoke(member)}
+                                disabled={actionLoadingId === member.id}
+                                title="Révoquer l'accès"
+                                className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic">Lecture seule</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+
+                {!filteredTeam.length && (
+                  <tr>
+                    <td colSpan="4" className="py-12 text-center text-xs text-slate-400">
+                      Aucun administrateur trouvé correspondant à la recherche.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal: Ajouter un administrateur */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div>
+                <h2 className="font-display text-lg font-bold text-slate-900">Ajouter un administrateur</h2>
+                <p className="text-xs text-slate-500">Créez un nouveau compte avec accès au panneau de gestion.</p>
+              </div>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAdmin} className="mt-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Nom complet du collaborateur *
+                  <input
+                    required
+                    type="text"
+                    placeholder="Ex: Marius - Responsable des Ventes"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                  />
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Adresse E-mail de connexion *
+                  <input
+                    required
+                    type="email"
+                    placeholder="collaborateur@foodpack.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                  />
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Mot de passe provisoire *
+                  <input
+                    required
+                    type="password"
+                    minLength="6"
+                    placeholder="6 caractères minimum"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                  />
+                </label>
+                <span className="mt-1 block text-[10px] text-slate-400">
+                  Le collaborateur pourra modifier son mot de passe depuis son profil.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Rôle attribué *
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className={`flex cursor-pointer flex-col rounded-xl border p-3 transition ${
+                    formData.role === 'admin'
+                      ? 'border-black bg-slate-50 ring-1 ring-black'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900">Administrateur</span>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="admin"
+                        checked={formData.role === 'admin'}
+                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        className="h-3.5 w-3.5"
+                      />
+                    </div>
+                    <span className="mt-1 text-[10px] text-slate-500">Produits, commandes, stocks et clients.</span>
+                  </label>
+
+                  <label className={`flex cursor-pointer flex-col rounded-xl border p-3 transition ${
+                    formData.role === 'superadmin'
+                      ? 'border-amber-500 bg-amber-50/50 ring-1 ring-amber-500'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-950">Super Admin</span>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="superadmin"
+                        checked={formData.role === 'superadmin'}
+                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        className="h-3.5 w-3.5"
+                      />
+                    </div>
+                    <span className="mt-1 text-[10px] text-amber-800/80">Accès total, équipe et paramètres.</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="rounded-xl bg-black px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition"
+                >
+                  {creating ? 'Création en cours…' : 'Créer le compte'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export function SimpleAdminPage({ title, type }) {
   if (type === 'gallery') return <GalleryAdmin />
   if (type === 'testimonials') return <TestimonialsAdmin />
+  if (type === 'team' || title === 'Équipe' || title === 'Équipe & Administrateurs') return <TeamAdmin />
   if (title === 'Paramètres') return <SettingsAdmin />
   if (title === 'Profil') return <ProfileAdmin />
   return (

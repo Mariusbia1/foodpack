@@ -24,7 +24,7 @@ drop table if exists public.profiles cascade;
 
 -- 2. TYPES & ENUMS
 drop type if exists public.user_role cascade;
-create type public.user_role as enum ('admin', 'customer');
+create type public.user_role as enum ('superadmin', 'admin', 'customer');
 
 drop type if exists public.order_status cascade;
 create type public.order_status as enum ('new', 'confirmed', 'in_progress', 'ready', 'delivered', 'cancelled');
@@ -242,12 +242,20 @@ alter table public.testimonials enable row level security;
 alter table public.traffic_logs enable row level security;
 alter table public.admin_notifications enable row level security;
 
--- Fonction utilitaire Admin
+-- Fonction utilitaire Admin & SuperAdmin
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from public.profiles
-    where id = auth.uid() and role = 'admin'
+    where id = auth.uid() and role in ('admin', 'superadmin')
+  );
+$$;
+
+create or replace function public.is_superadmin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'superadmin'
   );
 $$;
 

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Shapes, ShoppingCart, Images, Quote,
-  FileText, Settings, User, LogOut, Search, Bell, Menu, X, ChevronRight, ExternalLink, ShieldCheck, Plus, Sparkles
+  FileText, Settings, User, LogOut, Search, Bell, Menu, X, ChevronRight, ExternalLink, ShieldCheck, Plus, Sparkles,
+  Users, UserCheck, Shield
 } from 'lucide-react'
 import { useAdminAuth } from '../contexts/AdminAuthContext'
 import InstallAppButton from '../components/common/InstallAppButton'
@@ -19,12 +20,13 @@ const nav = [
   ['/admin/temoignages', Quote, 'Avis & Témoignages'],
   ['/admin/contenus', FileText, 'Textes & Contenus'],
   ['/admin/parametres', Settings, 'Paramètres de la boutique'],
+  ['/admin/equipe', Users, 'Équipe & Administrateurs'],
   ['/admin/activite', ShieldCheck, 'Journal de sécurité'],
   ['/admin/profil', User, 'Mon Compte'],
 ]
 
 function SidebarContent({ onNavigate }) {
-  const { logout, profile } = useAdminAuth()
+  const { logout, profile, isSuperAdmin } = useAdminAuth()
   const navigate = useNavigate()
 
   const signOut = () => {
@@ -101,12 +103,20 @@ function SidebarContent({ onNavigate }) {
 
         <div className="flex items-center justify-between rounded-xl bg-slate-800/60 p-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-tr from-slate-700 to-slate-600 text-xs font-bold text-white">
-              {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'A'}
+            <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-bold text-white shadow-xs ${
+              isSuperAdmin ? 'bg-gradient-to-tr from-amber-600 to-amber-500' : 'bg-gradient-to-tr from-slate-700 to-slate-600'
+            }`}>
+              {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : (isSuperAdmin ? 'S' : 'A')}
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-white">{profile?.full_name || 'Admin FOOD PACK'}</p>
-              <p className="truncate text-[10px] text-slate-400">{profile?.role === 'admin' ? 'Super Administrateur' : 'Gestionnaire'}</p>
+              <p className="truncate text-[10px]">
+                {isSuperAdmin ? (
+                  <span className="font-semibold text-amber-300">Super Admin</span>
+                ) : (
+                  <span className="text-slate-400">Administrateur</span>
+                )}
+              </p>
             </div>
           </div>
           <button

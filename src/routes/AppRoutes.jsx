@@ -77,6 +77,7 @@ export default function AppRoutes(){
           <Route path="temoignages" element={<SimpleAdminPage title="Témoignages" type="testimonials"/>}/>
           <Route path="contenus" element={<SimpleAdminPage title="Contenus"/>}/>
           <Route path="parametres" element={<SimpleAdminPage title="Paramètres"/>}/>
+          <Route path="equipe" element={<SimpleAdminPage title="Équipe & Administrateurs" type="team"/>}/>
           <Route path="activite" element={<AuditLogPage/>}/>
           <Route path="profil" element={<SimpleAdminPage title="Profil"/>}/>
         </Route>

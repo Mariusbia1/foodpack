@@ -60,7 +60,7 @@ export function AdminAuthProvider({ children }) {
       .maybeSingle()
 
     if (profileError) throw profileError
-    if (adminProfile?.role !== 'admin') {
+    if (!['admin', 'superadmin'].includes(adminProfile?.role)) {
       await supabase.auth.signOut()
       throw new Error('Ce compte ne possède pas encore le rôle administrateur.')
     }
@@ -74,7 +74,25 @@ export function AdminAuthProvider({ children }) {
     if (supabase) await supabase.auth.signOut()
   }
 
-  const isAuthenticated = Boolean(session && profile?.role === 'admin')
-  return <AdminAuthContext.Provider value={{ isAuthenticated, session, profile, loading, login, logout, isSupabaseConfigured }}>{children}</AdminAuthContext.Provider>
+  const isSuperAdmin = profile?.role === 'superadmin'
+  const isAdmin = ['admin', 'superadmin'].includes(profile?.role)
+  const isAuthenticated = Boolean(session && isAdmin)
+  return (
+    <AdminAuthContext.Provider
+      value={{
+        isAuthenticated,
+        isAdmin,
+        isSuperAdmin,
+        session,
+        profile,
+        loading,
+        login,
+        logout,
+        isSupabaseConfigured,
+      }}
+    >
+      {children}
+    </AdminAuthContext.Provider>
+  )
 }
 export const useAdminAuth = () => useContext(AdminAuthContext)

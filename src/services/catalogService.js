@@ -183,6 +183,66 @@ export async function saveAdminProfile(payload, userId = null) {
   return data
 }
 
+export async function getAdminTeam() {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, phone, role, created_at, updated_at')
+    .in('role', ['superadmin', 'admin'])
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function updateAdminRole(targetUserId, newRole) {
+  if (!supabase) throw new Error('Supabase non connecté.')
+  if (!['superadmin', 'admin', 'customer'].includes(newRole)) {
+    throw new Error('Rôle non valide.')
+  }
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ role: newRole, updated_at: new Date().toISOString() })
+    .eq('id', targetUserId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function revokeAdminAccess(targetUserId) {
+  return updateAdminRole(targetUserId, 'customer')
+}
+
+export async function createAdminAccount({ email, password, full_name, role = 'admin' }) {
+  if (!supabase) throw new Error('Supabase non configuré.')
+  // Création du compte via Supabase Auth
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name,
+        role,
+      },
+    },
+  })
+  if (error) throw error
+
+  // S'assurer que le profil est immédiatement mis à jour avec le rôle choisi
+  if (data?.user?.id) {
+    await supabase
+      .from('profiles')
+      .upsert({
+        id: data.user.id,
+        full_name,
+        role,
+        updated_at: new Date().toISOString(),
+      })
+  }
+
+  return data
+}
+
 export async function updateAdminEmail(email) {
   const { error } = await supabase.auth.updateUser({ email })
   if (error) throw error
