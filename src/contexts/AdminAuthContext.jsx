@@ -8,6 +8,24 @@ export function AdminAuthProvider({ children }) {
   const [loading, setLoading] = useState(isSupabaseConfigured)
 
   useEffect(() => {
+    // Détection automatique des retours d'e-mail Supabase (confirmation, invitation, réinitialisation)
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash
+      if (
+        hash.includes('type=recovery') ||
+        hash.includes('type=signup') ||
+        hash.includes('type=invite') ||
+        hash.includes('type=magiclink')
+      ) {
+        if (!window.location.pathname.startsWith('/admin/reinitialiser')) {
+          window.location.replace('/admin/reinitialiser' + hash)
+          return
+        }
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     if (!supabase) {
       setLoading(false)
       return undefined
@@ -32,8 +50,14 @@ export function AdminAuthProvider({ children }) {
     }
 
     supabase.auth.getSession().then(({ data }) => loadSession(data.session))
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
+      if (event === 'PASSWORD_RECOVERY') {
+        if (!window.location.pathname.startsWith('/admin/reinitialiser')) {
+          window.location.replace('/admin/reinitialiser')
+        }
+      }
+
       if (!nextSession) {
         setProfile(null)
         setLoading(false)
