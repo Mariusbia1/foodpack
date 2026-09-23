@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /commande/
 Disallow: /panier
 
-Sitemap: https://foodpack.bj/sitemap.xml
+Sitemap: https://maurellefoodpack.store/sitemap.xml
