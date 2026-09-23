@@ -3,23 +3,14 @@
 -- ==============================================================================
 
 -- 1. Ajouter la valeur 'superadmin' à l'enum user_role si elle n'existe pas déjà
-do $$
-begin
-  if not exists (
-    select 1 from pg_enum 
-    where enumlabel = 'superadmin' 
-    and enumtypid = 'public.user_role'::regtype
-  ) then
-    alter type public.user_role add value 'superadmin';
-  end if;
-end $$;
+alter type public.user_role add value if not exists 'superadmin';
 
 -- 2. Mise à jour de la fonction utilitaire is_admin() pour inclure admin ET superadmin
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from public.profiles
-    where id = auth.uid() and role in ('admin', 'superadmin')
+    where id = auth.uid() and role::text in ('admin', 'superadmin')
   );
 $$;
 
@@ -28,17 +19,17 @@ create or replace function public.is_superadmin()
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (
     select 1 from public.profiles
-    where id = auth.uid() and role = 'superadmin'
+    where id = auth.uid() and role::text = 'superadmin'
   );
 $$;
 
 -- 4. Promouvoir le premier administrateur existant ou l'administrateur principal en superadmin
 update public.profiles
-set role = 'superadmin'
-where role = 'admin'
+set role = 'superadmin'::public.user_role
+where role::text = 'admin'
   and id = (
     select id from public.profiles
-    where role = 'admin'
+    where role::text = 'admin'
     order by created_at asc
     limit 1
   );
