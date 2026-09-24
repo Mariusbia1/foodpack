@@ -34,6 +34,11 @@ function SidebarContent({ onNavigate }) {
     navigate('/admin/connexion')
   }
 
+  const allowedNav = nav.filter(([to]) => {
+    if (to === '/admin/equipe') return isSuperAdmin
+    return true
+  })
+
   return (
     <div className="flex h-full flex-col justify-between bg-[#0F172A] text-slate-200">
       <div>
@@ -61,7 +66,7 @@ function SidebarContent({ onNavigate }) {
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Menu Principal</p>
           </div>
           <nav className="grid gap-1">
-            {nav.map(([to, Icon, label]) => (
+            {allowedNav.map(([to, Icon, label]) => (
               <NavLink
                 end={to === '/admin'}
                 key={to}

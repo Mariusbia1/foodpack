@@ -2456,6 +2456,7 @@ function TeamAdmin() {
   })
 
   const loadTeam = async () => {
+    if (!isSuperAdmin) return
     setLoading(true)
     try {
       const data = await getAdminTeam()
@@ -2468,8 +2469,24 @@ function TeamAdmin() {
   }
 
   useEffect(() => {
-    loadTeam()
-  }, [])
+    if (isSuperAdmin) {
+      loadTeam()
+    }
+  }, [isSuperAdmin])
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-xs">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 text-amber-600 mb-4">
+          <ShieldCheck className="h-7 w-7" />
+        </div>
+        <h3 className="font-display text-lg font-bold text-slate-900">Accès Réservé au Super Administrateur</h3>
+        <p className="mt-1.5 max-w-md mx-auto text-xs text-slate-500 leading-relaxed">
+          Seul le Super Administrateur est autorisé à consulter l'équipe, gérer les rôles et créer de nouveaux accès administrateurs.
+        </p>
+      </div>
+    )
+  }
 
   const handleRoleChange = async (targetUser, newRole) => {
     if (targetUser.id === currentProfile?.id && newRole !== 'superadmin') {
