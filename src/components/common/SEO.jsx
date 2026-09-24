@@ -7,7 +7,7 @@ const BASE_DOMAIN = 'https://www.maurellefoodpack.store'
 export default function SEO({
   title,
   description = siteConfig.description,
-  image = `${BASE_DOMAIN}/products/bouteille-pet.webp`,
+  image = `${BASE_DOMAIN}/og-image.png`,
   type = 'website',
   productData = null,
   breadcrumbs = null,
@@ -25,8 +25,8 @@ export default function SEO({
     name: 'FOOD PACK Bénin',
     alternateName: 'Maurelle Food Pack',
     url: BASE_DOMAIN,
-    logo: `${BASE_DOMAIN}/app-icon.svg`,
-    image: `${BASE_DOMAIN}/products/bouteille-pet.webp`,
+    logo: `${BASE_DOMAIN}/app-icon-512.png`,
+    image: `${BASE_DOMAIN}/og-image.png`,
     description: siteConfig.description,
     telephone: siteConfig.phone,
     address: {
