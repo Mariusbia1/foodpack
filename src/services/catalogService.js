@@ -213,7 +213,7 @@ export async function revokeAdminAccess(targetUserId) {
   return updateAdminRole(targetUserId, 'customer')
 }
 
-export async function createAdminAccount({ email, password, full_name, role = 'admin' }) {
+export async function createAdminAccount({ email, password, full_name, phone = '', role = 'admin' }) {
   if (!supabase) throw new Error('Supabase non configuré.')
   const siteOrigin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://www.maurellefoodpack.store'
 
@@ -225,6 +225,7 @@ export async function createAdminAccount({ email, password, full_name, role = 'a
       emailRedirectTo: `${siteOrigin}/admin/reinitialiser`,
       data: {
         full_name,
+        phone,
         role,
       },
     },
@@ -243,6 +244,7 @@ export async function createAdminAccount({ email, password, full_name, role = 'a
       .upsert({
         id: data.user.id,
         full_name,
+        phone: phone || null,
         role,
         updated_at: new Date().toISOString(),
       })

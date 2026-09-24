@@ -2444,13 +2444,15 @@ function TeamAdmin() {
   const [creating, setCreating] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState(null)
   const [showSqlHelper, setShowSqlHelper] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [createdAdminResult, setCreatedAdminResult] = useState(null)
 
   const [formData, setFormData] = useState({
     full_name: '',
+    phone: '',
     email: '',
     password: '',
     role: 'admin',
-    sendEmailLink: true,
   })
 
   const loadTeam = async () => {
@@ -2538,10 +2540,44 @@ function TeamAdmin() {
     }
   }
 
+  const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$'
+    let pass = ''
+    for (let i = 0; i < 10; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    setFormData((prev) => ({ ...prev, password: pass }))
+    setShowPassword(true)
+    toast.success('Mot de passe généré !')
+  }
+
+  const buildAdminWhatsAppMessage = ({ full_name, email, password, role }) => {
+    const roleLabel = role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'
+    const loginUrl = 'https://www.maurellefoodpack.store/admin/connexion'
+    
+    return `Bonjour ${full_name || ''},\n\nVotre compte d'accès à l'espace d'administration de FOOD PACK Bénin a été créé avec succès.\n\nVoici vos identifiants de connexion :\n- Espace de connexion : ${loginUrl}\n- Identifiant (Email) : ${email}\n- Mot de passe : ${password}\n- Rôle attribué : ${roleLabel}\n\nVous pouvez vous connecter dès maintenant et modifier votre mot de passe depuis votre espace profil si vous le souhaitez.\n\nBienvenue dans l'équipe FOOD PACK !`
+  }
+
+  const buildMemberReminderWhatsAppMessage = (member) => {
+    const roleLabel = member.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'
+    const loginUrl = 'https://www.maurellefoodpack.store/admin/connexion'
+    const resetUrl = 'https://www.maurellefoodpack.store/admin/mot-de-passe-oublie'
+
+    return `Bonjour ${member.full_name || ''},\n\nRappel de vos accès pour l'espace d'administration FOOD PACK Bénin :\n- Espace de connexion : ${loginUrl}\n- Identifiant : ${member.email || member.full_name}\n- Rôle : ${roleLabel}\n- En cas d'oubli ou pour changer votre mot de passe : ${resetUrl}\n\nÉquipe FOOD PACK Bénin`
+  }
+
+  const getWhatsAppShareUrl = (phone, text) => {
+    const digits = (phone || '').replace(/\D/g, '')
+    if (digits) {
+      return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`
+    }
+    return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`
+  }
+
   const handleCopyInvitationMessage = (member) => {
-    const text = `Bonjour ${member.full_name || ''},\n\nVous avez été ajouté(e) comme administrateur sur la boutique FOOD PACK Bénin.\n\nLien de connexion : https://www.maurellefoodpack.store/admin/connexion\nLien pour définir ou modifier votre mot de passe : https://www.maurellefoodpack.store/admin/mot-de-passe-oublie\n\nBienvenue dans l'équipe !`
+    const text = buildMemberReminderWhatsAppMessage(member)
     navigator.clipboard.writeText(text)
-    toast.success('Message d’invitation copié dans le presse-papier !')
+    toast.success('Message copié dans le presse-papier !')
   }
 
   const handleCreateAdmin = async (e) => {
@@ -2559,11 +2595,18 @@ function TeamAdmin() {
         email: formData.email.trim(),
         password: formData.password,
         full_name: formData.full_name.trim(),
+        phone: formData.phone?.trim() || '',
         role: formData.role,
       })
-      toast.success(`Compte ${formData.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'} créé avec succès ! Le collaborateur peut se connecter immédiatement.`)
-      setFormData({ full_name: '', email: '', password: '', role: 'admin' })
-      setModalOpen(false)
+      toast.success(`Compte ${formData.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'} créé avec succès !`)
+      
+      setCreatedAdminResult({
+        full_name: formData.full_name.trim(),
+        phone: formData.phone?.trim() || '',
+        email: formData.email.trim(),
+        password: formData.password,
+        role: formData.role,
+      })
       await loadTeam()
     } catch (error) {
       console.error('Erreur création admin :', error)
@@ -2571,6 +2614,19 @@ function TeamAdmin() {
     } finally {
       setCreating(false)
     }
+  }
+
+  const handleCloseModal = () => {
+    setModalOpen(false)
+    setCreatedAdminResult(null)
+    setFormData({
+      full_name: '',
+      phone: '',
+      email: '',
+      password: '',
+      role: 'admin',
+    })
+    setShowPassword(false)
   }
 
   const filteredTeam = team.filter((member) => {
@@ -2589,7 +2645,7 @@ function TeamAdmin() {
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Title subtitle="Gérez les comptes autorisés, envoyez des invitations par e-mail et définissez les rôles.">
+        <Title subtitle="Gérez les comptes autorisés, transmettez les accès par WhatsApp et définissez les rôles.">
           Équipe & Administrateurs
         </Title>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -2602,7 +2658,10 @@ function TeamAdmin() {
           </button>
           {isSuperAdmin && (
             <button
-              onClick={() => setModalOpen(true)}
+              onClick={() => {
+                setCreatedAdminResult(null)
+                setModalOpen(true)
+              }}
               className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 transition"
             >
               <Plus className="h-4 w-4" />
@@ -2669,7 +2728,7 @@ function TeamAdmin() {
                 Super Administrateur
               </span>
               <p className="text-[11px] text-slate-600 leading-relaxed">
-                Accès illimité. Peut créer et supprimer des administrateurs, envoyer des e-mails d'accès, modifier les rôles de l'équipe et gérer les paramètres clés du site.
+                Accès illimité. Peut créer et supprimer des administrateurs, transmettre les accès par WhatsApp, modifier les rôles de l'équipe et gérer les paramètres clés du site.
               </p>
             </div>
             <div className="rounded-xl border border-blue-200/80 bg-white p-3.5 space-y-1">
@@ -2742,6 +2801,8 @@ function TeamAdmin() {
                 {filteredTeam.map((member) => {
                   const isCurrent = member.id === currentProfile?.id
                   const isMemberSuperAdmin = member.role === 'superadmin'
+                  const reminderMessage = buildMemberReminderWhatsAppMessage(member)
+                  const waUrl = getWhatsAppShareUrl(member.phone, reminderMessage)
 
                   return (
                     <tr key={member.id} className="hover:bg-slate-50/80 transition">
@@ -2793,6 +2854,27 @@ function TeamAdmin() {
 
                       <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* WhatsApp sharing */}
+                          <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Transmettre le rappel d'accès par WhatsApp"
+                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/80 px-2 py-1 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 transition"
+                          >
+                            <MessageCircle className="h-3 w-3 text-emerald-600" />
+                            <span className="hidden sm:inline">WhatsApp</span>
+                          </a>
+
+                          {/* Copy invitation text */}
+                          <button
+                            onClick={() => handleCopyInvitationMessage(member)}
+                            title="Copier le message d'invitation avec les liens d'accès"
+                            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+
                           {/* Send password reset / setup email */}
                           <button
                             onClick={() => handleSendResetEmail(member)}
@@ -2802,15 +2884,6 @@ function TeamAdmin() {
                           >
                             <Mail className="h-3 w-3 text-slate-500" />
                             <span className="hidden sm:inline">E-mail d'accès</span>
-                          </button>
-
-                          {/* Copy invitation text */}
-                          <button
-                            onClick={() => handleCopyInvitationMessage(member)}
-                            title="Copier le message d'invitation avec les liens d'accès"
-                            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
                           </button>
 
                           {isSuperAdmin && (
@@ -2868,132 +2941,282 @@ function TeamAdmin() {
         )}
       </div>
 
-      {/* Modal: Ajouter un administrateur */}
+      {/* Modal: Ajouter un administrateur / Transmettre par WhatsApp */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div>
-                <h2 className="font-display text-lg font-bold text-slate-900">Ajouter un administrateur</h2>
-                <p className="text-xs text-slate-500">Créez le compte et envoyez-lui ses accès automatiquement par e-mail.</p>
-              </div>
-              <button
-                onClick={() => setModalOpen(false)}
-                className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateAdmin} className="mt-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Nom complet du collaborateur *
-                  <input
-                    required
-                    type="text"
-                    placeholder="Ex: Marius - Responsable des Ventes"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-                  />
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Adresse E-mail de connexion *
-                  <input
-                    required
-                    type="email"
-                    placeholder="collaborateur@foodpack.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-                  />
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Mot de passe provisoire *
-                  <input
-                    required
-                    type="password"
-                    minLength="6"
-                    placeholder="6 caractères minimum"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
-                  />
-                </label>
-                <span className="mt-1 block text-[10px] text-slate-400">
-                  Le collaborateur pourra soit utiliser ce mot de passe, soit le changer via le lien envoyé dans son e-mail.
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Rôle attribué *
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className={`flex cursor-pointer flex-col rounded-xl border p-3 transition ${
-                    formData.role === 'admin'
-                      ? 'border-black bg-slate-50 ring-1 ring-black'
-                      : 'border-slate-200 bg-white hover:bg-slate-50'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900">Administrateur</span>
-                      <input
-                        type="radio"
-                        name="role"
-                        value="admin"
-                        checked={formData.role === 'admin'}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                        className="h-3.5 w-3.5"
-                      />
+          <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8 animate-in fade-in zoom-in duration-150 max-h-[90vh] overflow-y-auto">
+            {createdAdminResult ? (
+              /* Success Screen with WhatsApp share */
+              <div className="space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
+                      <CheckCircle2 className="h-5 w-5" />
                     </div>
-                    <span className="mt-1 text-[10px] text-slate-500">Produits, commandes, stocks et clients.</span>
-                  </label>
-
-                  <label className={`flex cursor-pointer flex-col rounded-xl border p-3 transition ${
-                    formData.role === 'superadmin'
-                      ? 'border-amber-500 bg-amber-50/50 ring-1 ring-amber-500'
-                      : 'border-slate-200 bg-white hover:bg-slate-50'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-950">Super Admin</span>
-                      <input
-                        type="radio"
-                        name="role"
-                        value="superadmin"
-                        checked={formData.role === 'superadmin'}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                        className="h-3.5 w-3.5"
-                      />
+                    <div>
+                      <h2 className="font-display text-base font-bold text-slate-900">Compte créé avec succès !</h2>
+                      <p className="text-[11px] text-slate-500">Transmettez immédiatement ses accès au collaborateur.</p>
                     </div>
-                    <span className="mt-1 text-[10px] text-amber-800/80">Accès total, équipe et paramètres.</span>
-                  </label>
+                  </div>
+                  <button
+                    onClick={handleCloseModal}
+                    className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Account credentials summary */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-2 text-xs">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500 font-medium">Collaborateur :</span>
+                    <span className="font-bold text-slate-900">{createdAdminResult.full_name}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500 font-medium">Email / Identifiant :</span>
+                    <span className="font-mono font-bold text-slate-900">{createdAdminResult.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500 font-medium">Mot de passe créé :</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
+                        {createdAdminResult.password}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(createdAdminResult.password)
+                          toast.success('Mot de passe copié !')
+                        }}
+                        className="text-slate-400 hover:text-black"
+                        title="Copier le mot de passe"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 font-medium">Rôle attribué :</span>
+                    <span className="font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md text-[11px]">
+                      {createdAdminResult.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* WhatsApp Message Preview */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+                      Message généré pour WhatsApp
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const msg = buildAdminWhatsAppMessage(createdAdminResult)
+                        navigator.clipboard.writeText(msg)
+                        toast.success('Message WhatsApp copié !')
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-black"
+                    >
+                      <Copy className="h-3 w-3" />
+                      <span>Copier le texte</span>
+                    </button>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 text-[11px] text-slate-700 font-sans leading-relaxed whitespace-pre-wrap select-all">
+                    {buildAdminWhatsAppMessage(createdAdminResult)}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2">
+                  <a
+                    href={getWhatsAppShareUrl(createdAdminResult.phone, buildAdminWhatsAppMessage(createdAdminResult))}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition text-center"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Transmettre sur WhatsApp</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  >
+                    Terminer
+                  </button>
                 </div>
               </div>
+            ) : (
+              /* Creation Form */
+              <div>
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div>
+                    <h2 className="font-display text-lg font-bold text-slate-900">Ajouter un administrateur</h2>
+                    <p className="text-xs text-slate-500">Créez le compte puis transmettez-lui directement ses accès par WhatsApp.</p>
+                  </div>
+                  <button
+                    onClick={handleCloseModal}
+                    className="grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="rounded-xl bg-black px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition"
-                >
-                  {creating ? 'Création en cours…' : 'Créer le compte'}
-                </button>
+                <form onSubmit={handleCreateAdmin} className="mt-6 space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Nom complet du collaborateur *
+                      <input
+                        required
+                        type="text"
+                        placeholder="Ex: Marius - Responsable des Ventes"
+                        value={formData.full_name}
+                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Numéro WhatsApp / Téléphone (Optionnel)
+                      <input
+                        type="tel"
+                        placeholder="Ex: +229 01 23 45 67"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                      />
+                    </label>
+                    <span className="mt-1 block text-[10px] text-slate-400">
+                      Permet d'ouvrir directement la discussion WhatsApp avec ce contact lors de l'envoi du message.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Adresse E-mail de connexion *
+                      <input
+                        required
+                        type="email"
+                        placeholder="collaborateur@foodpack.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 outline-none focus:border-black"
+                      />
+                    </label>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                        Mot de passe *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={generateRandomPassword}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        <span>Générer un mot de passe</span>
+                      </button>
+                    </div>
+                    <div className="relative mt-1.5">
+                      <input
+                        required
+                        type={showPassword ? 'text' : 'password'}
+                        minLength="6"
+                        placeholder="6 caractères minimum"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 pr-10 text-xs text-slate-900 outline-none focus:border-black"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <span className="mt-1 block text-[10px] text-slate-400">
+                      Le collaborateur utilisera ce mot de passe pour se connecter et pourra le modifier à tout moment.
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                      Rôle attribué *
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className={`flex cursor-pointer flex-col rounded-xl border p-3 transition ${
+                        formData.role === 'admin'
+                          ? 'border-black bg-slate-50 ring-1 ring-black'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-900">Administrateur</span>
+                          <input
+                            type="radio"
+                            name="role"
+                            value="admin"
+                            checked={formData.role === 'admin'}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            className="h-3.5 w-3.5"
+                          />
+                        </div>
+                        <span className="mt-1 text-[10px] text-slate-500">Produits, commandes, stocks et clients.</span>
+                      </label>
+
+                      <label className={`flex cursor-pointer flex-col rounded-xl border p-3 transition ${
+                        formData.role === 'superadmin'
+                          ? 'border-amber-500 bg-amber-50/50 ring-1 ring-amber-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-950">Super Admin</span>
+                          <input
+                            type="radio"
+                            name="role"
+                            value="superadmin"
+                            checked={formData.role === 'superadmin'}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            className="h-3.5 w-3.5"
+                          />
+                        </div>
+                        <span className="mt-1 text-[10px] text-amber-800/80">Accès total, équipe et paramètres.</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="inline-flex items-center gap-2 rounded-xl bg-black px-6 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 transition"
+                    >
+                      {creating ? (
+                        <span>Création en cours…</span>
+                      ) : (
+                        <>
+                          <MessageCircle className="h-4 w-4 text-emerald-400" />
+                          <span>Créer et préparer le WhatsApp</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}
