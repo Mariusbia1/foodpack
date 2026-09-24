@@ -2560,14 +2560,9 @@ function TeamAdmin() {
         password: formData.password,
         full_name: formData.full_name.trim(),
         role: formData.role,
-        sendResetEmail: Boolean(formData.sendEmailLink),
       })
-      toast.success(
-        formData.sendEmailLink
-          ? `Compte créé ! Un e-mail d'accès et de configuration a été envoyé à ${formData.email}.`
-          : `Compte ${formData.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'} créé avec succès.`
-      )
-      setFormData({ full_name: '', email: '', password: '', role: 'admin', sendEmailLink: true })
+      toast.success(`Compte ${formData.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'} créé avec succès ! Le collaborateur peut se connecter immédiatement.`)
+      setFormData({ full_name: '', email: '', password: '', role: 'admin' })
       setModalOpen(false)
       await loadTeam()
     } catch (error) {

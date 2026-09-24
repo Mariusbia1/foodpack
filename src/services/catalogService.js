@@ -213,7 +213,7 @@ export async function revokeAdminAccess(targetUserId) {
   return updateAdminRole(targetUserId, 'customer')
 }
 
-export async function createAdminAccount({ email, password, full_name, role = 'admin', sendResetEmail = true }) {
+export async function createAdminAccount({ email, password, full_name, role = 'admin' }) {
   if (!supabase) throw new Error('Supabase non configuré.')
   const siteOrigin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://www.maurellefoodpack.store'
 
@@ -229,7 +229,12 @@ export async function createAdminAccount({ email, password, full_name, role = 'a
       },
     },
   })
-  if (error) throw error
+  if (error) {
+    if (error.message?.toLowerCase().includes('rate limit')) {
+      throw new Error("Limite d'envoi d'e-mails atteinte par Supabase pour cette heure. Désactivez 'Confirm Email' dans Supabase pour créer des comptes instantanément.")
+    }
+    throw error
+  }
 
   // S'assurer que le profil est immédiatement mis à jour avec le rôle choisi
   if (data?.user?.id) {
@@ -241,17 +246,6 @@ export async function createAdminAccount({ email, password, full_name, role = 'a
         role,
         updated_at: new Date().toISOString(),
       })
-  }
-
-  // Envoyer l'e-mail de configuration / réinitialisation si souhaité
-  if (sendResetEmail) {
-    try {
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteOrigin}/admin/reinitialiser`,
-      })
-    } catch (err) {
-      console.warn('Envoi e-mail réinitialisation :', err)
-    }
   }
 
   return data
