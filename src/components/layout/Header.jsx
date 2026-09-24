@@ -69,9 +69,14 @@ export default function Header() {
 
             <Link
               to="/"
-              className="font-display text-2xl font-black uppercase tracking-[-0.04em] text-black sm:text-3xl"
+              className="inline-flex flex-col group"
             >
-              FOOD PACK<span className="text-[#FF3333]">.</span>
+              <span className="font-display text-2xl font-black uppercase tracking-[-0.04em] text-black sm:text-3xl leading-none">
+                FOODPACK<span className="text-[#FF3333]">.</span>
+              </span>
+              <span className="text-[9px] font-extrabold tracking-[0.18em] text-black/50 uppercase mt-0.5 sm:text-[10px]">
+                by Maurelle
+              </span>
             </Link>
           </div>
 
@@ -179,9 +184,14 @@ export default function Header() {
             <Link
               to="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="font-display text-2xl font-black uppercase text-black"
+              className="inline-flex flex-col"
             >
-              FOOD PACK<span className="text-[#FF3333]">.</span>
+              <span className="font-display text-2xl font-black uppercase text-black leading-none">
+                FOODPACK<span className="text-[#FF3333]">.</span>
+              </span>
+              <span className="text-[9px] font-extrabold tracking-[0.18em] text-black/50 uppercase mt-0.5">
+                by Maurelle
+              </span>
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}

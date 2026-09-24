@@ -21,9 +21,14 @@ export default class ErrorBoundary extends Component {
       return (
         <main className="grid min-h-screen place-items-center bg-[#F2F0F1] px-5 py-10 text-center">
           <div className="max-w-lg">
-            <p className="font-display text-4xl font-black uppercase tracking-tight text-black">
-              FOOD PACK<span className="text-[#FF3333]">.</span>
-            </p>
+            <div className="inline-flex flex-col items-center">
+              <span className="font-display text-4xl font-black uppercase tracking-tight text-black leading-none">
+                FOODPACK<span className="text-[#FF3333]">.</span>
+              </span>
+              <span className="text-xs font-extrabold tracking-[0.2em] text-black/50 uppercase mt-1">
+                by Maurelle
+              </span>
+            </div>
             <h1 className="mt-6 font-display text-2xl font-black text-black">La page n’a pas pu s’afficher.</h1>
             <p className="mt-3 text-sm text-black/60">
               Une erreur inattendue est survenue lors de l'affichage. Vous pouvez actualiser ou retourner à l'accueil.

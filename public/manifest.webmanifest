@@ -1,7 +1,7 @@
 {
-  "name": "FOOD PACK",
-  "short_name": "FOOD PACK",
-  "description": "Emballages alimentaires professionnels et bouteilles de jus à Cotonou.",
+  "name": "FOODPACK by Maurelle",
+  "short_name": "FOODPACK",
+  "description": "Emballages alimentaires professionnels et bouteilles de jus à Cotonou - FOODPACK by Maurelle.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

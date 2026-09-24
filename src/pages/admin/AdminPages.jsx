@@ -76,8 +76,13 @@ export function LoginPage() {
           className="relative w-full max-w-md rounded-3xl border border-slate-200/80 bg-white p-8 shadow-xl sm:p-10"
         >
           <div className="text-center">
-            <Link to="/" className="font-display text-3xl font-black uppercase tracking-tight text-slate-900">
-              FOOD PACK<span className="text-[#FF3333]">.</span>
+            <Link to="/" className="inline-flex flex-col items-center">
+              <span className="font-display text-3xl font-black uppercase tracking-tight text-slate-900 leading-none">
+                FOODPACK<span className="text-[#FF3333]">.</span>
+              </span>
+              <span className="text-[10px] font-extrabold tracking-[0.2em] text-slate-400 uppercase mt-1">
+                by Maurelle
+              </span>
             </Link>
             <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-600">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -2572,7 +2577,7 @@ function TeamAdmin() {
     const roleLabel = role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'
     const loginUrl = 'https://www.maurellefoodpack.store/admin/connexion'
     
-    return `Bonjour ${full_name || ''},\n\nVotre compte d'accès à l'espace d'administration de FOOD PACK Bénin a été créé avec succès.\n\nVoici vos identifiants de connexion :\n- Espace de connexion : ${loginUrl}\n- Identifiant (Email) : ${email}\n- Mot de passe : ${password}\n- Rôle attribué : ${roleLabel}\n\nVous pouvez vous connecter dès maintenant et modifier votre mot de passe depuis votre espace profil si vous le souhaitez.\n\nBienvenue dans l'équipe FOOD PACK !`
+    return `Bonjour ${full_name || ''},\n\nVotre compte d'accès à l'espace d'administration de FOODPACK by Maurelle a été créé avec succès.\n\nVoici vos identifiants de connexion :\n- Espace de connexion : ${loginUrl}\n- Identifiant (Email) : ${email}\n- Mot de passe : ${password}\n- Rôle attribué : ${roleLabel}\n\nVous pouvez vous connecter dès maintenant et modifier votre mot de passe depuis votre espace profil si vous le souhaitez.\n\nBienvenue dans l'équipe FOODPACK !`
   }
 
   const buildMemberReminderWhatsAppMessage = (member) => {
@@ -2580,7 +2585,7 @@ function TeamAdmin() {
     const loginUrl = 'https://www.maurellefoodpack.store/admin/connexion'
     const resetUrl = 'https://www.maurellefoodpack.store/admin/mot-de-passe-oublie'
 
-    return `Bonjour ${member.full_name || ''},\n\nRappel de vos accès pour l'espace d'administration FOOD PACK Bénin :\n- Espace de connexion : ${loginUrl}\n- Identifiant : ${member.email || member.full_name}\n- Rôle : ${roleLabel}\n- En cas d'oubli ou pour changer votre mot de passe : ${resetUrl}\n\nÉquipe FOOD PACK Bénin`
+    return `Bonjour ${member.full_name || ''},\n\nRappel de vos accès pour l'espace d'administration FOODPACK by Maurelle :\n- Espace de connexion : ${loginUrl}\n- Identifiant : ${member.email || member.full_name}\n- Rôle : ${roleLabel}\n- En cas d'oubli ou pour changer votre mot de passe : ${resetUrl}\n\nÉquipe FOODPACK by Maurelle`
   }
 
   const getWhatsAppShareUrl = (phone, text) => {
@@ -3277,8 +3282,13 @@ export function ForgotPasswordPage() {
     <div className="grid min-h-screen place-items-center bg-[#F8FAFC] p-4">
       <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
         <div className="text-center">
-          <Link to="/" className="font-display text-2xl font-black uppercase text-slate-900">
-            FOOD PACK<span className="text-[#FF3333]">.</span>
+          <Link to="/" className="inline-flex flex-col items-center">
+            <span className="font-display text-2xl font-black uppercase text-slate-900 leading-none">
+              FOODPACK<span className="text-[#FF3333]">.</span>
+            </span>
+            <span className="text-[9px] font-extrabold tracking-[0.2em] text-slate-400 uppercase mt-0.5">
+              by Maurelle
+            </span>
           </Link>
           <h1 className="mt-4 font-display text-xl font-bold text-slate-900">Récupération de mot de passe</h1>
         </div>
@@ -3342,8 +3352,13 @@ export function ResetPasswordPage() {
     <div className="grid min-h-screen place-items-center bg-[#F8FAFC] p-4">
       <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
         <div className="text-center">
-          <Link to="/" className="font-display text-2xl font-black uppercase text-slate-900">
-            FOOD PACK<span className="text-[#FF3333]">.</span>
+          <Link to="/" className="inline-flex flex-col items-center">
+            <span className="font-display text-2xl font-black uppercase text-slate-900 leading-none">
+              FOODPACK<span className="text-[#FF3333]">.</span>
+            </span>
+            <span className="text-[9px] font-extrabold tracking-[0.2em] text-slate-400 uppercase mt-0.5">
+              by Maurelle
+            </span>
           </Link>
           <h1 className="mt-4 font-display text-xl font-bold text-slate-900">Définir un nouveau mot de passe</h1>
         </div>

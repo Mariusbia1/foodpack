@@ -22,8 +22,8 @@ export default function SEO({
   const defaultOrganizationSchema = {
     '@context': 'https://schema.org',
     '@type': ['Organization', 'LocalBusiness', 'WholesaleStore'],
-    name: 'FOOD PACK Bénin',
-    alternateName: 'Maurelle Food Pack',
+    name: 'FOODPACK by Maurelle',
+    alternateName: 'FOODPACK Bénin',
     url: BASE_DOMAIN,
     logo: `${BASE_DOMAIN}/app-icon-512.png`,
     image: `${BASE_DOMAIN}/og-image.png`,
@@ -63,7 +63,7 @@ export default function SEO({
         description: productData.shortDescription || productData.description || description,
         brand: {
           '@type': 'Brand',
-          name: 'FOOD PACK',
+          name: 'FOODPACK by Maurelle',
         },
         offers: {
           '@type': 'Offer',
@@ -77,7 +77,7 @@ export default function SEO({
           itemCondition: 'https://schema.org/NewCondition',
           seller: {
             '@type': 'Organization',
-            name: 'FOOD PACK Bénin',
+            name: 'FOODPACK by Maurelle',
           },
         },
         aggregateRating: {
@@ -119,7 +119,7 @@ export default function SEO({
       <meta property="og:title" content={pageTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={imageUrl} />
-      <meta property="og:site_name" content="FOOD PACK" />
+      <meta property="og:site_name" content="FOODPACK by Maurelle" />
       <meta property="og:locale" content="fr_FR" />
 
       {/* Twitter Cards */}

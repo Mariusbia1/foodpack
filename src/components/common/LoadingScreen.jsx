@@ -7,10 +7,13 @@ export default function LoadingScreen({ label = 'Chargement...' }) {
     >
       <div className="flex flex-col items-center">
         <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-black/10 border-t-black" />
-        <p className="mt-5 font-display text-lg font-black uppercase tracking-tight text-black">
-          FOOD PACK<span className="text-[#FF3333]">.</span>
+        <p className="mt-5 font-display text-lg font-black uppercase tracking-tight text-black leading-none">
+          FOODPACK<span className="text-[#FF3333]">.</span>
         </p>
-        <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-black/40">
+        <span className="text-[9px] font-extrabold tracking-[0.18em] text-black/40 uppercase mt-0.5">
+          by Maurelle
+        </span>
+        <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-black/40">
           {label}
         </p>
       </div>

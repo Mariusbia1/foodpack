@@ -102,9 +102,14 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <Link
               to="/"
-              className="inline-block font-display text-2xl font-black uppercase tracking-[-0.04em] text-black sm:text-3xl"
+              className="inline-flex flex-col group"
             >
-              FOOD PACK<span className="text-[#FF3333]">.</span>
+              <span className="font-display text-2xl font-black uppercase tracking-[-0.04em] text-black sm:text-3xl leading-none">
+                FOODPACK<span className="text-[#FF3333]">.</span>
+              </span>
+              <span className="text-[10px] font-extrabold tracking-[0.18em] text-black/50 uppercase mt-0.5">
+                by Maurelle
+              </span>
             </Link>
             <p className="max-w-sm text-sm leading-relaxed text-black/60">
               Grossiste et distributeur d’emballages alimentaires professionnels au Bénin : bouteilles de jus et bissap, boîtes kraft, barquettes et gobelets pour restaurants et traiteurs.
@@ -291,10 +296,10 @@ export default function Footer() {
         {/* 3. Bottom Bar (Clean without payment badges) */}
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-black/10 pt-8 sm:flex-row text-xs text-black/60">
           <p>
-            FOOD PACK © 2026. Tous droits réservés.
+            FOODPACK by Maurelle © 2026. Tous droits réservés.
           </p>
           <p className="text-black/40">
-            Fournisseur d’emballages alimentaires professionnels au Bénin
+            Fournisseur d’emballages alimentaires professionnels au Bénin • Cotonou & Parakou
           </p>
         </div>
       </div>

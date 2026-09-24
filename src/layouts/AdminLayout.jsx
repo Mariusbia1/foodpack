@@ -49,10 +49,13 @@ function SidebarContent({ onNavigate }) {
               FP
             </span>
             <div>
-              <p className="font-display text-lg font-black uppercase tracking-tight text-white">
-                FOOD PACK<span className="text-[#FF3333]">.</span>
+              <p className="font-display text-lg font-black uppercase tracking-tight text-white leading-none">
+                FOODPACK<span className="text-[#FF3333]">.</span>
               </p>
-              <div className="flex items-center gap-1.5">
+              <span className="text-[8px] font-extrabold tracking-widest text-amber-400 uppercase">
+                by Maurelle
+              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Administration</span>
               </div>
@@ -237,7 +240,7 @@ export default function AdminLayout() {
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">FOOD PACK</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">FOODPACK by Maurelle</span>
                 <span className="text-slate-300">/</span>
                 <h1 className="font-display text-base font-extrabold text-slate-900 sm:text-lg">{current}</h1>
               </div>
