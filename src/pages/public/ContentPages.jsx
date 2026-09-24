@@ -390,7 +390,10 @@ export function GalleryPage() {
 export function LegalPage({ title }) {
   return (
     <>
-      <SEO title={`${title} | FOOD PACK`} />
+      <SEO
+        title={`${title} | FOOD PACK Bénin`}
+        description={`Informations officielles et dispositions relatives à la page ${title} de FOOD PACK Bénin (emballages alimentaires à Cotonou et Parakou).`}
+      />
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         <h1 className="shop-title-display text-3xl font-black text-black">{title}</h1>
         <div className="mt-8 space-y-4 text-sm leading-relaxed text-black/70">
