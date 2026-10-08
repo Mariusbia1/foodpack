@@ -293,13 +293,21 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* 3. Bottom Bar (Clean without payment badges) */}
+        {/* 3. Bottom Bar */}
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-black/10 pt-8 sm:flex-row text-xs text-black/60">
           <p>
             FOODPACK by Maurelle © 2026. Tous droits réservés.
           </p>
-          <p className="text-black/40">
-            Fournisseur d’emballages alimentaires professionnels au Bénin • Cotonou & Parakou
+          <p className="flex items-center gap-1.5 text-black/60">
+            <span>Réalisé par</span>
+            <a
+              href="https://mariusbiaou.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-black transition-colors hover:text-[#01AB31] underline decoration-black/20 hover:decoration-[#01AB31] underline-offset-2"
+            >
+              Mermouz
+            </a>
           </p>
         </div>
       </div>
