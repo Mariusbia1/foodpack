@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   Truck,
   Sparkles,
+  Copy,
+  Check,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import SEO from '../../components/common/SEO'
@@ -19,10 +21,12 @@ import { useCatalog } from '../../contexts/CatalogContext'
 import { useCart } from '../../contexts/CartContext'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { addReview } from '../../services/catalogService'
+import { copyTextToClipboard, getProductPublicUrl } from '../../utils/clipboard'
 
 export default function ProductPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const [copiedLink, setCopiedLink] = useState(false)
   const { products, testimonials } = useCatalog()
   const product = products.find((p) => p.slug === slug)
   const { addItem } = useCart()
@@ -100,6 +104,19 @@ export default function ProductPage() {
   const handleDirectOrder = () => {
     handleAddToCart()
     navigate('/panier')
+  }
+
+  const handleCopyProductLink = async () => {
+    if (!product) return
+    const url = getProductPublicUrl(product)
+    const success = await copyTextToClipboard(url)
+    if (success) {
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2000)
+      toast.success(`Lien de « ${product.name} » copié !`)
+    } else {
+      toast.error('Impossible de copier le lien.')
+    }
   }
 
   const handleReviewSubmit = async (e) => {
@@ -416,6 +433,20 @@ export default function ProductPage() {
             >
               <MessageCircle className="h-4 w-4 text-[#01AB31]" />
               <span>Commander instantanément</span>
+            </button>
+
+            {/* Copy Product Link Button */}
+            <button
+              type="button"
+              onClick={handleCopyProductLink}
+              className={`mt-2.5 flex w-full items-center justify-center gap-2 rounded-full border py-3 text-xs font-bold transition ${
+                copiedLink
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                  : 'border-black/10 bg-[#F7F6F5] text-black/70 hover:border-black/20 hover:bg-black hover:text-white'
+              }`}
+            >
+              {copiedLink ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+              <span>{copiedLink ? 'Lien copié dans le presse-papier !' : 'Copier le lien du produit'}</span>
             </button>
 
             {/* Value Props */}

@@ -18,6 +18,7 @@ import PhoneInput from '../../components/common/PhoneInput'
 import ProductMediaThumb from '../../components/products/ProductMediaThumb'
 import { supabase } from '../../lib/supabase'
 import { formatErrorMessage } from '../../utils/formatError'
+import { copyTextToClipboard, getProductPublicUrl } from '../../utils/clipboard'
 import {
   deleteCategory, deleteGalleryItem, deleteProduct, deleteProductImage, deleteTestimonial,
   getAdminOrders, getAdminProfile, getAdminTeam, getCategories, getDashboardData, getGallery,
@@ -625,6 +626,20 @@ export function ProductsAdmin() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [copiedId, setCopiedId] = useState(null)
+
+  const handleCopyProductLink = async (e, product) => {
+    e.stopPropagation()
+    const url = getProductPublicUrl(product)
+    const success = await copyTextToClipboard(url)
+    if (success) {
+      setCopiedId(product.id)
+      setTimeout(() => setCopiedId(null), 2000)
+      toast.success(`Lien de « ${product.name} » copié !`)
+    } else {
+      toast.error('Impossible de copier le lien.')
+    }
+  }
 
   useEffect(() => {
     getProducts({ includeDrafts: true })
@@ -725,7 +740,39 @@ export function ProductsAdmin() {
                       <Status>{p.stockStatus}</Status>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyProductLink(e, p)}
+                          className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                            copiedId === p.id
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-black'
+                          }`}
+                          title="Copier le lien public du produit sur le site"
+                        >
+                          {copiedId === p.id ? (
+                            <>
+                              <Check className="h-3.5 w-3.5 text-emerald-600" />
+                              <span>Copié !</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3.5 w-3.5 text-slate-500" />
+                              <span>Copier lien</span>
+                            </>
+                          )}
+                        </button>
+                        <a
+                          href={`/collections/${p.slug || p.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-black transition"
+                          title="Voir le produit sur le site (ouvre un nouvel onglet)"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
                         <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50">
                           Modifier
                         </span>
