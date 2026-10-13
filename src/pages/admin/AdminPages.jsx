@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
@@ -191,9 +191,13 @@ const statusMap = {
   ready: { label: 'Prête', style: 'bg-purple-50 text-purple-700 border-purple-200/80' },
   delivered: { label: 'Livrée', style: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' },
   cancelled: { label: 'Annulée', style: 'bg-rose-50 text-rose-700 border-rose-200/80' },
-  'Disponible': { label: 'Disponible', style: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' },
-  'Sur commande': { label: 'Sur commande', style: 'bg-slate-100 text-slate-700 border-slate-200' },
+  'Disponible': { label: 'En stock', style: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' },
+  'in_stock': { label: 'En stock', style: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' },
+  'Sur commande': { label: 'Sur commande', style: 'bg-amber-50 text-amber-700 border-amber-200/80' },
+  'low_stock': { label: 'Stock faible', style: 'bg-amber-50 text-amber-700 border-amber-200/80' },
   'Indisponible': { label: 'Rupture', style: 'bg-rose-50 text-rose-700 border-rose-200/80' },
+  'Rupture': { label: 'Rupture', style: 'bg-rose-50 text-rose-700 border-rose-200/80' },
+  'out_of_stock': { label: 'Rupture', style: 'bg-rose-50 text-rose-700 border-rose-200/80' },
   'Publié': { label: 'Publié', style: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' },
   'Brouillon': { label: 'Brouillon', style: 'bg-slate-100 text-slate-600 border-slate-200' },
 }
@@ -217,55 +221,108 @@ const orderStatus = {
   cancelled: 'Annulée',
 }
 
-function OrderTable({ rows = [] }) {
+function OrderTable({ rows = [], compact = false }) {
   const navigate = useNavigate()
   return (
-    <div className="w-full overflow-x-auto rounded-2xl border border-slate-200/80 bg-white">
-      <table className="w-full min-w-[760px] text-left text-xs">
-        <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-          <tr>
-            <th className="px-5 py-3.5">Référence</th>
-            <th className="px-5 py-3.5">Client</th>
-            <th className="px-5 py-3.5">Ville</th>
-            <th className="px-5 py-3.5">Montant</th>
-            <th className="px-5 py-3.5">Statut</th>
-            <th className="px-5 py-3.5">Date</th>
-            <th className="px-5 py-3.5 text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {rows.map((o) => (
-            <tr
-              key={o.id}
-              onClick={() => navigate(`/admin/commandes/${o.id}`)}
-              className="cursor-pointer transition hover:bg-slate-50/80"
-            >
-              <td className="px-5 py-3.5 font-bold font-mono text-slate-900">{o.order_number || o.id.slice(0, 8)}</td>
-              <td className="px-5 py-3.5 font-semibold text-slate-800">{o.customer_name || o.customer || 'Client'}</td>
-              <td className="px-5 py-3.5 text-slate-600">{o.city || 'Cotonou'}</td>
-              <td className="px-5 py-3.5 font-bold text-slate-900">{formatCurrency(o.total ?? o.amount ?? 0)}</td>
-              <td className="px-5 py-3.5">
-                <Status>{o.status}</Status>
-              </td>
-              <td className="px-5 py-3.5 text-slate-500">
+    <div className="w-full">
+      {/* Mobile view: Fluid, touch-friendly cards */}
+      <div className="grid gap-2.5 sm:hidden">
+        {rows.map((o) => (
+          <div
+            key={o.id}
+            onClick={() => navigate(`/admin/commandes/${o.id}`)}
+            className="flex flex-col gap-2 rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs transition hover:border-slate-400 active:scale-[0.99] cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-slate-900">
+                {o.order_number || o.id.slice(0, 8)}
+              </span>
+              <Status>{o.status}</Status>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-slate-700 truncate max-w-[200px]">
+                {o.customer_name || o.customer || 'Client'}
+                {o.city ? <span className="text-slate-400"> · {o.city}</span> : null}
+              </span>
+              <span className="text-[11px] text-slate-400">
                 {o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR') : o.date || '—'}
-              </td>
-              <td className="px-5 py-3.5 text-right">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-black hover:text-white">
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </span>
-              </td>
-            </tr>
-          ))}
-          {!rows.length && (
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+              <span className="font-sans text-sm font-black text-slate-900">
+                {formatCurrency(o.total ?? o.amount ?? 0)}
+              </span>
+              <span className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
+                <span>Détails</span>
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </span>
+            </div>
+          </div>
+        ))}
+        {!rows.length && (
+          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-xs text-slate-400">
+            Aucune commande enregistrée pour le moment.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop view: Fluid Table without artificial min-w overflow */}
+      <div className={`hidden sm:block ${compact ? 'overflow-hidden' : 'overflow-x-auto rounded-2xl border border-slate-200/80 bg-white'}`}>
+        <table className="w-full text-left text-xs">
+          <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500">
             <tr>
-              <td colSpan="7" className="py-12 text-center text-xs text-slate-400">
-                Aucune commande enregistrée pour le moment.
-              </td>
+              <th className="px-4 py-3">Référence</th>
+              <th className="px-4 py-3">Client</th>
+              {!compact && <th className="px-4 py-3">Ville</th>}
+              <th className="px-4 py-3">Montant</th>
+              <th className="px-4 py-3">Statut</th>
+              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3 text-right">Action</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rows.map((o) => (
+              <tr
+                key={o.id}
+                onClick={() => navigate(`/admin/commandes/${o.id}`)}
+                className="cursor-pointer transition hover:bg-slate-50/80"
+              >
+                <td className="px-4 py-3 font-bold font-mono text-slate-900 whitespace-nowrap">
+                  {o.order_number || o.id.slice(0, 8)}
+                </td>
+                <td className="px-4 py-3 font-semibold text-slate-800">
+                  <span className="block truncate max-w-44">{o.customer_name || o.customer || 'Client'}</span>
+                  {compact && o.city && <span className="block text-[10px] font-normal text-slate-400">{o.city}</span>}
+                </td>
+                {!compact && (
+                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{o.city || 'Cotonou'}</td>
+                )}
+                <td className="px-4 py-3 font-bold text-slate-900 whitespace-nowrap">
+                  {formatCurrency(o.total ?? o.amount ?? 0)}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <Status>{o.status}</Status>
+                </td>
+                <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
+                  {o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR') : o.date || '—'}
+                </td>
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-black hover:text-white transition">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {!rows.length && (
+              <tr>
+                <td colSpan={compact ? 6 : 7} className="py-12 text-center text-xs text-slate-400">
+                  Aucune commande enregistrée pour le moment.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
@@ -414,52 +471,60 @@ function CatalogDashboard() {
       {/* Main Sections Grid */}
       <div className="mt-6 grid gap-6 lg:grid-cols-12">
         {/* Category Breakdown */}
-        <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs lg:col-span-5">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Catalogue réel</p>
-              <h2 className="font-display text-base font-bold text-slate-900">Produits par catégorie</h2>
-            </div>
-            <Link to="/admin/categories" className="text-xs font-bold text-slate-600 hover:text-black">
-              Gérer
-            </Link>
-          </div>
-
-          <div className="mt-5 space-y-4">
-            {counts.map((item) => (
-              <div key={item.id} className="space-y-1.5">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-700">{item.name}</span>
-                  <b className="text-slate-900">{item.count} réf.</b>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-black transition-all duration-500"
-                    style={{ width: `${(item.count / maximum) * 100}%` }}
-                  />
-                </div>
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs lg:col-span-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Catalogue réel</p>
+                <h2 className="font-display text-base font-bold text-slate-900">Produits par catégorie</h2>
               </div>
-            ))}
-            {!counts.length && (
-              <p className="py-6 text-center text-xs text-slate-400">Aucune catégorie pour le moment.</p>
-            )}
+              <Link to="/admin/categories" className="text-xs font-bold text-slate-600 hover:text-black">
+                Gérer
+              </Link>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {counts.map((item) => (
+                <Link
+                  key={item.id}
+                  to={`/admin/produits?category=${item.slug || item.id}`}
+                  className="group block space-y-1.5 rounded-xl p-2 -mx-2 transition hover:bg-slate-50"
+                  title={`Voir les produits dans ${item.name}`}
+                >
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-slate-700 group-hover:text-black transition">{item.name}</span>
+                    <b className="text-slate-900">{item.count} réf.</b>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-black transition-all duration-500 group-hover:bg-[#FF3333]"
+                      style={{ width: `${(item.count / maximum) * 100}%` }}
+                    />
+                  </div>
+                </Link>
+              ))}
+              {!counts.length && (
+                <p className="py-6 text-center text-xs text-slate-400">Aucune catégorie pour le moment.</p>
+              )}
+            </div>
           </div>
         </section>
 
         {/* Recent Orders Preview */}
-        <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs lg:col-span-7">
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs lg:col-span-7">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Flux d'achats</p>
               <h2 className="font-display text-base font-bold text-slate-900">Commandes récentes</h2>
             </div>
-            <Link to="/admin/commandes" className="text-xs font-bold text-slate-600 hover:text-black">
-              Voir tout ({ordersList.length})
+            <Link to="/admin/commandes" className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-black">
+              <span>Voir tout ({ordersList.length})</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           <div className="mt-4">
-            <OrderTable rows={ordersList.slice(0, 5)} />
+            <OrderTable rows={ordersList.slice(0, 5)} compact />
           </div>
         </section>
       </div>
@@ -519,7 +584,7 @@ function TrafficPanel() {
   const periodLabel = period ? `${period} derniers jours` : 'toute la période'
 
   return (
-    <section className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+    <section className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Audience & Visites · {periodLabel}</p>
@@ -563,7 +628,7 @@ function TrafficPanel() {
       {/* Chart Bars */}
       <div className="mt-6 overflow-x-auto pb-2">
         <div
-          className="grid h-36 min-w-[700px] items-end gap-2 rounded-xl bg-slate-50/50 p-4 border border-slate-100"
+          className="grid h-36 w-full min-w-[280px] sm:min-w-[480px] items-end gap-1.5 sm:gap-2 rounded-xl bg-slate-50/50 p-4 border border-slate-100"
           style={{ gridTemplateColumns: `repeat(${Math.max(dailyList.length, 1)}, minmax(0, 1fr))` }}
         >
           {dailyList.map((item) => (
@@ -573,7 +638,7 @@ function TrafficPanel() {
               className="group relative min-w-0 rounded-t bg-slate-900 transition hover:bg-[#FF3333]"
               style={{ height: `${Math.max(8, (item.count / maximum) * 100)}%` }}
             >
-              <span className="absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded bg-black px-1.5 py-0.5 text-[9px] font-bold text-white shadow group-hover:block">
+              <span className="absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded bg-black px-1.5 py-0.5 text-[9px] font-bold text-white shadow group-hover:block z-10 whitespace-nowrap">
                 {item.count}
               </span>
             </div>
@@ -622,11 +687,18 @@ export function DashboardPage() {
 
 export function ProductsAdmin() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState(() => searchParams.get('category') || 'all')
+  const [statusFilter, setStatusFilter] = useState('all') // 'all', 'published', 'draft', 'in_stock', 'out_of_stock'
   const [copiedId, setCopiedId] = useState(null)
+
+  useEffect(() => {
+    const cat = searchParams.get('category')
+    if (cat) setCategoryFilter(cat)
+  }, [searchParams])
 
   const handleCopyProductLink = async (e, product) => {
     e.stopPropagation()
@@ -659,11 +731,50 @@ export function ProductsAdmin() {
     }
   }
 
+  const categoriesList = useMemo(() => {
+    const set = new Set()
+    items.forEach((p) => {
+      if (p.category) set.add(p.category)
+    })
+    return Array.from(set)
+  }, [items])
+
+  const totalCount = items.length
+  const publishedCount = items.filter((p) => p.isPublished).length
+  const draftCount = totalCount - publishedCount
+  const outOfStockCount = items.filter(
+    (p) => p.stockStatus === 'Rupture' || p.stockStatus === 'Indisponible' || p.stockStatus === 'out_of_stock'
+  ).length
+
   const filtered = items.filter((p) => {
-    const matchesQuery = (p.name || '').toLowerCase().includes(query.toLowerCase()) || (p.category || '').toLowerCase().includes(query.toLowerCase())
-    const matchesCategory = categoryFilter === 'all' || p.categorySlug === categoryFilter || p.category === categoryFilter
-    return matchesQuery && matchesCategory
+    const matchesQuery =
+      (p.name || '').toLowerCase().includes(query.toLowerCase()) ||
+      (p.category || '').toLowerCase().includes(query.toLowerCase()) ||
+      (p.slug || '').toLowerCase().includes(query.toLowerCase())
+
+    const matchesCategory =
+      categoryFilter === 'all' ||
+      p.categorySlug === categoryFilter ||
+      p.category === categoryFilter ||
+      p.categoryId === categoryFilter
+
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'published' && p.isPublished) ||
+      (statusFilter === 'draft' && !p.isPublished) ||
+      (statusFilter === 'in_stock' && (p.stockStatus === 'Disponible' || p.stockStatus === 'in_stock')) ||
+      (statusFilter === 'out_of_stock' && (p.stockStatus === 'Rupture' || p.stockStatus === 'Indisponible' || p.stockStatus === 'out_of_stock'))
+
+    return matchesQuery && matchesCategory && matchesStatus
   })
+
+  const hasActiveFilters = query.trim() !== '' || categoryFilter !== 'all' || statusFilter !== 'all'
+  const resetFilters = () => {
+    setQuery('')
+    setCategoryFilter('all')
+    setStatusFilter('all')
+    setSearchParams({})
+  }
 
   return (
     <>
@@ -672,7 +783,7 @@ export function ProductsAdmin() {
         action={
           <Link
             to="/admin/produits/nouveau"
-            className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-95"
           >
             <Plus className="h-4 w-4" />
             <span>Nouveau produit</span>
@@ -682,124 +793,441 @@ export function ProductsAdmin() {
         Produits & Emballages
       </Title>
 
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
-        {/* Search & Filter bar */}
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex w-full max-w-sm items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs transition focus-within:border-black focus-within:bg-white focus-within:ring-2 focus-within:ring-black/5">
-            <Search className="h-4 w-4 shrink-0 text-slate-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher par nom, format ou catégorie…"
-              className="w-full bg-transparent outline-none placeholder:text-slate-400"
-            />
+      {/* KPI Stats Filter Bar */}
+      <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+        <button
+          type="button"
+          onClick={() => setStatusFilter('all')}
+          className={`flex items-center justify-between rounded-2xl border p-3.5 text-left transition ${
+            statusFilter === 'all'
+              ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+              : 'border-slate-200/90 bg-white text-slate-800 hover:border-slate-300'
+          }`}
+        >
+          <div>
+            <p className={`text-[11px] font-semibold ${statusFilter === 'all' ? 'text-slate-300' : 'text-slate-500'}`}>Total catalogue</p>
+            <p className="mt-0.5 text-lg font-black tracking-tight">{totalCount}</p>
           </div>
-          <span className="text-xs text-slate-500 font-medium">
-            {filtered.length} produit{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
+          <span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-black ${
+            statusFilter === 'all' ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-700'
+          }`}>
+            <Package className="h-4 w-4" />
           </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter(statusFilter === 'published' ? 'all' : 'published')}
+          className={`flex items-center justify-between rounded-2xl border p-3.5 text-left transition ${
+            statusFilter === 'published'
+              ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs'
+              : 'border-slate-200/90 bg-white text-slate-800 hover:border-slate-300'
+          }`}
+        >
+          <div>
+            <p className={`text-[11px] font-semibold ${statusFilter === 'published' ? 'text-emerald-100' : 'text-slate-500'}`}>En ligne</p>
+            <p className="mt-0.5 text-lg font-black tracking-tight">{publishedCount}</p>
+          </div>
+          <span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-black ${
+            statusFilter === 'published' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700'
+          }`}>
+            <CheckCircle2 className="h-4 w-4" />
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter(statusFilter === 'draft' ? 'all' : 'draft')}
+          className={`flex items-center justify-between rounded-2xl border p-3.5 text-left transition ${
+            statusFilter === 'draft'
+              ? 'border-slate-800 bg-slate-800 text-white shadow-xs'
+              : 'border-slate-200/90 bg-white text-slate-800 hover:border-slate-300'
+          }`}
+        >
+          <div>
+            <p className={`text-[11px] font-semibold ${statusFilter === 'draft' ? 'text-slate-300' : 'text-slate-500'}`}>Brouillons</p>
+            <p className="mt-0.5 text-lg font-black tracking-tight">{draftCount}</p>
+          </div>
+          <span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-black ${
+            statusFilter === 'draft' ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            <Layers className="h-4 w-4" />
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter(statusFilter === 'out_of_stock' ? 'all' : 'out_of_stock')}
+          className={`flex items-center justify-between rounded-2xl border p-3.5 text-left transition ${
+            statusFilter === 'out_of_stock'
+              ? 'border-rose-600 bg-rose-600 text-white shadow-xs'
+              : 'border-slate-200/90 bg-white text-slate-800 hover:border-slate-300'
+          }`}
+        >
+          <div>
+            <p className={`text-[11px] font-semibold ${statusFilter === 'out_of_stock' ? 'text-rose-100' : 'text-slate-500'}`}>En rupture</p>
+            <p className="mt-0.5 text-lg font-black tracking-tight">{outOfStockCount}</p>
+          </div>
+          <span className={`grid h-8 w-8 place-items-center rounded-xl text-xs font-black ${
+            statusFilter === 'out_of_stock' ? 'bg-white/20 text-white' : 'bg-rose-50 text-rose-700'
+          }`}>
+            <AlertCircle className="h-4 w-4" />
+          </span>
+        </button>
+      </div>
+
+      {/* Main Catalog Container */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-xs">
+        {/* Search & Category Filter Bar */}
+        <div className="space-y-3.5 border-b border-slate-100 pb-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* Search Input */}
+            <div className="relative flex w-full max-w-md items-center rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs transition focus-within:border-black focus-within:bg-white focus-within:ring-2 focus-within:ring-black/5">
+              <Search className="h-4 w-4 shrink-0 text-slate-400" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher par nom, format, catégorie ou référence…"
+                className="w-full bg-transparent px-2.5 outline-none placeholder:text-slate-400"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  className="grid h-5 w-5 place-items-center rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300"
+                  aria-label="Effacer la recherche"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
+              <span className="font-semibold text-slate-600">
+                {filtered.length} produit{filtered.length > 1 ? 's' : ''} affiché{filtered.length > 1 ? 's' : ''}
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="font-bold text-rose-600 hover:text-rose-700 hover:underline"
+                >
+                  Réinitialiser
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Category Chips Filter */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setCategoryFilter('all')
+                setSearchParams({})
+              }}
+              className={`shrink-0 rounded-xl px-3 py-1.5 font-bold transition ${
+                categoryFilter === 'all'
+                  ? 'bg-black text-white shadow-2xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-black'
+              }`}
+            >
+              Toutes les catégories ({totalCount})
+            </button>
+            {categoriesList.map((cat) => {
+              const count = items.filter((p) => p.category === cat).length
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setCategoryFilter(cat)
+                    setSearchParams({ category: cat })
+                  }}
+                  className={`shrink-0 rounded-xl px-3 py-1.5 font-bold transition ${
+                    categoryFilter === cat
+                      ? 'bg-black text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-black'
+                  }`}
+                >
+                  {cat} ({count})
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {loading ? (
-          <div className="py-16 text-center">
-            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-black" />
-            <p className="mt-3 text-xs text-slate-500">Chargement du catalogue FOOD PACK…</p>
+          <div className="py-20 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-3 border-slate-200 border-t-black" />
+            <p className="mt-3 text-xs font-semibold text-slate-500">Chargement du catalogue FOOD PACK…</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-xs">
-              <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Visuel</th>
-                  <th className="px-4 py-3">Produit</th>
-                  <th className="px-4 py-3">Catégorie</th>
-                  <th className="px-4 py-3">Prix unitaire</th>
-                  <th className="px-4 py-3">Disponibilité</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filtered.map((p) => (
-                  <tr
-                    key={p.id}
-                    onClick={() => navigate(`/admin/produits/${p.id}/modifier`)}
-                    className="cursor-pointer transition hover:bg-slate-50/80"
-                  >
-                    <td className="px-4 py-3">
-                      <ProductMediaThumb product={p} alt={p.name} className="h-12 w-12 rounded-xl object-cover border border-slate-100" />
-                    </td>
-                    <td className="px-4 py-3">
-                      <b className="text-slate-900 text-sm">{p.name}</b>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${p.isPublished ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                        <span className="text-[10px] text-slate-500">{p.isPublished ? 'En ligne' : 'Brouillon'}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 font-medium text-slate-600">{p.category || 'Emballage'}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900">{formatCurrency(p.price)}</td>
-                    <td className="px-4 py-3">
-                      <Status>{p.stockStatus}</Status>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => handleCopyProductLink(e, p)}
-                          className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
-                            copiedId === p.id
-                              ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-black'
-                          }`}
-                          title="Copier le lien public du produit sur le site"
-                        >
-                          {copiedId === p.id ? (
-                            <>
-                              <Check className="h-3.5 w-3.5 text-emerald-600" />
-                              <span>Copié !</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-3.5 w-3.5 text-slate-500" />
-                              <span>Copier lien</span>
-                            </>
-                          )}
-                        </button>
-                        <a
-                          href={`/collections/${p.slug || p.id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-black transition"
-                          title="Voir le produit sur le site (ouvre un nouvel onglet)"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                        <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-50">
-                          Modifier
+          <>
+            {/* Mobile View: Fluid & Touch-Friendly Cards (Zero Horizontal Scrolling) */}
+            <div className="mt-4 grid gap-3 md:hidden">
+              {filtered.map((p) => (
+                <div
+                  key={p.id}
+                  className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs transition hover:border-slate-300"
+                >
+                  <div className="flex gap-3">
+                    <div className="relative shrink-0">
+                      <ProductMediaThumb
+                        product={p}
+                        alt={p.name}
+                        className="h-20 w-20 rounded-xl border border-slate-100 object-cover shadow-2xs"
+                      />
+                      <span
+                        className={`absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white ${
+                          p.isPublished ? 'bg-emerald-500' : 'bg-slate-400'
+                        }`}
+                        title={p.isPublished ? 'En ligne' : 'Brouillon'}
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="inline-block truncate rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 max-w-[120px]">
+                          {p.category || 'Emballage'}
                         </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            remove(p)
-                          }}
-                          className="grid h-7 w-7 place-items-center rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700"
-                          aria-label={`Supprimer ${p.name}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <Status>{p.stockStatus}</Status>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {!filtered.length && (
+
+                      <h3
+                        onClick={() => navigate(`/admin/produits/${p.id}/modifier`)}
+                        className="mt-1 font-bold text-sm text-slate-900 line-clamp-2 cursor-pointer hover:underline leading-snug"
+                      >
+                        {p.name}
+                      </h3>
+
+                      <div className="mt-2 flex items-baseline gap-1.5">
+                        <span className="font-sans text-sm font-black text-slate-900">
+                          {formatCurrency(p.price)}
+                        </span>
+                        {p.variants?.length > 1 && (
+                          <span className="text-[10px] text-slate-400 font-semibold">
+                            ({p.variants.length} formats)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile Actions Toolbar */}
+                  <div className="mt-3 flex items-center justify-between gap-1.5 border-t border-slate-100 pt-2.5">
+                    <button
+                      type="button"
+                      onClick={(e) => handleCopyProductLink(e, p)}
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold transition active:scale-95 ${
+                        copiedId === p.id
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {copiedId === p.id ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>Lien copié !</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5 text-slate-500" />
+                          <span>Copier lien</span>
+                        </>
+                      )}
+                    </button>
+
+                    <a
+                      href={`/collections/${p.slug || p.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 active:scale-95"
+                      title="Voir sur le site"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/produits/${p.id}/modifier`)}
+                      className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 active:scale-95"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-slate-500" />
+                      <span>Modifier</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => remove(p)}
+                      className="grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl border border-rose-100 bg-rose-50/50 text-rose-600 hover:bg-rose-100 active:scale-95"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {!filtered.length && (
+                <div className="py-16 text-center text-xs text-slate-400 rounded-2xl border border-dashed border-slate-200 p-8">
+                  Aucun produit trouvé correspondant à vos critères de recherche.
+                </div>
+              )}
+            </div>
+
+            {/* Desktop View: Spacious, Fluid, High-Visibility Table */}
+            <div className="mt-4 hidden md:block overflow-hidden rounded-xl border border-slate-100">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   <tr>
-                    <td colSpan="6" className="py-12 text-center text-xs text-slate-400">
-                      Aucun produit trouvé correspondant à vos critères.
-                    </td>
+                    <th className="px-4 py-3.5 w-20">Visuel</th>
+                    <th className="px-4 py-3.5 min-w-[220px]">Produit & Référence</th>
+                    <th className="px-4 py-3.5 w-36">Catégorie</th>
+                    <th className="px-4 py-3.5 w-36">Prix unitaire</th>
+                    <th className="px-4 py-3.5 w-32">Disponibilité</th>
+                    <th className="px-4 py-3.5 text-right w-64">Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((p) => (
+                    <tr
+                      key={p.id}
+                      onClick={() => navigate(`/admin/produits/${p.id}/modifier`)}
+                      className="group cursor-pointer transition hover:bg-slate-50/80"
+                    >
+                      {/* Product Thumbnail */}
+                      <td className="px-4 py-3.5">
+                        <ProductMediaThumb
+                          product={p}
+                          alt={p.name}
+                          className="h-14 w-14 rounded-xl border border-slate-200/90 object-cover shadow-2xs group-hover:scale-105 transition-transform duration-200"
+                        />
+                      </td>
+
+                      {/* Product Title & Subtitle */}
+                      <td className="px-4 py-3.5">
+                        <b className="text-slate-900 text-sm group-hover:text-black leading-snug block">
+                          {p.name}
+                        </b>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            p.isPublished
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                              : 'bg-slate-100 text-slate-600 border border-slate-200/80'
+                          }`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${p.isPublished ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                            {p.isPublished ? 'En ligne' : 'Brouillon'}
+                          </span>
+                          {p.variants?.length > 1 ? (
+                            <span className="text-[11px] text-slate-400 font-medium">
+                              {p.variants.length} formats disponibles
+                            </span>
+                          ) : p.slug ? (
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              /{p.slug}
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+
+                      {/* Category */}
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center rounded-lg bg-slate-100 border border-slate-200/60 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                          {p.category || 'Emballage'}
+                        </span>
+                      </td>
+
+                      {/* Unit Price */}
+                      <td className="px-4 py-3.5">
+                        <span className="font-sans text-sm font-black text-slate-900 whitespace-nowrap block">
+                          {formatCurrency(p.price)}
+                        </span>
+                        {p.variants?.length > 1 && (
+                          <span className="text-[10px] text-slate-400 font-medium">À partir de</span>
+                        )}
+                      </td>
+
+                      {/* Availability */}
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <Status>{p.stockStatus}</Status>
+                      </td>
+
+                      {/* Action buttons */}
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Copier le lien button */}
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopyProductLink(e, p)}
+                            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-2xs ${
+                              copiedId === p.id
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-black'
+                            }`}
+                            title="Copier le lien public du produit sur la boutique"
+                          >
+                            {copiedId === p.id ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                <span>Copié !</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5 text-slate-500" />
+                                <span>Copier lien</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* Voir sur le site */}
+                          <a
+                            href={`/collections/${p.slug || p.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="grid h-8 w-8 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-2xs hover:border-slate-300 hover:bg-slate-50 hover:text-black transition"
+                            title="Voir le produit sur la boutique en ligne"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+
+                          {/* Modifier */}
+                          <span
+                            onClick={() => navigate(`/admin/produits/${p.id}/modifier`)}
+                            className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:border-slate-300 hover:bg-slate-50 hover:text-black transition"
+                          >
+                            <Pencil className="h-3 w-3 text-slate-500" />
+                            <span>Modifier</span>
+                          </span>
+
+                          {/* Supprimer */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              remove(p)
+                            }}
+                            className="grid h-8 w-8 place-items-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                            title={`Supprimer ${p.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!filtered.length && (
+                    <tr>
+                      <td colSpan="6" className="py-16 text-center text-xs text-slate-400">
+                        Aucun produit trouvé correspondant à vos critères de recherche.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </>
