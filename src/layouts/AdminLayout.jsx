@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Shapes, ShoppingCart, Images, Quote,
-  FileText, Settings, User, LogOut, Search, Bell, Menu, X, ChevronRight, ExternalLink, ShieldCheck, Plus, Sparkles,
-  Users, UserCheck, Shield
+  FileText, Settings, User, LogOut, Bell, Menu, X, ExternalLink, ShieldCheck,
+  Users
 } from 'lucide-react'
 import { useAdminAuth } from '../contexts/AdminAuthContext'
 import InstallAppButton from '../components/common/InstallAppButton'
@@ -99,15 +99,22 @@ function SidebarContent({ onNavigate }) {
       </div>
 
       {/* Sidebar Footer */}
-      <div className="border-t border-slate-800/80 p-4">
-        <Link
-          to="/"
-          onClick={onNavigate}
-          className="mb-3 flex w-full items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
-        >
-          <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
-          <span>Voir le site</span>
-        </Link>
+      <div className="border-t border-slate-800/80 p-4 space-y-3">
+        <div className="space-y-1.5">
+          <Link
+            to="/"
+            onClick={onNavigate}
+            className="flex w-full items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
+          >
+            <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+            <span>Voir le site</span>
+          </Link>
+          <InstallAppButton
+            manifestHref="/admin-manifest.webmanifest"
+            label="Installer l'application"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/30 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+          />
+        </div>
 
         <div className="flex items-center justify-between rounded-xl bg-slate-800/60 p-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -142,6 +149,7 @@ function SidebarContent({ onNavigate }) {
 }
 
 export default function AdminLayout() {
+  const { profile, isSuperAdmin } = useAdminAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -229,42 +237,52 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <div className="min-h-screen min-w-0 overflow-x-hidden lg:pl-64">
         {/* Sticky Modern Topbar */}
-        <header className="sticky top-0 z-30 flex h-18 items-center justify-between border-b border-slate-200/90 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-slate-200/90 bg-white/95 px-3.5 backdrop-blur-md sm:px-6 lg:px-8">
+          {/* Left: Mobile Menu & Current Page Title */}
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
             <button
               onClick={() => setMobileOpen(true)}
-              className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 lg:hidden"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-2xs transition hover:bg-slate-50 active:scale-95 lg:hidden"
               aria-label="Ouvrir le menu"
             >
               <Menu className="h-4 w-4" />
             </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">FOODPACK by Maurelle</span>
-                <span className="text-slate-300">/</span>
-                <h1 className="font-display text-base font-extrabold text-slate-900 sm:text-lg">{current}</h1>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="hidden items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:inline-flex">
+                  <span>FOODPACK</span>
+                  <span className="text-slate-300">/</span>
+                </span>
+                <h1 className="truncate font-display text-sm font-extrabold text-slate-900 sm:text-base md:text-lg">
+                  {current}
+                </h1>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Search Input */}
-            <div className="hidden h-9 min-w-56 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-black focus-within:bg-white focus-within:ring-2 focus-within:ring-black/5 md:flex">
-              <Search className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-              <input
-                placeholder="Rechercher..."
-                className="w-full bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-400"
-              />
-              <span className="rounded bg-slate-200/70 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">⌘K</span>
-            </div>
-
-            <InstallAppButton compact manifestHref="/admin-manifest.webmanifest" label="Installer App" />
+          {/* Right: Actions */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+            {/* Quick Link to Storefront */}
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 sm:px-3 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-black active:scale-95"
+              title="Voir la boutique en ligne"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
+              <span className="hidden md:inline">Voir le site</span>
+            </a>
 
             {/* Notifications Dropdown */}
             <div className="relative" ref={notificationPanel}>
               <button
                 onClick={() => setNotificationsOpen((open) => !open)}
-                className="relative grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-2xs transition hover:bg-slate-50"
+                className={`relative grid h-9 w-9 place-items-center rounded-xl border transition shadow-2xs active:scale-95 ${
+                  notificationsOpen
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
                 aria-label={`${unreadCount} notifications`}
                 aria-expanded={notificationsOpen}
               >
@@ -277,68 +295,79 @@ export default function AdminLayout() {
               </button>
 
               {notificationsOpen && (
-                <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3">
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">Notifications</p>
-                      <p className="text-[10px] text-slate-500">
-                        {unreadCount ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Tout est à jour'}
-                      </p>
+                <>
+                  <div
+                    className="fixed inset-0 z-40 bg-slate-950/20 backdrop-blur-2xs sm:hidden"
+                    onClick={() => setNotificationsOpen(false)}
+                  />
+                  <div className="fixed inset-x-3 top-16 z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:absolute sm:inset-auto sm:right-0 sm:top-12 sm:w-80">
+                    <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3">
+                      <div>
+                        <p className="text-xs font-bold text-slate-900">Notifications</p>
+                        <p className="text-[10px] text-slate-500">
+                          {unreadCount ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Tout est à jour'}
+                        </p>
+                      </div>
+                      {unreadCount > 0 && (
+                        <button onClick={markAllRead} className="text-[10px] font-bold text-slate-600 hover:text-black">
+                          Tout marquer lu
+                        </button>
+                      )}
                     </div>
-                    {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="text-[10px] font-bold text-slate-600 hover:text-black">
-                        Tout marquer lu
-                      </button>
-                    )}
-                  </div>
 
-                  <div className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <button
-                        key={notification.id}
-                        onClick={() => openNotification(notification)}
-                        className={`block w-full p-3 text-left transition hover:bg-slate-50 ${
-                          notification.read_at ? 'opacity-60 bg-white' : 'bg-slate-50/50'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${notification.read_at ? 'bg-slate-300' : 'bg-[#FF3333]'}`} />
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-900">{notification.title}</p>
-                            <p className="mt-0.5 text-xs text-slate-600 leading-snug">{notification.message}</p>
-                            <span className="mt-1 block text-[9px] text-slate-400">
-                              {new Date(notification.created_at).toLocaleString('fr-FR')}
-                            </span>
+                    <div className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
+                      {notifications.map((notification) => (
+                        <button
+                          key={notification.id}
+                          onClick={() => openNotification(notification)}
+                          className={`block w-full p-3 text-left transition hover:bg-slate-50 ${
+                            notification.read_at ? 'opacity-60 bg-white' : 'bg-slate-50/50'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${notification.read_at ? 'bg-slate-300' : 'bg-[#FF3333]'}`} />
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-900">{notification.title}</p>
+                              <p className="mt-0.5 text-xs text-slate-600 leading-snug">{notification.message}</p>
+                              <span className="mt-1 block text-[9px] text-slate-400">
+                                {new Date(notification.created_at).toLocaleString('fr-FR')}
+                              </span>
+                            </div>
                           </div>
-                        </div>
+                        </button>
+                      ))}
+                      {!notifications.length && (
+                        <p className="p-6 text-center text-xs text-slate-400">Aucune notification.</p>
+                      )}
+                    </div>
+
+                    {notificationPermission === 'default' && (
+                      <button
+                        onClick={enableBrowserNotifications}
+                        className="w-full border-t border-slate-100 bg-slate-50 p-2.5 text-center text-[11px] font-bold text-slate-700 hover:text-black"
+                      >
+                        Activer les alertes navigateur
                       </button>
-                    ))}
-                    {!notifications.length && (
-                      <p className="p-6 text-center text-xs text-slate-400">Aucune notification.</p>
                     )}
                   </div>
-
-                  {notificationPermission === 'default' && (
-                    <button
-                      onClick={enableBrowserNotifications}
-                      className="w-full border-t border-slate-100 bg-slate-50 p-2.5 text-center text-[11px] font-bold text-slate-700 hover:text-black"
-                    >
-                      Activer les alertes navigateur
-                    </button>
-                  )}
-                </div>
+                </>
               )}
             </div>
 
             {/* Profile Avatar Chip */}
             <Link
               to="/admin/profil"
-              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 pr-2.5 shadow-2xs transition hover:bg-slate-50"
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 pr-1 sm:pr-2.5 shadow-2xs transition hover:bg-slate-50 active:scale-95"
+              title="Mon profil"
             >
-              <div className="grid h-7 w-7 place-items-center rounded-lg bg-black text-[11px] font-black text-white">
-                FP
+              <div className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-[11px] font-black text-white ${
+                isSuperAdmin ? 'bg-gradient-to-tr from-amber-600 to-amber-500' : 'bg-slate-900'
+              }`}>
+                {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : (isSuperAdmin ? 'S' : 'A')}
               </div>
-              <span className="hidden text-xs font-bold text-slate-800 sm:inline">Admin</span>
+              <span className="hidden max-w-24 truncate text-xs font-bold text-slate-800 sm:inline">
+                {profile?.full_name?.split(' ')[0] || 'Admin'}
+              </span>
             </Link>
           </div>
         </header>

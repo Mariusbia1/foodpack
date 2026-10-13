@@ -6,6 +6,7 @@ export default function InstallAppButton({
   compact = false,
   label = 'Installer Foodpack',
   manifestHref = '/manifest.webmanifest',
+  className = '',
 }) {
   const [installPrompt, setInstallPrompt] = useState(null)
   const [installed, setInstalled] = useState(
@@ -55,14 +56,14 @@ export default function InstallAppButton({
   return (
     <button
       onClick={install}
-      className={compact
+      className={className || (compact
         ? 'grid h-10 w-10 place-items-center rounded-full bg-mist text-gold'
         : 'flex w-full items-center justify-center gap-2 rounded-2xl border border-goldSoft/25 bg-white px-4 py-3 text-sm font-semibold text-gold shadow-sm dark:bg-white/5'
-      }
+      )}
       aria-label={label}
     >
-      <Download className="h-4 w-4" />
-      {!compact && label}
+      <Download className="h-4 w-4 shrink-0" />
+      {!compact && <span>{label}</span>}
     </button>
   )
 }
