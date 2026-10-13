@@ -109,15 +109,15 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Price & Discounts */}
-        <div className="mt-2.5 flex items-baseline gap-1.5">
+        <div className="mt-2.5 flex items-baseline gap-1.5 flex-nowrap whitespace-nowrap">
           {isMultiPrice && (
-            <span className="text-xs font-semibold text-black/50">Dès</span>
+            <span className="text-xs font-semibold text-black/50 shrink-0">Dès</span>
           )}
-          <span className="font-display text-base font-black text-black sm:text-lg">
+          <span className="font-sans text-[15px] font-extrabold text-black tracking-tight sm:text-base shrink-0 whitespace-nowrap">
             {formatCurrency(minPrice)}
           </span>
           {hasDiscount && (
-            <span className="text-xs font-bold text-black/40 line-through">
+            <span className="text-xs font-semibold text-black/40 line-through shrink-0 whitespace-nowrap">
               {formatCurrency(product.oldPrice)}
             </span>
           )}

@@ -249,16 +249,16 @@ export default function ProductPage() {
             </div>
 
             {/* Price & Discounts */}
-            <div className="mt-4 flex items-center gap-3">
-              <span className="text-2xl font-black text-black sm:text-3xl">
+            <div className="mt-4 flex items-center gap-3 flex-wrap sm:flex-nowrap whitespace-nowrap">
+              <span className="font-sans text-2xl font-black text-black tracking-tight sm:text-3xl shrink-0">
                 {formatCurrency(currentPrice)}
               </span>
               {hasDiscount && (
                 <>
-                  <span className="text-2xl font-black text-black/30 line-through sm:text-3xl">
+                  <span className="font-sans text-xl font-bold text-black/30 line-through sm:text-2xl shrink-0">
                     {formatCurrency(currentOldPrice)}
                   </span>
-                  <span className="rounded-full bg-[#FF3333]/10 px-3 py-1 text-xs font-black text-[#FF3333]">
+                  <span className="rounded-full bg-[#FF3333]/10 px-3 py-1 text-xs font-black text-[#FF3333] shrink-0">
                     -{discountPercent}%
                   </span>
                 </>
@@ -309,12 +309,12 @@ export default function ProductPage() {
                         <span className="text-xs font-extrabold line-clamp-1">
                           {variant.name || variant.capacity}
                         </span>
-                        <div className="mt-2 flex items-baseline gap-1.5">
-                          <span className={`text-sm font-black ${isSelected ? 'text-white' : 'text-black'}`}>
+                        <div className="mt-2 flex items-baseline gap-1.5 flex-nowrap whitespace-nowrap">
+                          <span className={`font-sans text-sm font-extrabold tracking-tight shrink-0 whitespace-nowrap ${isSelected ? 'text-white' : 'text-black'}`}>
                             {formatCurrency(variant.price)}
                           </span>
                           {varHasDiscount && (
-                            <span className={`text-[10px] line-through ${isSelected ? 'text-white/60' : 'text-black/40'}`}>
+                            <span className={`font-sans text-[10px] line-through shrink-0 whitespace-nowrap ${isSelected ? 'text-white/60' : 'text-black/40'}`}>
                               {formatCurrency(variant.old_price)}
                             </span>
                           )}

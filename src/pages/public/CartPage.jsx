@@ -130,8 +130,8 @@ export default function CartPage() {
                   </div>
 
                   {/* Price & Quantity Controls */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-lg font-black text-black sm:text-xl">
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <span className="font-sans text-base font-extrabold text-black tracking-tight whitespace-nowrap sm:text-lg">
                       {formatCurrency(item.price * item.quantity)}
                     </span>
 
@@ -170,20 +170,20 @@ export default function CartPage() {
             <div className="mt-6 space-y-4 text-sm">
               <div className="flex justify-between text-black/60">
                 <span>Sous-total</span>
-                <span className="font-bold text-black">{formatCurrency(subtotal)}</span>
+                <span className="font-sans font-bold text-black whitespace-nowrap">{formatCurrency(subtotal)}</span>
               </div>
 
               {discountAmount > 0 && (
                 <div className="flex items-center justify-between text-[#FF3333]">
                   <span>Remise ({promo?.discountPercent}%)</span>
-                  <span className="font-bold">-{formatCurrency(discountAmount)}</span>
+                  <span className="font-sans font-bold whitespace-nowrap">-{formatCurrency(discountAmount)}</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between text-black/60">
                 <span>Frais de livraison</span>
                 {deliveryFee > 0 ? (
-                  <span className="font-bold text-black">{formatCurrency(deliveryFee)}</span>
+                  <span className="font-sans font-bold text-black whitespace-nowrap">{formatCurrency(deliveryFee)}</span>
                 ) : (
                   <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
                     À régler avec le livreur
@@ -192,9 +192,9 @@ export default function CartPage() {
               </div>
 
               <div className="border-t border-black/10 pt-4">
-                <div className="flex justify-between text-base font-bold">
+                <div className="flex justify-between items-baseline text-base font-bold">
                   <span className="text-black">Total</span>
-                  <span className="text-xl font-black text-black">{formatCurrency(total)}</span>
+                  <span className="font-sans text-xl font-extrabold text-black tracking-tight whitespace-nowrap">{formatCurrency(total)}</span>
                 </div>
                 {deliveryFee === 0 && (
                   <p className="mt-1 text-right text-[11px] text-black/50">
