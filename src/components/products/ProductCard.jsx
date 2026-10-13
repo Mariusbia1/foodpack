@@ -1,27 +1,8 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Star, ArrowRight, Copy, Check } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { Star, ArrowRight } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatCurrency'
-import { copyTextToClipboard, getProductPublicUrl } from '../../utils/clipboard'
 
 export default function ProductCard({ product }) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopyLink = async (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const url = getProductPublicUrl(product)
-    const success = await copyTextToClipboard(url)
-    if (success) {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-      toast.success(`Lien de « ${product.name} » copié !`)
-    } else {
-      toast.error('Impossible de copier le lien.')
-    }
-  }
-
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
   const variantPrices = hasVariants ? product.variants.map((v) => Number(v.price) || 0).filter((p) => p > 0) : []
   const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : Number(product.price || 0)
@@ -127,45 +108,19 @@ export default function ProductCard({ product }) {
           </span>
         </div>
 
-        {/* Price, Discounts & Copy Link Action */}
-        <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-black/5 pt-2">
-          <div className="flex items-baseline gap-1.5">
-            {isMultiPrice && (
-              <span className="text-xs font-semibold text-black/50">Dès</span>
-            )}
-            <span className="font-display text-base font-black text-black sm:text-lg">
-              {formatCurrency(minPrice)}
+        {/* Price & Discounts */}
+        <div className="mt-2.5 flex items-baseline gap-1.5">
+          {isMultiPrice && (
+            <span className="text-xs font-semibold text-black/50">Dès</span>
+          )}
+          <span className="font-display text-base font-black text-black sm:text-lg">
+            {formatCurrency(minPrice)}
+          </span>
+          {hasDiscount && (
+            <span className="text-xs font-bold text-black/40 line-through">
+              {formatCurrency(product.oldPrice)}
             </span>
-            {hasDiscount && (
-              <span className="text-xs font-bold text-black/40 line-through">
-                {formatCurrency(product.oldPrice)}
-              </span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition-all ${
-              copied
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'border border-black/10 bg-[#F7F6F5] text-black/70 hover:border-black/20 hover:bg-black hover:text-white'
-            }`}
-            title="Copier le lien public du produit"
-            aria-label={`Copier le lien de ${product.name}`}
-          >
-            {copied ? (
-              <>
-                <Check className="h-3 w-3 stroke-[2.5]" />
-                <span>Copié !</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-3 w-3" />
-                <span>Lien</span>
-              </>
-            )}
-          </button>
+          )}
         </div>
       </div>
     </article>
