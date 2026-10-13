@@ -23,20 +23,31 @@ import { addReview } from '../../services/catalogService'
 export default function ProductPage() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const { products, testimonials } = useCatalog()
+  const { products, testimonials, loading } = useCatalog()
   const product = products.find((p) => p.slug === slug)
   const { addItem } = useCart()
 
+  // All React Hooks MUST be called unconditionally at the top level
   const [activeImage, setActiveImage] = useState(0)
   const [selectedFormat, setSelectedFormat] = useState('')
   const [selectedCapacity, setSelectedCapacity] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('avis') // 'details', 'avis', 'faq'
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
 
   // Form for writing a review
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [newReview, setNewReview] = useState({ name: '', rating: 5, comment: '' })
   const [submittingReview, setSubmittingReview] = useState(false)
+
+  if (loading && !product) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-32 text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-3 border-black/20 border-t-black" />
+        <p className="mt-4 text-xs font-semibold text-black/60">Chargement de votre emballage…</p>
+      </div>
+    )
+  }
 
   if (!product) {
     return (
@@ -51,7 +62,6 @@ export default function ProductPage() {
   }
 
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
 
   // Pre-select first options if available
   const availableFormats = product.formats?.length ? product.formats : ['Lot de 50', 'Lot de 100', 'Carton de 500']
