@@ -10,7 +10,6 @@ import {
   SlidersHorizontal,
   ShieldCheck,
   Truck,
-  Share2,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import SEO from '../../components/common/SEO'
@@ -18,8 +17,7 @@ import ProductCard from '../../components/products/ProductCard'
 import { useCatalog } from '../../contexts/CatalogContext'
 import { useCart } from '../../contexts/CartContext'
 import { formatCurrency } from '../../utils/formatCurrency'
-import { addReview, recordUserAction } from '../../services/catalogService'
-import { shareProduct, shareProductToWhatsApp } from '../../utils/clipboard'
+import { addReview } from '../../services/catalogService'
 
 export default function ProductPage() {
   const { slug } = useParams()
@@ -428,38 +426,6 @@ export default function ProductPage() {
               <MessageCircle className="h-4 w-4 text-[#01AB31]" />
               <span>Commander instantanément</span>
             </button>
-
-            {/* Share / Publish Product */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-black/10 bg-[#F9F8F7] p-3 text-xs">
-              <span className="font-bold text-black/60">Partager ce produit :</span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    recordUserAction('whatsapp_click', product.name).catch(() => {})
-                    shareProductToWhatsApp(product)
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 font-bold text-emerald-800 transition hover:bg-emerald-100"
-                  title="Partager directement sur WhatsApp avec photo et détails"
-                >
-                  <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>WhatsApp</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    recordUserAction('share_product', product.name).catch(() => {})
-                    const ok = await shareProduct(product)
-                    if (ok) toast.success('Lien du produit copié !')
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-white px-3 py-1.5 font-bold text-black transition hover:bg-black hover:text-white"
-                  title="Copier le lien public pro"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                  <span>Copier le lien pro</span>
-                </button>
-              </div>
-            </div>
 
             {/* Value Props */}
             <div className="mt-8 grid grid-cols-2 gap-4 rounded-2xl bg-[#F0EEED]/60 p-4 text-xs text-black/70">
