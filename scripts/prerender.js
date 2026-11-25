@@ -23,7 +23,7 @@ function escapeHtml(str) {
 }
 
 function resolveImageUrl(img) {
-  if (!img) return `${BASE_DOMAIN}/foodpack-by-maurelle-banner.png`
+  if (!img) return `${BASE_DOMAIN}/foodpack-banner-pro.png?v=20261125`
   if (img.startsWith('http://') || img.startsWith('https://')) return img
   const cleanPath = img.startsWith('/') ? img : `/${img}`
   return `${BASE_DOMAIN}${cleanPath}`
