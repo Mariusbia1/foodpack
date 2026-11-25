@@ -174,10 +174,10 @@ export default function Header() {
             {isAuthenticated && (
               <Link
                 to="/admin"
-                className="flex items-center gap-2 rounded-full bg-black px-3.5 py-2 text-xs font-bold text-white hover:bg-black/80"
+                className="hidden sm:flex items-center gap-2 rounded-full bg-black px-3.5 py-2 text-xs font-bold text-white hover:bg-black/80"
               >
                 <LayoutDashboard className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Admin</span>
+                <span>Admin</span>
               </Link>
             )}
           </div>
