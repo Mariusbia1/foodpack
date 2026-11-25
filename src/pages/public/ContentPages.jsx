@@ -14,6 +14,7 @@ import {
 import toast from 'react-hot-toast'
 import SEO from '../../components/common/SEO'
 import { useCatalog } from '../../contexts/CatalogContext'
+import { recordUserAction } from '../../services/catalogService'
 import { faq } from '../../data/faq'
 import PhoneInput from '../../components/common/PhoneInput'
 
@@ -59,6 +60,7 @@ Merci de votre retour rapide.`
     const waNumber = String(settings.whatsapp || '2290100000000').replace(/\D/g, '')
     const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(body)}`
     window.open(url, '_blank', 'noopener,noreferrer')
+    recordUserAction('contact_submit', subjectType).catch(() => {})
     toast.success('Votre demande a été transmise sur WhatsApp !')
     setName('')
     setPhone('')

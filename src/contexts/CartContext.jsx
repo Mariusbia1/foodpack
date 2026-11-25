@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { siteConfig } from '../config/siteConfig'
 import { useCatalog } from './CatalogContext'
-import { checkPromoCode } from '../services/catalogService'
+import { checkPromoCode, recordUserAction } from '../services/catalogService'
 
 const CartContext = createContext(null)
 const keyFor = (product, options = {}) => [product.id, options.variantId || '', options.format || '', options.capacity || '', options.note || ''].join('|')
@@ -67,6 +67,7 @@ export function CartProvider({ children }) {
       ]
     })
     const variantLabel = options.capacity || options.format || options.variantName
+    recordUserAction('add_to_cart', `${product.name}${variantLabel ? ` (${variantLabel})` : ''} x${options.quantity || 1}`).catch(() => {})
     toast.success(`${product.name}${variantLabel ? ` (${variantLabel})` : ''} ajouté au panier !`)
   }
 

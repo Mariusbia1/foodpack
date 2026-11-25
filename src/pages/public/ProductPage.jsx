@@ -18,7 +18,7 @@ import ProductCard from '../../components/products/ProductCard'
 import { useCatalog } from '../../contexts/CatalogContext'
 import { useCart } from '../../contexts/CartContext'
 import { formatCurrency } from '../../utils/formatCurrency'
-import { addReview } from '../../services/catalogService'
+import { addReview, recordUserAction } from '../../services/catalogService'
 import { shareProduct, shareProductToWhatsApp } from '../../utils/clipboard'
 
 export default function ProductPage() {
@@ -435,7 +435,10 @@ export default function ProductPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => shareProductToWhatsApp(product)}
+                  onClick={() => {
+                    recordUserAction('whatsapp_click', product.name).catch(() => {})
+                    shareProductToWhatsApp(product)
+                  }}
                   className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1.5 font-bold text-emerald-800 transition hover:bg-emerald-100"
                   title="Partager directement sur WhatsApp avec photo et détails"
                 >
@@ -445,6 +448,7 @@ export default function ProductPage() {
                 <button
                   type="button"
                   onClick={async () => {
+                    recordUserAction('share_product', product.name).catch(() => {})
                     const ok = await shareProduct(product)
                     if (ok) toast.success('Lien du produit copié !')
                   }}

@@ -591,53 +591,216 @@ export async function getDashboardData() {
   }
 }
 
-export async function getTrafficStats(days = 30) {
+function getVisitorId() {
   try {
-    if (!supabase) {
-      return { total: 0, visitors: 0, today: 0, daily: [], topPages: [] }
+    if (typeof window === 'undefined') return 'V-SERVER'
+    let vid = window.localStorage.getItem('fp_visitor_id')
+    if (!vid) {
+      vid = `V-${Math.random().toString(36).slice(2, 6).toUpperCase()}${Date.now().toString(36).slice(-2).toUpperCase()}`
+      window.localStorage.setItem('fp_visitor_id', vid)
     }
+    return vid
+  } catch {
+    return 'V-ANON'
+  }
+}
+
+function getDeviceLabel(uaString = '') {
+  const ua = String(uaString || (typeof navigator !== 'undefined' ? navigator.userAgent : '')).toLowerCase()
+  if (/iphone|ipad|ipod/.test(ua)) return 'Mobile (iOS)'
+  if (/android/.test(ua)) return 'Mobile (Android)'
+  if (/mobile/.test(ua)) return 'Mobile'
+  if (/macintosh|mac os/.test(ua)) return 'Ordinateur (Mac)'
+  if (/windows/.test(ua)) return 'Ordinateur (Windows)'
+  return 'Ordinateur'
+}
+
+function parseTrafficRow(row) {
+  const rawUa = row?.user_agent || ''
+  if (rawUa.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(rawUa)
+      if (parsed && parsed.fp) {
+        return {
+          visitorId: parsed.v || 'V-ANON',
+          action: parsed.a || 'page_view',
+          label: parsed.l || '',
+          device: parsed.d || getDeviceLabel(parsed.ua),
+        }
+      }
+    } catch {
+      // Fallback to legacy parsing
+    }
+  }
+  const fallbackVisitor = rawUa ? `V-${Math.abs(rawUa.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) | 0, 7)).toString(36).slice(0, 5).toUpperCase()}` : 'V-VISITEUR'
+  return {
+    visitorId: fallbackVisitor,
+    action: 'page_view',
+    label: '',
+    device: getDeviceLabel(rawUa),
+  }
+}
+
+export async function getTrafficStats(days = 30) {
+  const empty = {
+    total: 0,
+    visitors: 0,
+    today: 0,
+    actionsTotal: 0,
+    daily: [],
+    topPages: [],
+    recentEvents: [],
+    visitorProfiles: [],
+    actionBreakdown: {},
+  }
+  try {
+    if (!supabase) return empty
+
     const since = new Date()
     if (days) since.setDate(since.getDate() - days)
+    let effectiveSince = days ? since.toISOString() : '2000-01-01T00:00:00.000Z'
+
+    // Respect admin reset timestamp if present
+    try {
+      const { data: resetRow } = await supabase
+        .from('site_content')
+        .select('value')
+        .eq('key', 'traffic_reset_at')
+        .maybeSingle()
+      if (resetRow?.value && resetRow.value > effectiveSince) {
+        effectiveSince = resetRow.value
+      }
+    } catch {
+      // Ignore if site_content is unavailable
+    }
 
     const { data, error } = await supabase
       .from('traffic_logs')
-      .select('id, path, created_at')
-      .gte('created_at', days ? since.toISOString() : '2000-01-01')
-      .order('created_at', { ascending: true })
+      .select('id, path, user_agent, created_at')
+      .gte('created_at', effectiveSince)
+      .order('created_at', { ascending: false })
+      .limit(2000)
 
-    if (error || !data) {
-      return { total: 0, visitors: 0, today: 0, daily: [], topPages: [] }
-    }
+    if (error || !data) return empty
 
     const todayStr = new Date().toISOString().split('T')[0]
-    const todayCount = data.filter((d) => d.created_at?.startsWith(todayStr)).length
-
+    const uniqueVisitors = new Set()
     const dailyMap = {}
-    data.forEach((item) => {
-      const d = item.created_at ? item.created_at.split('T')[0] : 'Inconnu'
-      dailyMap[d] = (dailyMap[d] || 0) + 1
-    })
-    const daily = Object.entries(dailyMap).map(([date, count]) => ({ date, count }))
-
     const pageMap = {}
+    const actionBreakdown = {}
+    const visitorMap = {}
+    const recentEvents = []
+    let pageViews = 0
+    let actionsTotal = 0
+    let todayCount = 0
+
     data.forEach((item) => {
-      const p = item.path || '/'
-      pageMap[p] = (pageMap[p] || 0) + 1
+      const meta = parseTrafficRow(item)
+      const dateKey = item.created_at ? item.created_at.split('T')[0] : 'Inconnu'
+      const isPageView = meta.action === 'page_view'
+
+      uniqueVisitors.add(meta.visitorId)
+      if (item.created_at?.startsWith(todayStr)) todayCount += 1
+      if (isPageView) {
+        pageViews += 1
+        const p = item.path || '/'
+        pageMap[p] = (pageMap[p] || 0) + 1
+      } else {
+        actionsTotal += 1
+      }
+
+      actionBreakdown[meta.action] = (actionBreakdown[meta.action] || 0) + 1
+
+      if (!dailyMap[dateKey]) {
+        dailyMap[dateKey] = { date: dateKey, count: 0, views: 0, actions: 0, visitorsSet: new Set() }
+      }
+      dailyMap[dateKey].count += 1
+      if (isPageView) dailyMap[dateKey].views += 1
+      else dailyMap[dateKey].actions += 1
+      dailyMap[dateKey].visitorsSet.add(meta.visitorId)
+
+      if (!visitorMap[meta.visitorId]) {
+        visitorMap[meta.visitorId] = {
+          visitorId: meta.visitorId,
+          device: meta.device,
+          firstSeen: item.created_at,
+          lastSeen: item.created_at,
+          viewsCount: 0,
+          actionsCount: 0,
+          events: [],
+        }
+      }
+      const vp = visitorMap[meta.visitorId]
+      if (item.created_at && item.created_at < vp.firstSeen) vp.firstSeen = item.created_at
+      if (item.created_at && item.created_at > vp.lastSeen) vp.lastSeen = item.created_at
+      if (isPageView) vp.viewsCount += 1
+      else vp.actionsCount += 1
+      if (vp.events.length < 15) {
+        vp.events.push({
+          id: item.id,
+          action: meta.action,
+          label: meta.label,
+          path: item.path,
+          createdAt: item.created_at,
+        })
+      }
+
+      if (recentEvents.length < 80) {
+        recentEvents.push({
+          id: item.id,
+          visitorId: meta.visitorId,
+          device: meta.device,
+          action: meta.action,
+          label: meta.label,
+          path: item.path,
+          createdAt: item.created_at,
+        })
+      }
     })
+
+    const daily = Object.values(dailyMap)
+      .map((d) => ({
+        date: d.date,
+        count: d.count,
+        views: d.views,
+        actions: d.actions,
+        visitors: d.visitorsSet.size,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+
     const topPages = Object.entries(pageMap)
       .map(([path, count]) => ({ path, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10)
 
+    const visitorProfiles = Object.values(visitorMap)
+      .sort((a, b) => (b.lastSeen || '').localeCompare(a.lastSeen || ''))
+      .slice(0, 50)
+
     return {
-      total: data.length,
-      visitors: Math.round(data.length * 0.7) || data.length,
+      total: pageViews,
+      visitors: uniqueVisitors.size,
       today: todayCount,
+      actionsTotal,
       daily,
       topPages,
+      recentEvents,
+      visitorProfiles,
+      actionBreakdown,
     }
   } catch {
-    return { total: 0, visitors: 0, today: 0, daily: [], topPages: [] }
+    return empty
+  }
+}
+
+export async function resetTrafficStats() {
+  if (!supabase) return
+  const nowIso = new Date().toISOString()
+  await supabase.from('site_content').upsert({ key: 'traffic_reset_at', value: nowIso })
+  try {
+    await supabase.from('traffic_logs').delete().gte('id', 0)
+  } catch {
+    // RLS delete policy may not be applied yet; traffic_reset_at still resets all dashboards to 0
   }
 }
 
@@ -645,14 +808,27 @@ export async function getAuditLogs() {
   return []
 }
 
-export async function recordPageVisit(path) {
+export async function recordUserAction(action, label = '', pathOverride = null) {
   try {
-    if (supabase) {
-      await supabase.from('traffic_logs').insert([{ path, user_agent: navigator?.userAgent }])
-    }
+    if (!supabase) return
+    const currentPath = pathOverride || (typeof window !== 'undefined' ? window.location.pathname : '/')
+    if (String(currentPath).startsWith('/admin')) return
+    const meta = JSON.stringify({
+      fp: 1,
+      v: getVisitorId(),
+      a: action || 'page_view',
+      l: String(label || '').slice(0, 140),
+      d: getDeviceLabel(),
+      ua: (typeof navigator !== 'undefined' ? navigator.userAgent : '').slice(0, 80),
+    })
+    await supabase.from('traffic_logs').insert([{ path: currentPath, user_agent: meta }])
   } catch {
     // Ignorer si la table n'existe pas
   }
+}
+
+export async function recordPageVisit(path) {
+  return recordUserAction('page_view', '', path)
 }
 
 

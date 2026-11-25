@@ -24,7 +24,7 @@ import {
   deleteCategory, deleteGalleryItem, deleteProduct, deleteProductImage, deleteTestimonial,
   getAdminOrders, getAdminProfile, getAdminTeam, getCategories, getDashboardData, getGallery,
   getProducts, getSiteContent, getSiteSettings, getTestimonials, getTrafficStats, getAuditLogs,
-  reorderProductImages, saveAdminProfile, saveCategory, saveGalleryItem, saveProduct,
+  reorderProductImages, resetTrafficStats, saveAdminProfile, saveCategory, saveGalleryItem, saveProduct,
   saveSiteContent, uploadCatalogImage, saveSiteSettings, saveTestimonial,
   updateAdminEmail, updateAdminPassword, updateAdminRole, createAdminAccount, revokeAdminAccess,
   sendAdminPasswordResetEmail, updateOrderStatus,
@@ -534,9 +534,21 @@ function CatalogDashboard() {
 }
 
 function TrafficPanel() {
-  const [traffic, setTraffic] = useState({ total: 0, visitors: 0, today: 0, daily: [], topPages: [] })
+  const [traffic, setTraffic] = useState({
+    total: 0,
+    visitors: 0,
+    today: 0,
+    actionsTotal: 0,
+    daily: [],
+    topPages: [],
+    recentEvents: [],
+    visitorProfiles: [],
+    actionBreakdown: {},
+  })
   const [period, setPeriod] = useState(30)
   const [loading, setLoading] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [activeView, setActiveView] = useState('actions') // 'actions' | 'visitors' | 'pages'
 
   const load = (days) => {
     setLoading(true)
@@ -546,8 +558,12 @@ function TrafficPanel() {
           total: data?.total || 0,
           visitors: data?.visitors || 0,
           today: data?.today || 0,
+          actionsTotal: data?.actionsTotal || 0,
           daily: Array.isArray(data?.daily) ? data.daily : [],
           topPages: Array.isArray(data?.topPages) ? data.topPages : [],
+          recentEvents: Array.isArray(data?.recentEvents) ? data.recentEvents : [],
+          visitorProfiles: Array.isArray(data?.visitorProfiles) ? data.visitorProfiles : [],
+          actionBreakdown: data?.actionBreakdown || {},
         })
       })
       .catch((error) => {
@@ -560,8 +576,24 @@ function TrafficPanel() {
     load(period)
   }, [period])
 
+  const handleReset = async () => {
+    if (!window.confirm('Voulez-vous vraiment réinitialiser toutes les statistiques de visites et actions à 0 ?')) return
+    setResetting(true)
+    try {
+      await resetTrafficStats()
+      toast.success('Statistiques réinitialisées à 0.')
+      load(period)
+    } catch (error) {
+      toast.error(formatErrorMessage(error, 'Impossible de réinitialiser les statistiques.'))
+    } finally {
+      setResetting(false)
+    }
+  }
+
   const dailyList = Array.isArray(traffic?.daily) ? traffic.daily : []
   const topPagesList = Array.isArray(traffic?.topPages) ? traffic.topPages : []
+  const recentEvents = Array.isArray(traffic?.recentEvents) ? traffic.recentEvents : []
+  const visitorProfiles = Array.isArray(traffic?.visitorProfiles) ? traffic.visitorProfiles : []
   const maximum = Math.max(...dailyList.map((item) => item.count), 1)
 
   const pageName = (path) => {
@@ -582,6 +614,18 @@ function TrafficPanel() {
     return clean.replaceAll('-', ' ').replaceAll('/', ' ').trim()
   }
 
+  const actionMeta = (action) => {
+    const map = {
+      page_view: { label: 'Visite page', cls: 'bg-slate-100 text-slate-700' },
+      add_to_cart: { label: 'Ajout panier', cls: 'bg-amber-50 text-amber-800 border border-amber-200' },
+      place_order: { label: 'Commande', cls: 'bg-emerald-50 text-emerald-800 border border-emerald-200' },
+      whatsapp_click: { label: 'Clic WhatsApp', cls: 'bg-green-50 text-green-800 border border-green-200' },
+      share_product: { label: 'Partage produit', cls: 'bg-blue-50 text-blue-800 border border-blue-200' },
+      contact_submit: { label: 'Demande devis', cls: 'bg-purple-50 text-purple-800 border border-purple-200' },
+    }
+    return map[action] || { label: action || 'Action', cls: 'bg-slate-100 text-slate-700' }
+  }
+
   const periodLabel = period ? `${period} derniers jours` : 'toute la période'
 
   return (
@@ -589,33 +633,46 @@ function TrafficPanel() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Audience & Visites · {periodLabel}</p>
-          <h2 className="font-display text-lg font-bold text-slate-900">Fréquentation du site</h2>
+          <h2 className="font-display text-lg font-bold text-slate-900">Visiteurs & Actions sur le site</h2>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-slate-100 p-1">
-          {[
-            [3, '3j'],
-            [7, '7j'],
-            [30, '30j'],
-            [null, 'Tout'],
-          ].map(([days, label]) => (
-            <button
-              key={days ?? 'all'}
-              onClick={() => setPeriod(days)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                period === days ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-100 p-1">
+            {[
+              [3, '3j'],
+              [7, '7j'],
+              [30, '30j'],
+              [null, 'Tout'],
+            ].map(([days, label]) => (
+              <button
+                key={days ?? 'all'}
+                onClick={() => setPeriod(days)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  period === days ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={resetting}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
+            title="Remettre les compteurs et l'historique des visites à 0"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${resetting ? 'animate-spin' : ''}`} />
+            <span>Réinitialiser à 0</span>
+          </button>
         </div>
       </div>
 
       {/* Traffic Top Metrics */}
-      <div className="mt-6 grid grid-cols-3 gap-3 sm:gap-4 sm:max-w-md">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {[
           [Users, 'Visiteurs uniques', traffic?.visitors || 0],
-          [MousePointerClick, 'Pages vues', traffic?.total || 0],
+          [Eye, 'Pages vues', traffic?.total || 0],
+          [MousePointerClick, 'Actions clients', traffic?.actionsTotal || 0],
           [Clock, 'Aujourd’hui', traffic?.today || 0],
         ].map(([Icon, label, value]) => (
           <div key={label} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-center sm:p-4">
@@ -635,12 +692,12 @@ function TrafficPanel() {
           {dailyList.map((item) => (
             <div
               key={item.date}
-              title={`${new Date(item.date).toLocaleDateString('fr-FR')} : ${item.count} vue(s)`}
+              title={`${new Date(item.date).toLocaleDateString('fr-FR')} : ${item.views} vue(s), ${item.actions} action(s)`}
               className="group relative min-w-0 rounded-t bg-slate-900 transition hover:bg-[#FF3333]"
               style={{ height: `${Math.max(8, (item.count / maximum) * 100)}%` }}
             >
               <span className="absolute -top-6 left-1/2 hidden -translate-x-1/2 rounded bg-black px-1.5 py-0.5 text-[9px] font-bold text-white shadow group-hover:block z-10 whitespace-nowrap">
-                {item.count}
+                {item.views}v / {item.actions}a
               </span>
             </div>
           ))}
@@ -652,26 +709,132 @@ function TrafficPanel() {
         </div>
       </div>
 
-      {/* Top Pages Grid */}
+      {/* Tabs: Actions récentes / Visiteurs / Pages populaires */}
       <div className="mt-6 border-t border-slate-100 pt-5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Pages les plus consultées</h3>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {topPagesList.map((item, idx) => (
-            <div
-              key={item.path}
-              className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 px-3.5 py-2.5 text-xs"
-            >
-              <span className="flex items-center gap-2 truncate font-medium text-slate-700">
-                <span className="grid h-5 w-5 place-items-center rounded bg-slate-200 text-[10px] font-bold text-slate-700">
-                  {idx + 1}
-                </span>
-                <span className="truncate">{pageName(item.path)}</span>
-              </span>
-              <b className="ml-2 font-bold text-slate-900">{item.count}</b>
-            </div>
-          ))}
-          {!topPagesList.length && <p className="text-xs text-slate-400">Aucune donnée de consultation.</p>}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5 rounded-xl bg-slate-100 p-1">
+            {[
+              ['actions', `Actions effectuées (${recentEvents.length})`],
+              ['visitors', `Visiteurs (${visitorProfiles.length})`],
+              ['pages', 'Pages consultées'],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveView(key)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  activeView === key ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {activeView === 'actions' && (
+          <div className="mt-4 max-h-80 overflow-y-auto rounded-xl border border-slate-100">
+            {recentEvents.length ? (
+              <table className="w-full text-left text-xs">
+                <thead className="sticky top-0 border-b border-slate-100 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <tr>
+                    <th className="px-3.5 py-2.5">Visiteur</th>
+                    <th className="px-3.5 py-2.5">Action</th>
+                    <th className="px-3.5 py-2.5">Détail / Page</th>
+                    <th className="px-3.5 py-2.5">Appareil</th>
+                    <th className="px-3.5 py-2.5 text-right">Date & Heure</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentEvents.map((ev) => {
+                    const meta = actionMeta(ev.action)
+                    return (
+                      <tr key={ev.id} className="hover:bg-slate-50/70">
+                        <td className="px-3.5 py-2.5 font-mono font-bold text-slate-800 whitespace-nowrap">
+                          {ev.visitorId}
+                        </td>
+                        <td className="px-3.5 py-2.5 whitespace-nowrap">
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold ${meta.cls}`}>
+                            {meta.label}
+                          </span>
+                        </td>
+                        <td className="px-3.5 py-2.5 text-slate-700 max-w-[260px] truncate">
+                          {ev.label ? <b>{ev.label}</b> : pageName(ev.path)}
+                        </td>
+                        <td className="px-3.5 py-2.5 text-slate-500 whitespace-nowrap">{ev.device}</td>
+                        <td className="px-3.5 py-2.5 text-right text-slate-400 whitespace-nowrap">
+                          {ev.createdAt
+                            ? new Date(ev.createdAt).toLocaleString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p className="p-6 text-center text-xs text-slate-400">Aucune action enregistrée sur cette période.</p>
+            )}
+          </div>
+        )}
+
+        {activeView === 'visitors' && (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {visitorProfiles.map((vp) => (
+              <div key={vp.visitorId} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-slate-900">{vp.visitorId}</span>
+                  <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600 border border-slate-200/70">
+                    {vp.device}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-3 text-[11px] text-slate-600">
+                  <span><b>{vp.viewsCount}</b> page(s)</span>
+                  <span><b>{vp.actionsCount}</b> action(s)</span>
+                </div>
+                <p className="mt-1.5 text-[10px] text-slate-400">
+                  Dernière activité :{' '}
+                  {vp.lastSeen
+                    ? new Date(vp.lastSeen).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '—'}
+                </p>
+              </div>
+            ))}
+            {!visitorProfiles.length && (
+              <p className="col-span-full py-4 text-center text-xs text-slate-400">Aucun visiteur enregistré.</p>
+            )}
+          </div>
+        )}
+
+        {activeView === 'pages' && (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {topPagesList.map((item, idx) => (
+              <div
+                key={item.path}
+                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 px-3.5 py-2.5 text-xs"
+              >
+                <span className="flex items-center gap-2 truncate font-medium text-slate-700">
+                  <span className="grid h-5 w-5 place-items-center rounded bg-slate-200 text-[10px] font-bold text-slate-700">
+                    {idx + 1}
+                  </span>
+                  <span className="truncate">{pageName(item.path)}</span>
+                </span>
+                <b className="ml-2 font-bold text-slate-900">{item.count}</b>
+              </div>
+            ))}
+            {!topPagesList.length && <p className="text-xs text-slate-400">Aucune donnée de consultation.</p>}
+          </div>
+        )}
       </div>
     </section>
   )

@@ -7,6 +7,7 @@ import { useCart } from '../../contexts/CartContext'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { createWhatsAppMessage, whatsappUrl } from '../../services/whatsappService'
 import { createOrder } from '../../services/orderService'
+import { recordUserAction } from '../../services/catalogService'
 import { useCatalog } from '../../contexts/CatalogContext'
 import PhoneInput from '../../components/common/PhoneInput'
 import { formatErrorMessage } from '../../utils/formatError'
@@ -60,6 +61,7 @@ export default function CheckoutPage() {
       }
 
       const secureTotal = order?.total ?? total
+      recordUserAction('place_order', `${items.length} article(s) · ${formatCurrency(secureTotal)}`).catch(() => {})
 
       // 2. Open WhatsApp Message
       const waMsg = createWhatsAppMessage(
