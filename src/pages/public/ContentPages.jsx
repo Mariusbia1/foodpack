@@ -107,15 +107,18 @@ Merci de votre retour rapide.`
                   </div>
                 </a>
 
-                <div className="flex items-center gap-4 rounded-2xl bg-white p-4">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black/5 text-black">
+                <a
+                  href={`mailto:${settings.email || 'contact@foodpack.com'}?subject=${encodeURIComponent(`Demande d'information - ${settings.shop_name || 'FOOD PACK'}`)}`}
+                  className="group flex items-center gap-4 rounded-2xl bg-white p-4 transition hover:shadow-sm active:scale-[0.99]"
+                >
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black/5 text-black transition group-hover:bg-black group-hover:text-white">
                     <Mail className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-black/50">E-mail professionnel</p>
-                    <b className="text-black">{settings.email || 'contact@foodpack.com'}</b>
+                    <b className="text-black group-hover:underline break-all">{settings.email || 'contact@foodpack.com'}</b>
                   </div>
-                </div>
+                </a>
 
                 <div className="flex items-center gap-4 rounded-2xl bg-white p-4">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black/5 text-black">

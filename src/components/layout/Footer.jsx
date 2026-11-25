@@ -132,6 +132,15 @@ export default function Footer() {
                   <span>{cleanPhone}</span>
                 </a>
               )}
+              {settings?.email && (
+                <a
+                  href={`mailto:${settings.email}`}
+                  className="flex items-center gap-2.5 font-semibold text-black/80 transition hover:text-black hover:underline"
+                >
+                  <Mail className="h-4 w-4 text-black shrink-0" />
+                  <span>{settings.email}</span>
+                </a>
+              )}
             </div>
 
             {/* Social Media Icons (rendered ONLY if link is actually provided) */}
