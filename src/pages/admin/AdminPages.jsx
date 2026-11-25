@@ -18,7 +18,7 @@ import PhoneInput from '../../components/common/PhoneInput'
 import ProductMediaThumb from '../../components/products/ProductMediaThumb'
 import { supabase } from '../../lib/supabase'
 import { formatErrorMessage } from '../../utils/formatError'
-import { copyTextToClipboard, getProductPublicUrl } from '../../utils/clipboard'
+import { copyTextToClipboard, getProductPublicUrl, shareProductToWhatsApp } from '../../utils/clipboard'
 import {
   deleteCategory, deleteGalleryItem, deleteProduct, deleteProductImage, deleteTestimonial,
   getAdminOrders, getAdminProfile, getAdminTeam, getCategories, getDashboardData, getGallery,
@@ -1038,6 +1038,19 @@ export function ProductsAdmin() {
                       )}
                     </button>
 
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        shareProductToWhatsApp(p)
+                      }}
+                      className="flex items-center justify-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50 px-2.5 py-2 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 active:scale-95"
+                      title="Partager ce produit directement sur WhatsApp"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>WhatsApp</span>
+                    </button>
+
                     <a
                       href={`/collections/${p.slug || p.id}`}
                       target="_blank"
@@ -1178,6 +1191,20 @@ export function ProductsAdmin() {
                                 <span>Copier lien</span>
                               </>
                             )}
+                          </button>
+
+                          {/* Partager WhatsApp button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              shareProductToWhatsApp(p)
+                            }}
+                            className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-2.5 py-1.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 hover:border-emerald-300 shadow-2xs"
+                            title="Partager directement ce produit sur WhatsApp avec image et détails"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>WhatsApp</span>
                           </button>
 
                           {/* Voir sur le site */}

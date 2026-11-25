@@ -39,3 +39,41 @@ export function getProductPublicUrl(product) {
   const slug = product?.slug || product?.id || ''
   return `${origin}/collections/${slug}`
 }
+
+export function formatProductShareMessage(product) {
+  const url = getProductPublicUrl(product)
+  const price = product?.price ? `${Number(product.price).toLocaleString('fr-FR')} FCFA` : ''
+  const cat = product?.category ? ` • ${product.category}` : ''
+  return `📦 *${product?.name || 'Emballage alimentaire'}*${cat}\n💰 *Prix :* ${price || 'Sur demande'}\n✅ En stock & livrable 24/48h au Bénin (Cotonou, Parakou)\n👉 *Commander directement :*\n${url}`
+}
+
+export async function shareProduct(product) {
+  const url = getProductPublicUrl(product)
+  const title = `${product?.name || 'Produit'} | FOODPACK by Maurelle`
+  const text = formatProductShareMessage(product)
+
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({
+        title,
+        text,
+        url,
+      })
+      return true
+    } catch (err) {
+      if (err.name === 'AbortError') return false
+    }
+  }
+
+  // Fallback to clipboard
+  return await copyTextToClipboard(url)
+}
+
+export function shareProductToWhatsApp(product) {
+  const text = formatProductShareMessage(product)
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
+  if (typeof window !== 'undefined') {
+    window.open(waUrl, '_blank', 'noopener,noreferrer')
+  }
+}
+
