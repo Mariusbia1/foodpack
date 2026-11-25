@@ -235,17 +235,31 @@ export default function Header() {
 
             {/* Navigation */}
             <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pt-5 pb-4">
-              {/* Boutique Section */}
+              {/* Navigation Section */}
               <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-widest text-black/40">
-                Boutique
+                Navigation
               </p>
               <Link
                 to="/collections"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-black transition hover:bg-[#F0EEED] active:bg-[#E8E6E4]"
+                className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-bold text-black transition hover:bg-[#F0EEED] active:bg-[#E8E6E4]"
               >
-                <Store className="h-5 w-5 text-black/60" />
-                Tout le catalogue
+                <span className="flex items-center gap-3">
+                  <Store className="h-5 w-5 text-black/60" />
+                  Boutique
+                </span>
+                <ChevronRight className="h-4 w-4 text-black/30" />
+              </Link>
+              <Link
+                to="/collections"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-black/80 transition hover:bg-[#F0EEED] hover:text-black active:bg-[#E8E6E4]"
+              >
+                <span className="flex items-center gap-3">
+                  <Package className="h-5 w-5 text-black/60" />
+                  Tout le catalogue
+                </span>
+                <ChevronRight className="h-4 w-4 text-black/30" />
               </Link>
               {categories.map((cat) => (
                 <Link
