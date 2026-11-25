@@ -77,3 +77,37 @@ export function shareProductToWhatsApp(product) {
   }
 }
 
+export function getShopPublicUrl() {
+  const origin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'https://www.maurellefoodpack.store'
+  return `${origin}/collections`
+}
+
+export function formatShopShareMessage() {
+  const url = getShopPublicUrl()
+  return `📦 *FOODPACK by Maurelle*\nGrossiste en emballages alimentaires professionnels au Bénin (Bouteilles PET cristal, Boîtes Kraft, Barquettes, Gobelets).\n✅ Vente en gros & détail · Livraison 24/48h (Cotonou, Parakou & tout le Bénin)\n👉 *Découvrir la boutique :*\n${url}`
+}
+
+export async function shareShop() {
+  const url = getShopPublicUrl()
+  const title = 'FOODPACK by Maurelle | Boutique en ligne'
+  const text = formatShopShareMessage()
+
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({ title, text, url })
+      return 'shared'
+    } catch (err) {
+      if (err.name === 'AbortError') return 'cancelled'
+    }
+  }
+
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
+  if (typeof window !== 'undefined') {
+    window.open(waUrl, '_blank', 'noopener,noreferrer')
+    return 'whatsapp'
+  }
+  return (await copyTextToClipboard(url)) ? 'copied' : false
+}
+

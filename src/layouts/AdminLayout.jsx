@@ -3,13 +3,14 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import {
   LayoutDashboard, Package, Shapes, ShoppingCart, Images, Quote,
   FileText, Settings, User, LogOut, Bell, Menu, X, ExternalLink, ShieldCheck,
-  Users
+  Users, Copy, Check, Share2
 } from 'lucide-react'
 import { useAdminAuth } from '../contexts/AdminAuthContext'
 import InstallAppButton from '../components/common/InstallAppButton'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notificationService'
+import { copyTextToClipboard, getShopPublicUrl, shareShop } from '../utils/clipboard'
 
 const nav = [
   ['/admin', LayoutDashboard, 'Tableau de bord'],
@@ -151,6 +152,7 @@ function SidebarContent({ onNavigate }) {
 export default function AdminLayout() {
   const { profile, isSuperAdmin } = useAdminAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [shopCopied, setShopCopied] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState(() => 'Notification' in window ? Notification.permission : 'unsupported')
@@ -262,6 +264,43 @@ export default function AdminLayout() {
 
           {/* Right: Actions */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+            {/* Copy Shop Link */}
+            <button
+              type="button"
+              onClick={async () => {
+                const ok = await copyTextToClipboard(getShopPublicUrl())
+                if (ok) {
+                  setShopCopied(true)
+                  toast.success('Lien de la boutique copié !')
+                  setTimeout(() => setShopCopied(false), 2000)
+                }
+              }}
+              className={`grid h-9 w-9 place-items-center rounded-xl border transition shadow-2xs active:scale-95 ${
+                shopCopied
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-black'
+              }`}
+              title="Copier le lien de la boutique"
+              aria-label="Copier le lien de la boutique"
+            >
+              {shopCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 text-slate-500" />}
+            </button>
+
+            {/* Share Shop */}
+            <button
+              type="button"
+              onClick={async () => {
+                const result = await shareShop()
+                if (result === 'copied') toast.success('Lien de la boutique copié !')
+              }}
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-2.5 sm:px-3 text-xs font-semibold text-emerald-800 shadow-2xs transition hover:bg-emerald-100 active:scale-95"
+              title="Partager la boutique"
+              aria-label="Partager la boutique"
+            >
+              <Share2 className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="hidden md:inline">Partager</span>
+            </button>
+
             {/* Quick Link to Storefront */}
             <a
               href="/"
