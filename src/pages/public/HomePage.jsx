@@ -70,16 +70,16 @@ export default function HomePage() {
               {/* Metrics Counters */}
               <div className="mt-8 grid w-full grid-cols-3 gap-2 border-t border-black/10 pt-5 sm:gap-4">
                 <div>
-                  <b className="font-display text-xl font-black text-black sm:text-2xl">200+</b>
+                  <b className="font-display text-xl font-black text-black sm:text-2xl">20+</b>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Références</p>
                 </div>
                 <div className="border-l border-black/10 pl-3 sm:pl-5">
-                  <b className="font-display text-xl font-black text-black sm:text-2xl">2 000+</b>
+                  <b className="font-display text-xl font-black text-black sm:text-2xl">100+</b>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Clients servis</p>
                 </div>
                 <div className="border-l border-black/10 pl-3 sm:pl-5">
-                  <b className="font-display text-xl font-black text-black sm:text-2xl">24/48h</b>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Livraison Bénin</p>
+                  <b className="font-display text-xl font-black text-black sm:text-2xl">24h/24</b>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-black/50">Disponible</p>
                 </div>
               </div>
             </div>

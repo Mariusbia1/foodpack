@@ -3,14 +3,14 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import {
   LayoutDashboard, Package, Shapes, ShoppingCart, Images, Quote,
   FileText, Settings, User, LogOut, Bell, Menu, X, ExternalLink, ShieldCheck,
-  Users, Copy, Check, Share2
+  Users, Copy, Check
 } from 'lucide-react'
 import { useAdminAuth } from '../contexts/AdminAuthContext'
 import InstallAppButton from '../components/common/InstallAppButton'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notificationService'
-import { copyTextToClipboard, getShopPublicUrl, shareShop } from '../utils/clipboard'
+import { copyTextToClipboard, getShopPublicUrl } from '../utils/clipboard'
 
 const nav = [
   ['/admin', LayoutDashboard, 'Tableau de bord'],
@@ -56,10 +56,7 @@ function SidebarContent({ onNavigate }) {
               <span className="text-[8px] font-extrabold tracking-widest text-amber-400 uppercase">
                 by Maurelle
               </span>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Administration</span>
-              </div>
+
             </div>
           </Link>
         </div>
@@ -285,33 +282,6 @@ export default function AdminLayout() {
             >
               {shopCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 text-slate-500" />}
             </button>
-
-            {/* Share Shop */}
-            <button
-              type="button"
-              onClick={async () => {
-                const result = await shareShop()
-                if (result === 'copied') toast.success('Lien de la boutique copié !')
-              }}
-              className="flex h-9 items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-2.5 sm:px-3 text-xs font-semibold text-emerald-800 shadow-2xs transition hover:bg-emerald-100 active:scale-95"
-              title="Partager la boutique"
-              aria-label="Partager la boutique"
-            >
-              <Share2 className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="hidden md:inline">Partager</span>
-            </button>
-
-            {/* Quick Link to Storefront */}
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 sm:px-3 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-black active:scale-95"
-              title="Voir la boutique en ligne"
-            >
-              <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
-              <span className="hidden md:inline">Voir le site</span>
-            </a>
 
             {/* Notifications Dropdown */}
             <div className="relative" ref={notificationPanel}>
