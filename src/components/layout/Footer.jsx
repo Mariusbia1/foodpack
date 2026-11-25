@@ -64,7 +64,7 @@ export default function Footer() {
               RESTEZ INFORMÉ DE NOS ARRIVAGES
             </h2>
             <p className="mt-1.5 text-xs sm:text-sm text-white/70">
-              Recevez en direct nos arrivages de cartons, nouveaux formats et offres pro dégressives.
+              Recevez en direct nos arrivages de cartons, nouveaux formats et offres dégressives.
             </p>
           </div>
 

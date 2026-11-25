@@ -5,7 +5,7 @@ export const testimonials = [
     city: 'Cotonou',
     rating: 5,
     verified: true,
-    text: 'Les bouteilles de 330ml avec bouchons de sécurité sont parfaites pour mon bissap et jus de baobab. Mes clients adorent la finition pro !',
+    text: 'Les bouteilles de 330ml avec bouchons de sécurité sont parfaites pour mon bissap et jus de baobab. Mes clients adorent la finition !',
     date: '14 Août 2026',
   },
   {

@@ -63,7 +63,7 @@ export default function HomePage() {
                   to="/contact"
                   className="shop-btn-white px-6 py-3 text-sm font-bold"
                 >
-                  Demander un devis pro
+                  Demander un devis
                 </Link>
               </div>
 

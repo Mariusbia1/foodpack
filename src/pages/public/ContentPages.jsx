@@ -118,7 +118,7 @@ Merci de votre retour rapide.`
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-black/50">E-mail professionnel</p>
-                    <b className="text-black group-hover:underline break-all">{settings.email || 'contact@foodpack.com'}</b>
+                    <b className="text-black group-hover:underline break-words">{settings.email || 'contact@foodpack.com'}</b>
                   </div>
                 </a>
 
