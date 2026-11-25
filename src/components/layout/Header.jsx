@@ -6,7 +6,14 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronRight,
   LayoutDashboard,
+  MessageCircle,
+  Phone,
+  Store,
+  HelpCircle,
+  Info,
+  Package,
 } from 'lucide-react'
 import { useCart } from '../../contexts/CartContext'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -179,96 +186,140 @@ export default function Header() {
 
       {/* 3. Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white p-6 lg:hidden">
-          <div className="flex items-center justify-between border-b border-black/10 pb-4">
-            <Link
-              to="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="inline-flex flex-col"
-            >
-              <span className="font-display text-2xl font-black uppercase text-black leading-none">
-                FOODPACK<span className="text-[#FF3333]">.</span>
-              </span>
-              <span className="text-[9px] font-extrabold tracking-[0.18em] text-black/50 uppercase mt-0.5">
-                by Maurelle
-              </span>
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-full p-2 text-black hover:bg-[#F0EEED]"
-              aria-label="Fermer"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
 
-          <form onSubmit={handleSearch} className="mt-5 flex items-center rounded-full bg-[#F0EEED] px-4 py-3">
-            <Search className="h-5 w-5 text-black/40" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher des produits..."
-              className="w-full bg-transparent pl-3 text-sm text-black outline-none placeholder:text-black/40"
-            />
-          </form>
+          {/* Slide-over Panel */}
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-xs flex-col bg-white shadow-2xl sm:max-w-sm animate-slideIn">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="inline-flex flex-col"
+              >
+                <span className="font-display text-xl font-black uppercase text-black leading-none">
+                  FOODPACK<span className="text-[#FF3333]">.</span>
+                </span>
+                <span className="text-[8px] font-extrabold tracking-[0.18em] text-black/50 uppercase mt-0.5">
+                  by Maurelle
+                </span>
+              </Link>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="grid h-10 w-10 place-items-center rounded-full text-black hover:bg-[#F0EEED] transition"
+                aria-label="Fermer le menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-          <nav className="mt-6 flex flex-1 flex-col gap-4 overflow-y-auto">
-            <Link
-              to="/collections"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-lg font-bold text-black"
-            >
-              Tout le catalogue
-            </Link>
-            <div className="flex flex-col gap-2 pl-3">
+            {/* Search */}
+            <div className="px-5 pt-4">
+              <form onSubmit={(e) => { handleSearch(e); setMobileMenuOpen(false); }} className="flex items-center rounded-full bg-[#F0EEED] px-4 py-3">
+                <Search className="h-4 w-4 shrink-0 text-black/40" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un emballage…"
+                  className="w-full bg-transparent pl-3 text-sm text-black outline-none placeholder:text-black/40"
+                />
+              </form>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pt-5 pb-4">
+              {/* Boutique Section */}
+              <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-widest text-black/40">
+                Boutique
+              </p>
+              <Link
+                to="/collections"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-black transition hover:bg-[#F0EEED] active:bg-[#E8E6E4]"
+              >
+                <Store className="h-5 w-5 text-black/60" />
+                Tout le catalogue
+              </Link>
               {categories.map((cat) => (
                 <Link
                   key={cat.slug}
                   to={`/categories/${cat.slug}`}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-semibold text-black/70 hover:text-black"
+                  className="flex items-center justify-between rounded-xl px-3 py-2.5 pl-11 text-sm text-black/70 transition hover:bg-[#F0EEED] hover:text-black active:bg-[#E8E6E4]"
                 >
-                  • {cat.name}
+                  {cat.name}
+                  <ChevronRight className="h-4 w-4 text-black/30" />
                 </Link>
               ))}
-            </div>
 
-            <div className="my-2 border-t border-black/10" />
+              {/* Separator */}
+              <div className="mx-3 my-3 border-t border-black/8" />
 
-            <Link
-              to="/contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-lg font-bold text-black"
-            >
-              Demande de Devis & Contact
-            </Link>
-            <Link
-              to="/faq"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold text-black/70"
-            >
-              Questions fréquentes
-            </Link>
-            <Link
-              to="/a-propos"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold text-black/70"
-            >
-              À propos de FOOD PACK
-            </Link>
-
-            {isAuthenticated && (
+              {/* Links Section */}
+              <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-widest text-black/40">
+                Informations
+              </p>
               <Link
-                to="/admin"
+                to="/contact"
                 onClick={() => setMobileMenuOpen(false)}
-                className="mt-4 flex items-center justify-center gap-2 rounded-full bg-black py-3 text-sm font-bold text-white"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-black transition hover:bg-[#F0EEED] active:bg-[#E8E6E4]"
               >
-                <LayoutDashboard className="h-4 w-4" />
-                Tableau de bord Admin
+                <Phone className="h-5 w-5 text-black/60" />
+                Devis & Contact
               </Link>
-            )}
-          </nav>
+              <Link
+                to="/faq"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-black transition hover:bg-[#F0EEED] active:bg-[#E8E6E4]"
+              >
+                <HelpCircle className="h-5 w-5 text-black/60" />
+                Questions fréquentes
+              </Link>
+              <Link
+                to="/a-propos"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-black transition hover:bg-[#F0EEED] active:bg-[#E8E6E4]"
+              >
+                <Info className="h-5 w-5 text-black/60" />
+                À propos
+              </Link>
+            </nav>
+
+            {/* Bottom Actions */}
+            <div className="border-t border-black/10 px-5 py-4 space-y-3">
+              {/* WhatsApp CTA */}
+              {settings?.whatsapp && (
+                <a
+                  href={`https://wa.me/${settings.whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2.5 rounded-full bg-[#25D366] py-3 text-sm font-bold text-white transition hover:bg-[#1fb855] active:bg-[#1a9e49]"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  Écrire sur WhatsApp
+                </a>
+              )}
+
+              {/* Admin link */}
+              {isAuthenticated && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-black py-3 text-sm font-bold text-white transition hover:bg-black/80"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Tableau de bord
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </>

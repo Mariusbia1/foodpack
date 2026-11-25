@@ -41,6 +41,15 @@ export default {
       borderRadius: {
         card: '20px',
         pill: '9999px',
+      },
+      keyframes: {
+        slideIn: {
+          from: { transform: 'translateX(100%)' },
+          to: { transform: 'translateX(0)' },
+        },
+      },
+      animation: {
+        slideIn: 'slideIn 0.25s ease-out',
       }
     },
   },
