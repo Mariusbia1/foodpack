@@ -486,7 +486,7 @@ export default function ProductPage() {
                   <ul className="mt-4 space-y-3 text-sm text-black/70">
                     <li><b>Matière :</b> {product.materials || 'Apte au contact alimentaire'}</li>
                     <li><b>Stockage :</b> {product.careInstructions || 'Conserver dans un endroit sec'}</li>
-                    <li><b>Préparation :</b> {product.productionTime || 'Expédition sous 24 à 48h'}</li>
+                    <li><b>Préparation :</b> {product.productionTime || 'Expédition rapide'}</li>
                   </ul>
                 </div>
                 <div className="rounded-[20px] border border-black/10 p-6">

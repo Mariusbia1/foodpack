@@ -311,7 +311,7 @@ export default function Header() {
               {/* WhatsApp CTA */}
               {settings?.whatsapp && (
                 <a
-                  href={`https://wa.me/${settings.whatsapp}`}
+                  href={`https://wa.me/${String(settings.whatsapp).replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex w-full items-center justify-center gap-2.5 rounded-full bg-[#25D366] py-3 text-sm font-bold text-white transition hover:bg-[#1fb855] active:bg-[#1a9e49]"

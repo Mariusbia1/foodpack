@@ -17,8 +17,9 @@ import { useCatalog } from '../../contexts/CatalogContext'
 import { recordUserAction } from '../../services/catalogService'
 import { faq } from '../../data/faq'
 import PhoneInput from '../../components/common/PhoneInput'
+import { formatPhone } from '../../utils/formatPhone'
 
-// 1. PAGE CONTACT & DEVIS PRO
+// 1. PAGE CONTACT & DEVIS
 export function ContactPage() {
   const { settings } = useCatalog()
   const [phone, setPhone] = useState('')
@@ -98,27 +99,31 @@ Merci de votre retour rapide.`
                   href={`https://wa.me/${String(settings.whatsapp || '2290100000000').replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-4 rounded-2xl bg-white p-4 transition hover:shadow-sm"
+                  className="flex items-center gap-4 rounded-2xl bg-white p-4 transition hover:shadow-sm min-w-0"
                 >
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#01AB31]/10 text-[#01AB31]">
                     <MessageCircle className="h-5 w-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-black/50">WhatsApp Direct</p>
-                    <b className="text-black">{settings.phone || '+229 01 00 00 00 00'}</b>
+                    <b className="block text-xs sm:text-sm font-bold text-black truncate whitespace-nowrap">
+                      {formatPhone(settings.phone || settings.whatsapp || '+229 01 00 00 00 00')}
+                    </b>
                   </div>
                 </a>
 
                 <a
                   href={`mailto:${settings.email || 'contact@foodpack.com'}?subject=${encodeURIComponent(`Demande d'information - ${settings.shop_name || 'FOOD PACK'}`)}`}
-                  className="group flex items-center gap-4 rounded-2xl bg-white p-4 transition hover:shadow-sm active:scale-[0.99]"
+                  className="group flex items-center gap-4 rounded-2xl bg-white p-4 transition hover:shadow-sm active:scale-[0.99] min-w-0"
                 >
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black/5 text-black transition group-hover:bg-black group-hover:text-white">
                     <Mail className="h-5 w-5" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs text-black/50">E-mail professionnel</p>
-                    <b className="text-black group-hover:underline break-words">{settings.email || 'contact@foodpack.com'}</b>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-black/50">E-mail</p>
+                    <b className="block text-xs sm:text-sm font-bold text-black group-hover:underline truncate whitespace-nowrap">
+                      {settings.email || 'contact@foodpack.com'}
+                    </b>
                   </div>
                 </a>
 

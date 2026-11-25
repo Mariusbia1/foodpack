@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mail, ArrowRight, MapPin, Phone } from 'lucide-react'
+import { Mail, ArrowRight, MapPin, Phone, MessageCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { subscribeNewsletter } from '../../services/catalogService'
 import { useCatalog } from '../../contexts/CatalogContext'
+import { formatPhone } from '../../utils/formatPhone'
 
 export default function Footer() {
   const [email, setEmail] = useState('')
@@ -49,7 +50,7 @@ export default function Footer() {
   const hasFacebook = isValidSocialLink(settings?.facebook, 'https://facebook.com')
   const hasTikTok = isValidSocialLink(settings?.tiktok, 'https://tiktok.com')
 
-  const hasAnySocial = hasWhatsApp || hasInstagram || hasFacebook || hasTikTok
+  const hasOtherSocial = hasInstagram || hasFacebook || hasTikTok
 
   return (
     <footer className="relative mt-32 sm:mt-40 bg-[#F0EEED] pt-40 sm:pt-44 lg:pt-36 pb-12">
@@ -115,8 +116,8 @@ export default function Footer() {
               Grossiste et distributeur d’emballages alimentaires professionnels au Bénin : bouteilles de jus et bissap, boîtes kraft, barquettes et gobelets pour restaurants et traiteurs.
             </p>
 
-            {/* Address & Phone */}
-            <div className="space-y-2 pt-2 text-xs text-black/70">
+            {/* Address, Phone, WhatsApp & Email */}
+            <div className="space-y-2.5 pt-2 text-xs text-black/70">
               {settings?.address && (
                 <div className="flex items-center gap-2.5">
                   <MapPin className="h-4 w-4 text-[#FF3333] shrink-0" />
@@ -129,7 +130,18 @@ export default function Footer() {
                   className="flex items-center gap-2.5 font-semibold text-black/80 transition hover:text-black"
                 >
                   <Phone className="h-4 w-4 text-[#01AB31] shrink-0" />
-                  <span>{cleanPhone}</span>
+                  <span>{formatPhone(cleanPhone)}</span>
+                </a>
+              )}
+              {hasWhatsApp && (
+                <a
+                  href={waUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2.5 font-semibold text-[#01AB31] transition hover:underline"
+                >
+                  <MessageCircle className="h-4 w-4 text-[#01AB31] shrink-0" />
+                  <span>WhatsApp direct</span>
                 </a>
               )}
               {settings?.email && (
@@ -143,8 +155,8 @@ export default function Footer() {
               )}
             </div>
 
-            {/* Social Media Icons (rendered ONLY if link is actually provided) */}
-            {hasAnySocial && (
+            {/* Social Media Icons (rendered ONLY if external networks are provided) */}
+            {hasOtherSocial && (
               <div className="flex items-center gap-3 pt-3">
                 {hasWhatsApp && (
                   <a
