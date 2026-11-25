@@ -125,7 +125,7 @@ export default function ShopPage({ categorySlug }) {
         breadcrumbs={breadcrumbs}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:pt-8 pb-32 sm:pb-40 lg:pb-48 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-sm text-black/60">
           <Link to="/" className="hover:text-black">
@@ -320,40 +320,68 @@ export default function ShopPage({ categorySlug }) {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-12 flex items-center justify-between border-t border-black/10 pt-6">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="flex items-center gap-2 rounded-xl border border-black/10 px-4 py-2 text-xs font-bold text-black disabled:opacity-30 hover:bg-[#F0EEED]"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Précédent</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`grid h-9 w-9 place-items-center rounded-xl text-xs font-bold ${
-                        currentPage === i + 1
-                          ? 'bg-black text-white'
-                          : 'text-black/70 hover:bg-[#F0EEED]'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+              <div className="mt-14 border-t border-black/10 pt-8">
+                {/* Results count text */}
+                <div className="mb-4 flex flex-col items-center justify-between gap-3 text-xs text-black/60 sm:flex-row">
+                  <span>
+                    Affichage de <strong className="text-black font-extrabold">{Math.min(filteredProducts.length, (currentPage - 1) * itemsPerPage + 1)}</strong> à{' '}
+                    <strong className="text-black font-extrabold">{Math.min(filteredProducts.length, currentPage * itemsPerPage)}</strong> sur{' '}
+                    <strong className="text-black font-extrabold">{filteredProducts.length}</strong> emballages
+                  </span>
+                  <span>
+                    Page <strong className="text-black font-extrabold">{currentPage}</strong> sur <strong className="text-black font-extrabold">{totalPages}</strong>
+                  </span>
                 </div>
 
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="flex items-center gap-2 rounded-xl border border-black/10 px-4 py-2 text-xs font-bold text-black disabled:opacity-30 hover:bg-[#F0EEED]"
-                >
-                  <span>Suivant</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#F7F6F5] p-3 sm:p-4">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => {
+                      setCurrentPage((p) => Math.max(1, p - 1))
+                      window.scrollTo({ top: 160, behavior: 'smooth' })
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-xs font-bold text-black shadow-xs transition hover:bg-black hover:text-white disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span className="hidden sm:inline">Précédent</span>
+                  </button>
+
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                      const isActive = currentPage === pageNum
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => {
+                            setCurrentPage(pageNum)
+                            window.scrollTo({ top: 160, behavior: 'smooth' })
+                          }}
+                          className={`grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-xl text-xs font-black transition ${
+                            isActive
+                              ? 'bg-black text-white shadow-sm ring-2 ring-black'
+                              : 'border border-black/10 bg-white text-black hover:border-black/30 hover:bg-[#F0EEED]'
+                          }`}
+                          aria-label={`Page ${pageNum}`}
+                          aria-current={isActive ? 'page' : undefined}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => {
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      window.scrollTo({ top: 160, behavior: 'smooth' })
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-xs font-bold text-black shadow-xs transition hover:bg-black hover:text-white disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <span className="hidden sm:inline">Suivant</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             )}
           </main>
