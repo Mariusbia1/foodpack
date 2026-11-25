@@ -1020,22 +1020,18 @@ export function ProductsAdmin() {
                     <button
                       type="button"
                       onClick={(e) => handleCopyProductLink(e, p)}
-                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold transition active:scale-95 ${
+                      className={`grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl border transition active:scale-95 ${
                         copiedId === p.id
                           ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
                           : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
                       }`}
+                      title="Copier le lien du produit"
+                      aria-label="Copier le lien du produit"
                     >
                       {copiedId === p.id ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>Lien copié !</span>
-                        </>
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
                       ) : (
-                        <>
-                          <Copy className="h-3.5 w-3.5 text-slate-500" />
-                          <span>Copier lien</span>
-                        </>
+                        <Copy className="h-3.5 w-3.5 text-slate-500" />
                       )}
                     </button>
 
@@ -1170,27 +1166,22 @@ export function ProductsAdmin() {
                       {/* Action buttons */}
                       <td className="px-4 py-3.5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Copier le lien button */}
+                          {/* Copier le lien button (icône uniquement) */}
                           <button
                             type="button"
                             onClick={(e) => handleCopyProductLink(e, p)}
-                            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-2xs ${
+                            className={`grid h-8 w-8 place-items-center rounded-xl border transition shadow-2xs ${
                               copiedId === p.id
                                 ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-black'
+                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-black'
                             }`}
                             title="Copier le lien public du produit sur la boutique"
+                            aria-label="Copier le lien public du produit"
                           >
                             {copiedId === p.id ? (
-                              <>
-                                <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                <span>Copié !</span>
-                              </>
+                              <Check className="h-3.5 w-3.5 text-emerald-600" />
                             ) : (
-                              <>
-                                <Copy className="h-3.5 w-3.5 text-slate-500" />
-                                <span>Copier lien</span>
-                              </>
+                              <Copy className="h-3.5 w-3.5 text-slate-500" />
                             )}
                           </button>
 
