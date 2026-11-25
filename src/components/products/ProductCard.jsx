@@ -1,18 +1,17 @@
 import { Link } from 'react-router-dom'
 import { Star, ArrowRight } from 'lucide-react'
 import { formatCurrency } from '../../utils/formatCurrency'
+import { resolveProductPricing } from '../../utils/productPricing'
 
 export default function ProductCard({ product }) {
-  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
-  const variantPrices = hasVariants ? product.variants.map((v) => Number(v.price) || 0).filter((p) => p > 0) : []
-  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : Number(product.price || 0)
-  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : Number(product.price || 0)
-  const isMultiPrice = hasVariants && minPrice < maxPrice
-
-  const hasDiscount = product.oldPrice && product.oldPrice > minPrice
-  const discountPercent = hasDiscount
-    ? Math.round(((product.oldPrice - minPrice) / product.oldPrice) * 100)
-    : 0
+  const {
+    hasVariants,
+    variantPrices,
+    minPrice,
+    isMultiPrice,
+    hasDiscount,
+    discountPercent,
+  } = resolveProductPricing(product)
 
   const displayImage =
     product.images?.[0] || '/products/bouteille-pet.webp'

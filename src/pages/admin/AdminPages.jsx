@@ -12,6 +12,7 @@ import { categories as defaultCategories } from '../../data/categories'
 import { gallery as defaultGallery } from '../../data/gallery'
 import { testimonials as defaultTestimonials } from '../../data/testimonials'
 import { formatCurrency } from '../../utils/formatCurrency'
+import { resolveProductPricing } from '../../utils/productPricing'
 import Button from '../../components/common/Button'
 import SEO from '../../components/common/SEO'
 import PhoneInput from '../../components/common/PhoneInput'
@@ -1003,7 +1004,7 @@ export function ProductsAdmin() {
 
                       <div className="mt-2 flex items-baseline gap-1.5">
                         <span className="font-sans text-sm font-black text-slate-900">
-                          {formatCurrency(p.price)}
+                          {formatCurrency(resolveProductPricing(p).minPrice)}
                         </span>
                         {p.variants?.length > 1 && (
                           <span className="text-[10px] text-slate-400 font-semibold">
@@ -1154,7 +1155,7 @@ export function ProductsAdmin() {
                       {/* Unit Price */}
                       <td className="px-4 py-3.5">
                         <span className="font-sans text-sm font-black text-slate-900 whitespace-nowrap block">
-                          {formatCurrency(p.price)}
+                          {formatCurrency(resolveProductPricing(p).minPrice)}
                         </span>
                         {p.variants?.length > 1 && (
                           <span className="text-[10px] text-slate-400 font-medium">À partir de</span>
@@ -1436,7 +1437,14 @@ export function ProductFormPage() {
 
   const updateVariant = (index, key, value) => {
     const next = variants.map((v, i) => (i === index ? { ...v, [key]: value } : v))
-    update('variants', next)
+    setProduct((current) => {
+      const updated = { ...current, variants: next }
+      const prices = next.map((v) => Number(v.price) || 0).filter((p) => p > 0)
+      if (prices.length > 0) {
+        updated.price = Math.min(...prices)
+      }
+      return updated
+    })
   }
 
   const duplicateVariant = (index) => {
@@ -1453,7 +1461,14 @@ export function ProductFormPage() {
 
   const removeVariant = (index) => {
     const next = variants.filter((_, i) => i !== index)
-    update('variants', next)
+    setProduct((current) => {
+      const updated = { ...current, variants: next }
+      const prices = next.map((v) => Number(v.price) || 0).filter((p) => p > 0)
+      if (prices.length > 0) {
+        updated.price = Math.min(...prices)
+      }
+      return updated
+    })
   }
 
   const toggleFormat = (fmt) => {
@@ -1562,14 +1577,24 @@ export function ProductFormPage() {
                   required={!variants.length}
                   min="0"
                   type="number"
-                  value={product.price ?? ''}
-                  onChange={(e) => update('price', e.target.value)}
+                  readOnly={variants.length > 1}
+                  value={variants.length > 0 ? resolveProductPricing(product).minPrice || product.price || '' : product.price ?? ''}
+                  onChange={(e) => {
+                    const nextVal = e.target.value
+                    setProduct((current) => {
+                      const updated = { ...current, price: nextVal }
+                      if (Array.isArray(current.variants) && current.variants.length === 1) {
+                        updated.variants = [{ ...current.variants[0], price: nextVal }]
+                      }
+                      return updated
+                    })
+                  }}
                   placeholder={variants.length ? 'Calculé auto depuis variantes' : 'Ex. 6500'}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black"
+                  className={`mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none focus:border-black ${variants.length > 1 ? 'bg-slate-50 text-slate-600 cursor-not-allowed' : ''}`}
                 />
-                {variants.length > 0 && (
+                {variants.length > 1 && (
                   <span className="mt-1 block text-[10px] text-slate-500 font-medium">
-                    (Auto-ajusté sur le tarif le plus bas des variantes)
+                    Auto-ajusté sur le tarif le plus bas des variantes ci-dessous
                   </span>
                 )}
               </label>

@@ -4,6 +4,7 @@ import { SlidersHorizontal, ChevronRight, X, ArrowLeft, ArrowRight } from 'lucid
 import SEO from '../../components/common/SEO'
 import ProductCard from '../../components/products/ProductCard'
 import { useCatalog } from '../../contexts/CatalogContext'
+import { resolveProductPricing } from '../../utils/productPricing'
 
 export default function ShopPage({ categorySlug }) {
   const { products, categories } = useCatalog()
@@ -57,7 +58,7 @@ export default function ShopPage({ categorySlug }) {
       }
 
       // Price Filter
-      if (product.price > maxPrice) return false
+      if (resolveProductPricing(product).minPrice > maxPrice) return false
 
       // Capacity Filter
       if (selectedCapacity !== 'tous' && !(product.capacities || []).includes(selectedCapacity)) {

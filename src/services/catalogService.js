@@ -389,9 +389,9 @@ export async function saveProduct(product, newFiles = []) {
     capacities = Array.from(new Set(variants.map((v) => v.capacity || v.name).filter(Boolean)))
   }
 
-  // Base price: if variants are present and base price is 0/empty, use the lowest variant price
+  // Base price: always keep in sync with the lowest variant price when variants exist
   let finalPrice = Math.max(0, Math.round(Number(product.price) || 0))
-  if (variants.length > 0 && (!finalPrice || finalPrice === 0)) {
+  if (variants.length > 0) {
     finalPrice = Math.min(...variants.map((v) => v.price))
   }
 
