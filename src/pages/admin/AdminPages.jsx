@@ -4,7 +4,7 @@ import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
   AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw,
-  ImagePlus, Upload, Tag, Truck, Check, Layers, Copy, Mail, Key, Send
+  ImagePlus, Upload, Tag, Truck, Check, Layers, Copy, Mail, Key, Send, Download, TrendingUp
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -20,6 +20,7 @@ import ProductMediaThumb from '../../components/products/ProductMediaThumb'
 import { supabase } from '../../lib/supabase'
 import { formatErrorMessage } from '../../utils/formatError'
 import { copyTextToClipboard, getProductPublicUrl, shareProductToWhatsApp } from '../../utils/clipboard'
+import { exportAnalyticsToExcel } from '../../utils/excelExport'
 import {
   deleteCategory, deleteGalleryItem, deleteProduct, deleteProductImage, deleteTestimonial,
   getAdminOrders, getAdminProfile, getAdminTeam, getCategories, getDashboardData, getGallery,
@@ -590,6 +591,16 @@ function TrafficPanel() {
     }
   }
 
+  const handleExportExcel = async () => {
+    try {
+      const orders = await getAdminOrders().catch(() => [])
+      exportAnalyticsToExcel({ traffic, orders, periodLabel })
+      toast.success('Statistiques exportées pour Excel !')
+    } catch (error) {
+      toast.error(formatErrorMessage(error, "Impossible d'exporter les statistiques."))
+    }
+  }
+
   const dailyList = Array.isArray(traffic?.daily) ? traffic.daily : []
   const topPagesList = Array.isArray(traffic?.topPages) ? traffic.topPages : []
   const recentEvents = Array.isArray(traffic?.recentEvents) ? traffic.recentEvents : []
@@ -656,6 +667,15 @@ function TrafficPanel() {
           </div>
           <button
             type="button"
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100"
+            title="Télécharger les statistiques et l'évolution au format Excel"
+          >
+            <Download className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Exporter Excel</span>
+          </button>
+          <button
+            type="button"
             onClick={handleReset}
             disabled={resetting}
             className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
@@ -715,6 +735,7 @@ function TrafficPanel() {
           <div className="flex flex-wrap gap-1.5 rounded-xl bg-slate-100 p-1">
             {[
               ['actions', `Actions effectuées (${recentEvents.length})`],
+              ['evolution', 'Évolution & Statistiques'],
               ['visitors', `Visiteurs (${visitorProfiles.length})`],
               ['pages', 'Pages consultées'],
             ].map(([key, label]) => (
@@ -780,6 +801,74 @@ function TrafficPanel() {
             ) : (
               <p className="p-6 text-center text-xs text-slate-400">Aucune action enregistrée sur cette période.</p>
             )}
+          </div>
+        )}
+
+        {activeView === 'evolution' && (
+          <div className="mt-4 space-y-4">
+            {/* Action Breakdown Summary */}
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
+              {[
+                ['add_to_cart', 'Ajouts panier'],
+                ['place_order', 'Commandes'],
+                ['whatsapp_click', 'Clics WhatsApp'],
+                ['share_product', 'Partages'],
+                ['contact_submit', 'Devis / Contact'],
+              ].map(([key, label]) => (
+                <div key={key} className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 text-xs">
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
+                  <b className="mt-0.5 block text-lg font-black text-slate-900">{traffic.actionBreakdown?.[key] || 0}</b>
+                </div>
+              ))}
+            </div>
+
+            {/* Day-by-Day Evolution Table */}
+            <div className="max-h-72 overflow-y-auto rounded-xl border border-slate-100">
+              {dailyList.length ? (
+                <table className="w-full text-left text-xs">
+                  <thead className="sticky top-0 border-b border-slate-100 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th className="px-3.5 py-2.5">Date</th>
+                      <th className="px-3.5 py-2.5">Visiteurs</th>
+                      <th className="px-3.5 py-2.5">Pages vues</th>
+                      <th className="px-3.5 py-2.5">Actions</th>
+                      <th className="px-3.5 py-2.5 text-right">Tendance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[...dailyList].reverse().map((day, idx, arr) => {
+                      const prev = arr[idx + 1]
+                      const diff = prev ? day.count - prev.count : 0
+                      return (
+                        <tr key={day.date} className="hover:bg-slate-50/70">
+                          <td className="px-3.5 py-2.5 font-semibold text-slate-800 whitespace-nowrap">
+                            {new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })}
+                          </td>
+                          <td className="px-3.5 py-2.5 font-bold text-slate-900">{day.visitors || 0}</td>
+                          <td className="px-3.5 py-2.5 text-slate-700">{day.views || 0}</td>
+                          <td className="px-3.5 py-2.5 text-slate-700">{day.actions || 0}</td>
+                          <td className="px-3.5 py-2.5 text-right whitespace-nowrap">
+                            {!prev ? (
+                              <span className="text-slate-400">—</span>
+                            ) : diff > 0 ? (
+                              <span className="inline-flex items-center gap-0.5 font-bold text-emerald-600">
+                                <TrendingUp className="h-3 w-3" /> +{diff}
+                              </span>
+                            ) : diff < 0 ? (
+                              <span className="font-bold text-rose-600">{diff}</span>
+                            ) : (
+                              <span className="text-slate-400">Stable</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="p-6 text-center text-xs text-slate-400">Aucune donnée d'évolution sur cette période.</p>
+              )}
+            </div>
           </div>
         )}
 
