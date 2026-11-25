@@ -41,7 +41,7 @@ export default function ProductCard({ product }) {
         {/* Top Badges */}
         <div className="absolute left-3 top-3 right-3 flex items-center justify-between gap-2">
           {product.category && (
-            <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-black shadow-xs backdrop-blur-md">
+            <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-black border border-black/10 shadow-xs">
               {product.category}
             </span>
           )}
@@ -55,7 +55,7 @@ export default function ProductCard({ product }) {
               Rupture
             </span>
           ) : hasVariants && variantPrices.length > 1 ? (
-            <span className="rounded-full bg-slate-900/90 px-2.5 py-1 text-[10px] font-bold text-white shadow-xs backdrop-blur-xs">
+            <span className="rounded-full bg-black px-2.5 py-1 text-[10px] font-bold text-white shadow-xs">
               {product.variants.length} formats
             </span>
           ) : null}
@@ -63,7 +63,7 @@ export default function ProductCard({ product }) {
 
         {/* Hover Quick Action Pill */}
         <div className="absolute inset-x-3 bottom-3 translate-y-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          <div className="flex items-center justify-center gap-1.5 rounded-full bg-black/90 py-2.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm transition hover:bg-black">
+          <div className="flex items-center justify-center gap-1.5 rounded-full bg-black py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-neutral-800">
             <span>Commander</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </div>

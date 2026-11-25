@@ -10,7 +10,6 @@ import {
   SlidersHorizontal,
   ShieldCheck,
   Truck,
-  Sparkles,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import SEO from '../../components/common/SEO'

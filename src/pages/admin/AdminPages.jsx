@@ -4,7 +4,7 @@ import {
   Eye, EyeOff, Plus, Search, ArrowUpRight, Package, ShoppingBag, Clock, Banknote,
   Trash2, Pencil, X, ArrowUp, ArrowDown, Users, MousePointerClick, CheckCircle2,
   AlertCircle, ChevronRight, MessageCircle, ExternalLink, Filter, ShieldCheck, RefreshCw,
-  ImagePlus, Upload, Sparkles, Tag, Truck, Check, Layers, Copy, Mail, Key, Send
+  ImagePlus, Upload, Tag, Truck, Check, Layers, Copy, Mail, Key, Send
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
@@ -3616,7 +3616,7 @@ function TeamAdmin() {
                         onClick={generateRandomPassword}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
                       >
-                        <Sparkles className="h-3 w-3" />
+                        <Key className="h-3 w-3" />
                         <span>Générer un mot de passe</span>
                       </button>
                     </div>
