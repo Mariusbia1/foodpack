@@ -38,9 +38,17 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const missing = ['name', 'phone', 'city', 'address', 'delivery'].some((k) => !String(form[k] || '').trim())
-    if (missing) return toast.error('Veuillez renseigner tous les champs obligatoires (*).')
-    if (!form.terms) return toast.error('Veuillez accepter les conditions de commande.')
+    if (!String(form.name || '').trim() || !String(form.phone || '').trim()) {
+      return toast.error('Indiquez simplement votre nom et votre numéro de téléphone.')
+    }
+
+    const payloadForm = {
+      ...form,
+      city: String(form.city || 'Cotonou').trim(),
+      address: String(form.address || '').trim() || 'À préciser sur WhatsApp',
+      delivery: form.delivery || 'Livraison / Retrait (à confirmer)',
+      terms: true,
+    }
 
     setSubmitting(true)
     try {
@@ -49,7 +57,7 @@ export default function CheckoutPage() {
       try {
         order = await createOrder(
           {
-            ...form,
+            ...payloadForm,
             promo_code: promo?.code,
             discount_amount: discountAmount,
             delivery_fee: deliveryFee,
@@ -65,7 +73,7 @@ export default function CheckoutPage() {
 
       // 2. Open WhatsApp Message
       const waMsg = createWhatsAppMessage(
-        form,
+        payloadForm,
         items,
         secureTotal,
         discountAmount,
@@ -79,7 +87,7 @@ export default function CheckoutPage() {
       // 3. Store in session and navigate
       sessionStorage.setItem(
         'foodpack-last-order',
-        JSON.stringify({ form, items, total: secureTotal, order })
+        JSON.stringify({ form: payloadForm, items, total: secureTotal, order })
       )
       clearCart()
       navigate('/commande/confirmation')
@@ -111,26 +119,31 @@ export default function CheckoutPage() {
 
         {/* 2-Column Grid */}
         <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_420px]">
-          {/* Customer Info Form */}
+          {/* Customer Info Form — Ultra-simple */}
           <div className="space-y-6">
             <div className="rounded-[20px] border border-black/10 p-6 sm:p-8 space-y-5">
-              <h2 className="text-lg font-bold text-black">Informations de livraison</h2>
+              <div>
+                <h2 className="text-lg font-bold text-black">Vos coordonnées (Rapide)</h2>
+                <p className="mt-1 text-xs text-black/50">
+                  Entrez juste votre nom et votre numéro pour valider sur WhatsApp.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Nom complet *</label>
+                  <label className="text-xs font-bold uppercase text-black/60">Votre Nom *</label>
                   <input
                     required
                     name="name"
                     value={form.name}
                     onChange={handleChange}
-                    placeholder="Ex. Aïcha Dossou / Restaurant Le Jardin"
-                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
+                    placeholder="Ex. Aïcha"
+                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3.5 text-sm outline-none focus:border-black"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Numéro de Téléphone / WhatsApp *</label>
+                  <label className="text-xs font-bold uppercase text-black/60">Votre Numéro / WhatsApp *</label>
                   <div className="mt-1">
                     <PhoneInput
                       required
@@ -139,85 +152,18 @@ export default function CheckoutPage() {
                     />
                   </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Ville *</label>
-                  <select
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
-                  >
-                    <option value="Cotonou">Cotonou</option>
-                    <option value="Parakou">Parakou</option>
-                    <option value="Abomey-Calavi">Abomey-Calavi</option>
-                    <option value="Porto-Novo">Porto-Novo</option>
-                    <option value="Bohicon">Bohicon</option>
-                    <option value="Ouidah">Ouidah</option>
-                    <option value="Natitingou">Natitingou</option>
-                    <option value="Autre ville">Autre ville du Bénin</option>
-                  </select>
-                </div>
 
                 <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Quartier & Précisions *</label>
+                  <label className="text-xs font-bold uppercase text-black/60">Ville / Quartier (facultatif)</label>
                   <input
-                    required
                     name="address"
                     value={form.address}
                     onChange={handleChange}
-                    placeholder="Ex. Haie Vive / Albarika, rue 12, face pharmacie"
-                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
+                    placeholder="Ex. Cotonou, Haie Vive"
+                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3.5 text-sm outline-none focus:border-black"
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="text-xs font-bold uppercase text-black/60">Mode de livraison *</label>
-                <select
-                  name="delivery"
-                  value={form.delivery}
-                  onChange={handleChange}
-                  className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
-                >
-                  <option value="Livraison express à domicile / restaurant">
-                    Livraison express à domicile / restaurant
-                  </option>
-                  <option value="Retrait direct au showroom (Cotonou / Parakou)">
-                    Retrait direct au showroom (Cotonou / Parakou)
-                  </option>
-                  <option value="Expédition par gare / transporteur">
-                    Expédition par gare / transporteur (Toutes villes du Bénin)
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold uppercase text-black/60">Note ou instructions particulières</label>
-                <textarea
-                  name="comment"
-                  rows={3}
-                  value={form.comment}
-                  onChange={handleChange}
-                  placeholder="Horaires de disponibilité, besoin de facture, personnalisation..."
-                  className="mt-1 w-full resize-none rounded-2xl border border-black/15 bg-[#F0EEED] p-4 text-sm outline-none"
-                />
-              </div>
-
-              <label className="flex items-start gap-3 pt-2 text-xs text-black/70 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="terms"
-                  checked={form.terms}
-                  onChange={handleChange}
-                  className="mt-0.5 accent-black"
-                />
-                <span>
-                  J’accepte les conditions de commande et la transmission instantanée du récapitulatif sur WhatsApp.
-                </span>
-              </label>
             </div>
           </div>
 

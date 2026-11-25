@@ -145,83 +145,59 @@ Merci de votre retour rapide.`
             </div>
           </div>
 
-          {/* Right Column : Interactive Quote Form */}
-          <div className="rounded-[20px] border border-black/10 p-8 sm:p-10 lg:col-span-7">
-            <h2 className="text-xl font-bold text-black">Demande de Devis ou Renseignement</h2>
+          {/* Right Column : Simple Contact Form */}
+          <div className="rounded-[20px] border border-black/10 p-6 sm:p-10 lg:col-span-7 space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-black">Nous écrire en 1 clic</h2>
+              <p className="mt-1 text-xs text-black/50">
+                Pas besoin de long formulaire : cliquez directement sur WhatsApp ou laissez simplement votre nom et numéro.
+              </p>
+            </div>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-              {/* Subject Chips */}
+            <a
+              href={`https://wa.me/${String(settings.whatsapp || '2290100000000').replace(/\D/g, '')}?text=${encodeURIComponent(`Bonjour ${settings.shop_name || 'FOOD PACK'}, je souhaite commander ou avoir des renseignements.`)}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => recordUserAction('whatsapp_click', 'Page Contact').catch(() => {})}
+              className="flex w-full items-center justify-center gap-2.5 rounded-full bg-[#25D366] py-4 text-sm font-bold text-white transition hover:bg-[#1fb855] active:scale-[0.99]"
+            >
+              <MessageCircle className="h-5 w-5" />
+              <span>Discuter directement sur WhatsApp</span>
+            </a>
+
+            <div className="relative flex items-center py-1">
+              <div className="flex-grow border-t border-black/10" />
+              <span className="mx-3 shrink text-[11px] font-bold uppercase tracking-wider text-black/40">ou laissez vos coordonnées</span>
+              <div className="flex-grow border-t border-black/10" />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-bold uppercase text-black/50">Objet de votre demande</label>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {subjectOptions.map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => setSubjectType(opt)}
-                      className={`rounded-full px-4 py-2 text-xs font-bold transition ${
-                        subjectType === opt
-                          ? 'bg-black text-white'
-                          : 'bg-[#F0EEED] text-black/70 hover:bg-black/10'
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
+                <label className="text-xs font-bold uppercase text-black/60">Votre Nom *</label>
+                <input
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex. Aïcha"
+                  className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3.5 text-sm outline-none focus:border-black"
+                />
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Nom ou Établissement *</label>
-                  <input
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex. Restaurant Le Palmier"
-                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Numéro de Téléphone *</label>
-                  <div className="mt-1">
-                    <PhoneInput required value={phone} onChange={setPhone} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Adresse E-mail</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="contact@exemple.com"
-                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold uppercase text-black/60">Quantités souhaitées</label>
-                  <input
-                    value={quantities}
-                    onChange={(e) => setQuantities(e.target.value)}
-                    placeholder="Ex. 10 cartons (2 500 pcs)"
-                    className="mt-1 w-full rounded-full border border-black/15 bg-[#F0EEED] px-4 py-3 text-sm outline-none"
-                  />
+              <div>
+                <label className="text-xs font-bold uppercase text-black/60">Votre Numéro / WhatsApp *</label>
+                <div className="mt-1">
+                  <PhoneInput required value={phone} onChange={setPhone} />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold uppercase text-black/60">Détails de votre besoin</label>
+                <label className="text-xs font-bold uppercase text-black/60">Votre Message (facultatif)</label>
                 <textarea
-                  rows={4}
+                  rows={2}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Précisez les formats, contenances et délais de livraison souhaités..."
-                  className="mt-1 w-full resize-none rounded-2xl border border-black/15 bg-[#F0EEED] p-4 text-sm outline-none"
+                  placeholder="Ex. Je veux le prix des bouteilles..."
+                  className="mt-1 w-full resize-none rounded-2xl border border-black/15 bg-[#F0EEED] p-4 text-sm outline-none focus:border-black"
                 />
               </div>
 
@@ -229,7 +205,7 @@ Merci de votre retour rapide.`
                 type="submit"
                 className="shop-btn-black flex w-full items-center justify-center gap-2 py-4 text-sm font-bold"
               >
-                <span>Envoyer ma demande sur WhatsApp</span>
+                <span>Envoyer sur WhatsApp</span>
                 <Send className="h-4 w-4" />
               </button>
             </form>
