@@ -25,7 +25,7 @@ export default function SEO({
     name: 'FOODPACK by Maurelle',
     alternateName: 'FOODPACK Bénin',
     url: BASE_DOMAIN,
-    logo: `${BASE_DOMAIN}/app-icon-512.png`,
+    logo: `${BASE_DOMAIN}/app-icon-512.png?v=20261126`,
     image: `${BASE_DOMAIN}/foodpack-banner-pro.png?v=20261125b`,
     description: siteConfig.description,
     telephone: siteConfig.phone,
